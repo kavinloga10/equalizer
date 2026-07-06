@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ƒ<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1309,6 +1309,36 @@ function tryDemo() {
 document.addEventListener('DOMContentLoaded', () => {
   renderQuestion();
 });
+  function renderLeaderboard() {
+
+    const list = document.getElementById("leaderboard-list");
+
+    if (!list) return;
+
+    list.innerHTML = `
+        <h2 style="margin-bottom:20px;">🏆 Equalizer Leaderboard</h2>
+
+        <div style="background:white;padding:18px;border-radius:12px;margin-bottom:12px;">
+            🥇 Kavin — 2450 XP
+        </div>
+
+        <div style="background:white;padding:18px;border-radius:12px;margin-bottom:12px;">
+            🥈 Sophia — 2230 XP
+        </div>
+
+        <div style="background:white;padding:18px;border-radius:12px;margin-bottom:12px;">
+            🥉 Ethan — 2100 XP
+        </div>
+
+        <div style="background:white;padding:18px;border-radius:12px;margin-bottom:12px;">
+            #4 Olivia — 1950 XP
+        </div>
+
+        <div style="background:white;padding:18px;border-radius:12px;">
+            #5 Noah — 1820 XP
+        </div>
+    `;
+}
 </script>
 </body>
 </html>

@@ -1232,7 +1232,7 @@ function endTest() {
       <h2 style="font-size:28px;margin-bottom:8px">${pct >= 80 ? 'Excellent work!' : pct >= 60 ? 'Good effort!' : 'Keep practicing!'}</h2>
       <div style="font-size:52px;font-weight:700;color:var(--blue);margin:16px 0">${pct}%</div>
       <p style="color:var(--gray-500);margin-bottom:8px">You answered <strong>${score} out of ${total}</strong> correctly.</p>
-      <p style="color:var(--gray-500);font-size:14px;margin-bottom:32px">${pct >= 80 ? 'You're ready for the next challenge!' : 'Review the questions you missed with the AI Tutor.'}</p>
+      <p style="color:var(--gray-500);font-size:14px;margin-bottom:32px">${pct >= 80 ? 'You\'re ready for the next challenge!' : 'Review the questions you missed with the AI Tutor.'}</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
         <button class="btn btn-primary btn-lg" onclick="backToTests()">Try another test</button>
         <button class="btn btn-outline btn-lg" onclick="showPanel('tutor', document.querySelector(\'.sidebar-item:nth-child(3)\'))">Ask AI Tutor</button>

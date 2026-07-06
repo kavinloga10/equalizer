@@ -41,6 +41,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 /* ── PAGES ── */
 .page { display:none; min-height:100vh; }
 .page.active { display:block; }
+#dashboard.active { display:flex; }
 
 /* ── LANDING ── */
 #landing { background:var(--white); }
@@ -143,7 +144,8 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .land-footer span { color:var(--blue); font-weight:600; }
 
 /* ── AUTH ── */
-#auth { background:var(--gray-50); display:flex; align-items:center; justify-content:center; min-height:100vh; }
+#auth { background:var(--gray-50); align-items:center; justify-content:center; min-height:100vh; }
+#auth.active { display:flex; }
 .auth-card {
   background:var(--white); border-radius:var(--radius-lg); padding:48px 40px;
   width:420px; box-shadow:var(--shadow-lg); border:1px solid var(--gray-200);
@@ -177,7 +179,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .auth-back { display:inline-flex; align-items:center; gap:6px; color:var(--gray-500); font-size:13px; cursor:pointer; margin-bottom:20px; }
 
 /* ── DASHBOARD SHELL ── */
-#dashboard { display:flex; min-height:100vh; }
+#dashboard { min-height:100vh; }
 .sidebar {
   width:240px; background:var(--gray-900); padding:28px 0; display:flex;
   flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:50;
@@ -1232,7 +1234,7 @@ function endTest() {
       <h2 style="font-size:28px;margin-bottom:8px">${pct >= 80 ? 'Excellent work!' : pct >= 60 ? 'Good effort!' : 'Keep practicing!'}</h2>
       <div style="font-size:52px;font-weight:700;color:var(--blue);margin:16px 0">${pct}%</div>
       <p style="color:var(--gray-500);margin-bottom:8px">You answered <strong>${score} out of ${total}</strong> correctly.</p>
-      <p style="color:var(--gray-500);font-size:14px;margin-bottom:32px">${pct >= 80 ? 'You're ready for the next challenge!' : 'Review the questions you missed with the AI Tutor.'}</p>
+      <p style="color:var(--gray-500);font-size:14px;margin-bottom:32px">${pct >= 80 ? 'You\'re ready for the next challenge!' : 'Review the questions you missed with the AI Tutor.'}</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
         <button class="btn btn-primary btn-lg" onclick="backToTests()">Try another test</button>
         <button class="btn btn-outline btn-lg" onclick="showPanel('tutor', document.querySelector(\'.sidebar-item:nth-child(3)\'))">Ask AI Tutor</button>

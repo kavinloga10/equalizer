@@ -1,4 +1,4 @@
-ƒ<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -855,6 +855,16 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 
 <script>
 // ═══════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════
+// On GitHub Pages there's no backend to serve /api/chat, so point at the
+// deployed Render backend instead. Locally (node server.js), the relative
+// path works since the same server serves both the page and the API.
+const API_BASE = location.hostname === 'kavinloga10.github.io'
+  ? 'https://equalizer-api.onrender.com'
+  : '';
+
+// ═══════════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════════
 let currentUser = null;
@@ -1115,7 +1125,7 @@ async function sendMessage() {
   try {
     const messages = chatHistory.slice(-12); // keep last 12 for context
 
-    const res = await fetch('/api/chat', {
+    const res = await fetch(`${API_BASE}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages })

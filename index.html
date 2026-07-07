@@ -457,7 +457,22 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 
 <!-- ═══════════════════════════════ LANDING ═══════════════════════════════ -->
 <div id="landing" class="page active">
+<div class="sidebar">
+  <div class="sidebar-logo">Equalizer</div>
+  <nav class="sidebar-nav">
+    <a class="sidebar-item active" onclick="scrollToTop()"><span class="icon">🏠</span> Home</a>
+    <a class="sidebar-item" onclick="showAuth('signup')"><span class="icon">📝</span> Practice</a>
+    <a class="sidebar-item" onclick="showAuth('signup')"><span class="icon">🤖</span> AI Tutor</a>
+    <a class="sidebar-item" onclick="showAuth('signup')"><span class="icon">⏱️</span> Mock Tests</a>
+    <a class="sidebar-item" onclick="showAuth('signup')"><span class="icon">📊</span> Progress</a>
+    <a class="sidebar-item" onclick="showAuth('signup')"><span class="icon">🏆</span> Leaderboard</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a class="sidebar-item" onclick="showAuth('login')"><span class="icon">👤</span> Sign in</a>
+  </div>
+</div>
 
+<div class="main-area">
 <nav class="land-nav">
   <div class="land-logo">Equalizer</div>
   <div class="land-nav-links">
@@ -531,7 +546,8 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   <span>Equalizer</span> — Making elite academic preparation accessible to every student.<br>
   <small style="opacity:.6">© 2026 Equalizer. Not affiliated with any school or district.</small>
 </div>
-</div>
+</div><!-- end main-area -->
+</div><!-- end landing -->
 
 <!-- ═══════════════════════════════ AUTH ═══════════════════════════════ -->
 <div id="auth" class="page">
@@ -922,6 +938,10 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function showAuth(mode) {

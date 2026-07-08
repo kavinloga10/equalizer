@@ -645,13 +645,13 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   <div class="dash-panel active" id="panel-home">
     <div class="greeting">
       <h2 id="greeting-text">Good morning, Alex! 👋</h2>
-      <p>You're on a <strong id="streak-count">7-day</strong> streak. Keep it going!</p>
+      <p>You're on a <strong id="streak-count">0-day</strong> streak. Keep it going!</p>
     </div>
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-label">Questions answered</div><div class="kpi-value" id="kpi-questions">247</div><div class="kpi-sub">↑ 23 this week</div></div>
-      <div class="kpi"><div class="kpi-label">Overall accuracy</div><div class="kpi-value" id="kpi-accuracy">78%</div><div class="kpi-sub">↑ 4% this month</div></div>
-      <div class="kpi"><div class="kpi-label">Study hours</div><div class="kpi-value" id="kpi-hours">34h</div><div class="kpi-sub">↑ 3.2h this week</div></div>
-      <div class="kpi"><div class="kpi-label">Mock test rank</div><div class="kpi-value">#<span id="kpi-rank">12</span></div><div class="kpi-sub">Top 15%</div></div>
+      <div class="kpi"><div class="kpi-label">Questions answered</div><div class="kpi-value" id="kpi-questions">0</div><div class="kpi-sub" id="kpi-questions-sub">↑ 0 this week</div></div>
+      <div class="kpi"><div class="kpi-label">Overall accuracy</div><div class="kpi-value" id="kpi-accuracy">0%</div><div class="kpi-sub" id="kpi-accuracy-sub">Based on 0 questions</div></div>
+      <div class="kpi"><div class="kpi-label">Study hours</div><div class="kpi-value" id="kpi-hours">0h</div><div class="kpi-sub" id="kpi-hours-sub">↑ 0h this week</div></div>
+      <div class="kpi"><div class="kpi-label">Mock test rank</div><div class="kpi-value">#<span id="kpi-rank">-</span></div><div class="kpi-sub" id="kpi-rank-sub">-</div></div>
     </div>
     <div class="two-col">
       <div class="panel-card">
@@ -785,10 +785,10 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
               <circle class="ring-bg" cx="70" cy="70" r="60"/>
               <circle class="ring-fill" id="score-ring-circle" cx="70" cy="70" r="60"/>
             </svg>
-            <div class="score-number"><strong id="progress-accuracy-text">78%</strong><span>accuracy</span></div>
+            <div class="score-number"><strong id="progress-accuracy-text">0%</strong><span>accuracy</span></div>
           </div>
         </div>
-        <p style="font-size:13px;color:var(--gray-500)" id="progress-questions-count">Based on 247 questions answered</p>
+        <p style="font-size:13px;color:var(--gray-500)" id="progress-questions-count">Based on 0 questions answered</p>
       </div>
       <div class="panel-card">
         <h3>Accuracy by Subject</h3>
@@ -810,11 +810,11 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   <div class="dash-panel" id="panel-leaderboard">
     <div style="display:flex;gap:20px;align-items:center;margin-bottom:28px;flex-wrap:wrap">
       <div class="panel-card" style="flex:1;min-width:200px;text-align:center;background:var(--blue);border-color:var(--blue)">
-        <div style="font-size:28px;font-weight:700;color:white" id="lb-your-rank">#12</div>
+        <div style="font-size:28px;font-weight:700;color:white" id="lb-your-rank">-</div>
         <div style="font-size:13px;color:rgba(255,255,255,.8)">Your current rank</div>
       </div>
       <div class="panel-card" style="flex:1;min-width:200px;text-align:center">
-        <div style="font-size:28px;font-weight:700;color:var(--gray-900)" id="lb-your-points">1,847</div>
+        <div style="font-size:28px;font-weight:700;color:var(--gray-900)" id="lb-your-points">0</div>
         <div style="font-size:13px;color:var(--gray-500)">Total points</div>
       </div>
       <div class="panel-card" style="flex:1;min-width:200px;text-align:center">
@@ -852,6 +852,8 @@ let currentRole = 'student';
 let currentSubject = 'tj';
 let currentQuestionIndex = 0;
 let currentQuestion = null;
+let questionShownAt = null;
+let writingPromptShownAt = null;
 let practiceCorrect = 0;
 let practiceTotal = 0;
 let quizState = null;
@@ -868,18 +870,16 @@ const CHAT_KEY = 'equalizer_chat';
 
 function defaultProgress() {
   return {
-    questionsAnswered: 247,
-    correctAnswers: 193,
-    studyMinutes: 34 * 60,
-    streak: 7,
+    questionsAnswered: 0,
+    correctAnswers: 0,
+    studyMinutes: 0,
+    streak: 0,
     lastActiveDate: null,
-    points: 1847,
+    points: 0,
     subjectStats: { tj: { correct: 0, total: 0 }, acl: { correct: 0, total: 0 } },
-    recentActivity: [
-      { icon:'🎓', bg:'var(--blue-light)', label:'TJ Practice', time:'Yesterday', score:'9/10' },
-      { icon:'🏫', bg:'var(--green-light)', label:'ACL Practice', time:'2 days ago', score:'7/10' },
-    ],
+    recentActivity: [],
     dailyActivity: {},
+    dailyStudyMinutes: {},
   };
 }
 
@@ -917,6 +917,22 @@ function touchStreak() {
 function logDailyActivity(count) {
   const today = todayKey();
   progress.dailyActivity[today] = (progress.dailyActivity[today] || 0) + count;
+}
+
+function logStudyMinutes(minutes) {
+  const capped = Math.max(0, Math.min(minutes, 20)); // guard against a tab left open idle
+  progress.studyMinutes += capped;
+  const today = todayKey();
+  progress.dailyStudyMinutes[today] = (progress.dailyStudyMinutes[today] || 0) + capped;
+}
+
+function sumLastNDays(obj, n) {
+  let total = 0;
+  for (let i = 0; i < n; i++) {
+    const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+    total += obj[d] || 0;
+  }
+  return total;
 }
 
 function logActivity(icon, bg, label, score) {
@@ -1090,6 +1106,7 @@ function startWritingTest() {
 }
 
 function loadRandomWritingPrompt() {
+  writingPromptShownAt = Date.now();
   currentWritingPrompt = SPS_PROMPTS[Math.floor(Math.random() * SPS_PROMPTS.length)];
   document.getElementById('writing-category').textContent = currentWritingPrompt.category;
   document.getElementById('writing-prompt-text').textContent = currentWritingPrompt.text;
@@ -1133,6 +1150,7 @@ function renderWritingResult(data) {
   logActivity('✍️', '#fce7f3', 'SPS Writing Practice', `${data.score}/5`);
   progress.points += Math.round(data.score * 20);
   logDailyActivity(1);
+  if (writingPromptShownAt) logStudyMinutes((Date.now() - writingPromptShownAt) / 60000);
   saveProgress();
   renderHomeStats();
 
@@ -1170,7 +1188,6 @@ const LEADERBOARD_DATA = [
   { name:"James L.", school:"Freedom", pts:1863, badge:"🎖️" },
   { name:"Mei C.", school:"Riverside", pts:1855, badge:"🎖️" },
   { name:"Tyler B.", school:"Heritage", pts:1849, badge:"🎖️" },
-  { name:"Alex J. ★ YOU", school:"Your School", pts:1847, badge:"🎖️", isYou:true },
   { name:"Hannah N.", school:"Stone Bridge", pts:1820, badge:"🎖️" },
   { name:"Ryan F.", school:"Briar Woods", pts:1795, badge:"🎖️" },
   { name:"Ava G.", school:"Ashburn", pts:1780, badge:"🎖️" },
@@ -1294,6 +1311,7 @@ function setSubject(subj, btn) {
 }
 
 function renderQuestion() {
+  questionShownAt = Date.now();
   const qs = QUESTIONS[currentSubject];
   if (practiceOrderSubject !== currentSubject || practiceOrder.length !== qs.length) {
     practiceOrder = shuffleOrder(qs.length);
@@ -1349,6 +1367,7 @@ function selectOption(chosen) {
   progress.questionsAnswered++;
   practiceSessionTotal++;
   logDailyActivity(1);
+  if (questionShownAt) logStudyMinutes((Date.now() - questionShownAt) / 60000);
 
   if (chosen === correct) {
     fb.className = 'feedback-box correct active';
@@ -1490,11 +1509,12 @@ function startTest(type) {
 
 function renderQuizQuestion() {
   if (!quizState || quizState.current >= quizState.questions.length) { endTest(); return; }
+  questionShownAt = Date.now();
   const q = quizState.questions[quizState.current];
-  const progress = ((quizState.current) / quizState.total * 100).toFixed(0);
+  const pctComplete = ((quizState.current) / quizState.total * 100).toFixed(0);
   document.getElementById('quiz-q-label').textContent = `Question ${quizState.current+1} of ${quizState.total}`;
   document.getElementById('quiz-score-label').textContent = `Score: ${quizState.score}`;
-  document.getElementById('quiz-progress-fill').style.width = progress + '%';
+  document.getElementById('quiz-progress-fill').style.width = pctComplete + '%';
   const letters = ['A','B','C','D','E','F'];
   const badgeColors = { math:'var(--blue-light)', science:'var(--green-light)', logic:'var(--purple-light)', reading:'var(--orange-light)', vocab:'#fce7f3', tj:'#fef3c7', acl:'#dbeafe' };
   document.getElementById('quiz-container').innerHTML = `
@@ -1522,6 +1542,7 @@ function selectQuizOption(chosen) {
   if (stats) stats.total++;
   progress.questionsAnswered++;
   logDailyActivity(1);
+  if (questionShownAt) logStudyMinutes((Date.now() - questionShownAt) / 60000);
   if (chosen === correct) {
     quizState.score++;
     fb.className='feedback-box correct active'; fb.innerHTML='✅ ' + exp;
@@ -1637,10 +1658,26 @@ function renderHomeStats() {
   const el = (id) => document.getElementById(id);
   if (el('kpi-questions')) el('kpi-questions').textContent = progress.questionsAnswered;
   if (el('kpi-accuracy')) el('kpi-accuracy').textContent = overallAccuracy() + '%';
-  if (el('kpi-hours')) el('kpi-hours').textContent = Math.round(progress.studyMinutes / 60) + 'h';
+  if (el('kpi-hours')) el('kpi-hours').textContent = (progress.studyMinutes / 60).toFixed(1).replace(/\.0$/, '') + 'h';
   if (el('streak-count')) el('streak-count').textContent = progress.streak + '-day';
-  const rank = getBoardWithYou().findIndex(p => p.isYou) + 1;
-  if (el('kpi-rank')) el('kpi-rank').textContent = rank;
+
+  const weeklyQuestions = sumLastNDays(progress.dailyActivity, 7);
+  if (el('kpi-questions-sub')) el('kpi-questions-sub').textContent = `↑ ${weeklyQuestions} this week`;
+  if (el('kpi-accuracy-sub')) el('kpi-accuracy-sub').textContent = `Based on ${progress.questionsAnswered} question${progress.questionsAnswered === 1 ? '' : 's'}`;
+  const weeklyMinutes = sumLastNDays(progress.dailyStudyMinutes, 7);
+  if (el('kpi-hours-sub')) el('kpi-hours-sub').textContent = `↑ ${(weeklyMinutes / 60).toFixed(1).replace(/\.0$/, '')}h this week`;
+
+  const rankEl = el('kpi-rank');
+  const rankSubEl = el('kpi-rank-sub');
+  if (progress.questionsAnswered > 0) {
+    const board = getBoardWithYou();
+    const rank = board.findIndex(p => p.isYou) + 1;
+    if (rankEl) rankEl.textContent = rank;
+    if (rankSubEl) rankSubEl.textContent = `Top ${Math.max(1, Math.round((rank / board.length) * 100))}%`;
+  } else {
+    if (rankEl) rankEl.textContent = '-';
+    if (rankSubEl) rankSubEl.textContent = 'Not ranked yet';
+  }
 
   const activityContainer = el('recent-activity-list');
   if (activityContainer) {

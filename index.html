@@ -268,6 +268,8 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .q-badge.logic { background:var(--purple-light); color:var(--purple); }
 .q-badge.reading { background:var(--orange-light); color:var(--orange); }
 .q-badge.vocab { background:#fce7f3; color:#db2777; }
+.q-badge.tj { background:#fef3c7; color:#92400e; }
+.q-badge.acl { background:#dbeafe; color:var(--blue); }
 .q-number { font-size:13px; color:var(--gray-400); font-weight:500; }
 .q-text { font-size:18px; font-weight:600; line-height:1.6; margin-bottom:28px; color:var(--gray-900); }
 .options { display:flex; flex-direction:column; gap:12px; margin-bottom:28px; }
@@ -673,11 +675,8 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   <!-- PRACTICE -->
   <div class="dash-panel" id="panel-practice">
     <div class="subject-picker">
-      <button class="subj-btn active" onclick="setSubject('math',this)">📐 Math</button>
-      <button class="subj-btn" onclick="setSubject('science',this)">🔬 Science</button>
-      <button class="subj-btn" onclick="setSubject('logic',this)">🧩 Logic</button>
-      <button class="subj-btn" onclick="setSubject('reading',this)">📖 Reading</button>
-      <button class="subj-btn" onclick="setSubject('vocab',this)">🔤 Vocab</button>
+      <button class="subj-btn active" onclick="setSubject('tj',this)">🎓 TJ</button>
+      <button class="subj-btn" onclick="setSubject('acl',this)">🏫 ACL</button>
     </div>
     <div id="question-area">
       <!-- JS renders here -->
@@ -870,7 +869,7 @@ const API_BASE = location.hostname === 'kavinloga10.github.io'
 // ═══════════════════════════════════════════════════════
 let currentUser = null;
 let currentRole = 'student';
-let currentSubject = 'math';
+let currentSubject = 'tj';
 let currentQuestionIndex = 0;
 let practiceCorrect = 0;
 let practiceTotal = 0;
@@ -1195,9 +1194,9 @@ function setSubject(subj, btn) {
 function renderQuestion() {
   const qs = QUESTIONS[currentSubject];
   const q = qs[currentQuestionIndex % qs.length];
-  const letters = ['A','B','C','D'];
+  const letters = ['A','B','C','D','E','F'];
   const badgeClass = currentSubject;
-  const badgeLabels = { math:'📐 Math', science:'🔬 Science', logic:'🧩 Logic', reading:'📖 Reading', vocab:'🔤 Vocab' };
+  const badgeLabels = { math:'📐 Math', science:'🔬 Science', logic:'🧩 Logic', reading:'📖 Reading', vocab:'🔤 Vocab', tj:'🎓 TJ', acl:'🏫 ACL' };
 
   document.getElementById('question-area').innerHTML = `
     <div class="question-card">
@@ -1366,7 +1365,7 @@ function renderQuizQuestion() {
   document.getElementById('quiz-q-label').textContent = `Question ${quizState.current+1} of ${quizState.total}`;
   document.getElementById('quiz-score-label').textContent = `Score: ${quizState.score}`;
   document.getElementById('quiz-progress-fill').style.width = progress + '%';
-  const letters = ['A','B','C','D'];
+  const letters = ['A','B','C','D','E','F'];
   const badgeColors = { math:'var(--blue-light)', science:'var(--green-light)', logic:'var(--purple-light)', reading:'var(--orange-light)', vocab:'#fce7f3', tj:'#fef3c7', acl:'#dbeafe' };
   document.getElementById('quiz-container').innerHTML = `
     <div class="question-card">

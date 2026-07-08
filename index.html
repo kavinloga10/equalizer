@@ -656,18 +656,11 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
     <div class="two-col">
       <div class="panel-card">
         <h3>Recent Activity</h3>
-        <div class="activity-item"><div class="act-icon" style="background:var(--blue-light)">📐</div><div class="act-info"><strong>Algebra Practice</strong><span>Today, 9:14am</span></div><div class="act-score">9/10</div></div>
-        <div class="activity-item"><div class="act-icon" style="background:var(--green-light)">🔬</div><div class="act-info"><strong>Science Quiz</strong><span>Yesterday, 4:30pm</span></div><div class="act-score">7/10</div></div>
-        <div class="activity-item"><div class="act-icon" style="background:var(--purple-light)">🧩</div><div class="act-info"><strong>Logic Reasoning</strong><span>2 days ago</span></div><div class="act-score">8/10</div></div>
-        <div class="activity-item"><div class="act-icon" style="background:var(--orange-light)">📖</div><div class="act-info"><strong>Reading Comp.</strong><span>3 days ago</span></div><div class="act-score">6/10</div></div>
+        <div id="recent-activity-list"></div>
       </div>
       <div class="panel-card">
         <h3>Subject Mastery</h3>
-        <div class="progress-bar-wrap"><div class="progress-label"><span>Mathematics</span><span>84%</span></div><div class="progress-track"><div class="progress-fill" style="width:84%;background:var(--blue)"></div></div></div>
-        <div class="progress-bar-wrap"><div class="progress-label"><span>Science</span><span>71%</span></div><div class="progress-track"><div class="progress-fill" style="width:71%;background:var(--green)"></div></div></div>
-        <div class="progress-bar-wrap"><div class="progress-label"><span>Logic</span><span>78%</span></div><div class="progress-track"><div class="progress-fill" style="width:78%;background:var(--purple)"></div></div></div>
-        <div class="progress-bar-wrap"><div class="progress-label"><span>Reading</span><span>65%</span></div><div class="progress-track"><div class="progress-fill" style="width:65%;background:var(--orange)"></div></div></div>
-        <div class="progress-bar-wrap"><div class="progress-label"><span>Vocabulary</span><span>72%</span></div><div class="progress-track"><div class="progress-fill" style="width:72%;background:#db2777"></div></div></div>
+        <div id="subject-mastery-home"></div>
       </div>
     </div>
   </div>
@@ -792,18 +785,14 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
               <circle class="ring-bg" cx="70" cy="70" r="60"/>
               <circle class="ring-fill" id="score-ring-circle" cx="70" cy="70" r="60"/>
             </svg>
-            <div class="score-number"><strong>78%</strong><span>accuracy</span></div>
+            <div class="score-number"><strong id="progress-accuracy-text">78%</strong><span>accuracy</span></div>
           </div>
         </div>
-        <p style="font-size:13px;color:var(--gray-500)">Based on 247 questions answered</p>
+        <p style="font-size:13px;color:var(--gray-500)" id="progress-questions-count">Based on 247 questions answered</p>
       </div>
       <div class="panel-card">
         <h3>Accuracy by Subject</h3>
-        <div class="progress-bar-wrap" style="margin-top:12px"><div class="progress-label"><span>📐 Mathematics</span><span style="color:var(--blue);font-weight:700">84%</span></div><div class="progress-track"><div class="progress-fill" style="width:84%;background:var(--blue)"></div></div></div>
-        <div class="progress-bar-wrap"><div class="progress-label"><span>🔬 Science</span><span style="color:var(--green);font-weight:700">71%</span></div><div class="progress-track"><div class="progress-fill" style="width:71%;background:var(--green)"></div></div></div>
-        <div class="progress-bar-wrap"><div class="progress-label"><span>🧩 Logic</span><span style="color:var(--purple);font-weight:700">78%</span></div><div class="progress-track"><div class="progress-fill" style="width:78%;background:var(--purple)"></div></div></div>
-        <div class="progress-bar-wrap"><div class="progress-label"><span>📖 Reading</span><span style="color:var(--orange);font-weight:700">65%</span></div><div class="progress-track"><div class="progress-fill" style="width:65%;background:var(--orange)"></div></div></div>
-        <div class="progress-bar-wrap"><div class="progress-label"><span>🔤 Vocabulary</span><span style="color:#db2777;font-weight:700">72%</span></div><div class="progress-track"><div class="progress-fill" style="width:72%;background:#db2777"></div></div></div>
+        <div id="subject-mastery-progress"></div>
       </div>
     </div>
     <div class="panel-card" style="margin-bottom:24px">
@@ -813,16 +802,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
     </div>
     <div class="panel-card">
       <h3>Recommended Focus Areas</h3>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px">
-        <div style="background:var(--orange-light);color:#92400e;padding:14px 18px;border-radius:var(--radius);font-size:14px;flex:1;min-width:160px">
-          <strong style="display:block;margin-bottom:4px">📖 Reading Comprehension</strong>
-          Your lowest subject at 65%. Focus on main idea and inference questions.
-        </div>
-        <div style="background:var(--green-light);color:#065f46;padding:14px 18px;border-radius:var(--radius);font-size:14px;flex:1;min-width:160px">
-          <strong style="display:block;margin-bottom:4px">🔬 Science</strong>
-          Strong foundational knowledge. Push into physical science concepts.
-        </div>
-      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px" id="focus-areas"></div>
     </div>
   </div>
 
@@ -830,15 +810,15 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   <div class="dash-panel" id="panel-leaderboard">
     <div style="display:flex;gap:20px;align-items:center;margin-bottom:28px;flex-wrap:wrap">
       <div class="panel-card" style="flex:1;min-width:200px;text-align:center;background:var(--blue);border-color:var(--blue)">
-        <div style="font-size:28px;font-weight:700;color:white">#12</div>
+        <div style="font-size:28px;font-weight:700;color:white" id="lb-your-rank">#12</div>
         <div style="font-size:13px;color:rgba(255,255,255,.8)">Your current rank</div>
       </div>
       <div class="panel-card" style="flex:1;min-width:200px;text-align:center">
-        <div style="font-size:28px;font-weight:700;color:var(--gray-900)">1,847</div>
+        <div style="font-size:28px;font-weight:700;color:var(--gray-900)" id="lb-your-points">1,847</div>
         <div style="font-size:13px;color:var(--gray-500)">Total points</div>
       </div>
       <div class="panel-card" style="flex:1;min-width:200px;text-align:center">
-        <div style="font-size:28px;font-weight:700;color:var(--orange)">🔥 7</div>
+        <div style="font-size:28px;font-weight:700;color:var(--orange)" id="lb-your-streak">🔥 7</div>
         <div style="font-size:13px;color:var(--gray-500)">Day streak</div>
       </div>
     </div>
@@ -877,6 +857,99 @@ let quizState = null;
 let quizTimer = null;
 let timerSeconds = 0;
 let chatHistory = [];
+
+// ═══════════════════════════════════════════════════════
+//  PERSISTENCE (localStorage — keeps login + progress across reloads)
+// ═══════════════════════════════════════════════════════
+const USER_KEY = 'equalizer_user';
+const PROGRESS_KEY = 'equalizer_progress';
+const CHAT_KEY = 'equalizer_chat';
+
+function defaultProgress() {
+  return {
+    questionsAnswered: 247,
+    correctAnswers: 193,
+    studyMinutes: 34 * 60,
+    streak: 7,
+    lastActiveDate: null,
+    points: 1847,
+    subjectStats: { tj: { correct: 0, total: 0 }, acl: { correct: 0, total: 0 } },
+    recentActivity: [
+      { icon:'🎓', bg:'var(--blue-light)', label:'TJ Practice', time:'Yesterday', score:'9/10' },
+      { icon:'🏫', bg:'var(--green-light)', label:'ACL Practice', time:'2 days ago', score:'7/10' },
+    ],
+    dailyActivity: {},
+  };
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return Object.assign(defaultProgress(), parsed);
+    }
+  } catch (e) {}
+  return defaultProgress();
+}
+
+let progress = loadProgress();
+
+function saveProgress() {
+  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch (e) {}
+}
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function touchStreak() {
+  const today = todayKey();
+  if (progress.lastActiveDate === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  progress.streak = (progress.lastActiveDate === yesterday) ? progress.streak + 1 : 1;
+  progress.lastActiveDate = today;
+  progress.dailyActivity[today] = (progress.dailyActivity[today] || 0);
+  saveProgress();
+}
+
+function logDailyActivity(count) {
+  const today = todayKey();
+  progress.dailyActivity[today] = (progress.dailyActivity[today] || 0) + count;
+}
+
+function logActivity(icon, bg, label, score) {
+  progress.recentActivity.unshift({ icon, bg, label, time:'Just now', score });
+  progress.recentActivity = progress.recentActivity.slice(0, 6);
+}
+
+function saveUser() {
+  try { localStorage.setItem(USER_KEY, JSON.stringify({ user: currentUser, role: currentRole })); } catch (e) {}
+}
+
+function loadUser() {
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return null;
+}
+
+function clearUser() {
+  try { localStorage.removeItem(USER_KEY); } catch (e) {}
+}
+
+function saveChatHistory() {
+  try { localStorage.setItem(CHAT_KEY, JSON.stringify(chatHistory)); } catch (e) {}
+}
+
+function loadChatHistory() {
+  try {
+    const raw = localStorage.getItem(CHAT_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return [];
+}
 
 // ═══════════════════════════════════════════════════════
 //  QUESTION BANK
@@ -1056,6 +1129,12 @@ async function submitWritingResponse() {
 }
 
 function renderWritingResult(data) {
+  logActivity('✍️', '#fce7f3', 'SPS Writing Practice', `${data.score}/5`);
+  progress.points += Math.round(data.score * 20);
+  logDailyActivity(1);
+  saveProgress();
+  renderHomeStats();
+
   document.getElementById('writing-prompt-card').style.display = 'none';
   const card = document.getElementById('writing-result-card');
   card.style.display = 'block';
@@ -1132,8 +1211,9 @@ function showPanel(id, el) {
   if (el) el.classList.add('active');
   const titles = { home:'Dashboard', practice:'Practice Questions', tutor:'AI Tutor', tests:'Mock Tests', progress:'My Progress', leaderboard:'Leaderboard' };
   document.getElementById('panel-title').textContent = titles[id] || id;
+  if (id === 'home') renderHomeStats();
   if (id === 'practice') renderQuestion();
-  if (id === 'progress') animateRing();
+  if (id === 'progress') { renderProgressStats(); animateRing(); }
   if (id === 'leaderboard') renderLeaderboard();
 }
 
@@ -1144,7 +1224,8 @@ function doLogin() {
   const email = document.getElementById('login-email').value;
   if (!email) { toast('Please enter your email.', 'error'); return; }
   currentUser = { name: email.split('@')[0].replace(/\./g,' '), role: currentRole };
-  enterDashboard();
+  saveUser();
+  enterDashboard(true);
 }
 
 function doSignup() {
@@ -1152,22 +1233,26 @@ function doSignup() {
   const email = document.getElementById('signup-email').value;
   if (!name || !email) { toast('Please fill in all fields.', 'error'); return; }
   currentUser = { name, role: currentRole };
-  enterDashboard();
+  saveUser();
+  enterDashboard(true);
 }
 
-function enterDashboard() {
+function enterDashboard(showToast) {
   showPage('dashboard');
   const firstName = currentUser.name.split(' ')[0];
   document.getElementById('user-display-name').textContent = firstName + '.';
   document.getElementById('greeting-text').textContent = getGreeting() + ', ' + firstName + '! 👋';
-  document.getElementById('greeting-text').textContent = getGreeting() + ', ' + firstName + '! 👋';
+  touchStreak();
   renderQuestion();
-  toast('Welcome back, ' + firstName + '!', 'success');
+  renderHomeStats();
+  if (showToast) toast('Welcome back, ' + firstName + '!', 'success');
 }
 
 function doLogout() {
   currentUser = null;
   chatHistory = [];
+  clearUser();
+  try { localStorage.removeItem(CHAT_KEY); } catch (e) {}
   document.getElementById('chat-messages').innerHTML = `<div class="msg ai"><div class="msg-avatar">🤖</div><div class="msg-body"><div class="msg-bubble">Hi! I'm your Equalizer tutor. Ask me anything — algebra, chemistry, reading strategies, logic puzzles, vocabulary, you name it. What would you like help with today?</div><div class="msg-time">Just now</div></div></div>`;
   showPage('landing');
   toast('Signed out. See you next time!');
@@ -1183,9 +1268,25 @@ function getGreeting() {
 // ═══════════════════════════════════════════════════════
 //  PRACTICE
 // ═══════════════════════════════════════════════════════
+let practiceOrder = [];
+let practiceOrderSubject = null;
+
+function shuffleOrder(n) {
+  const arr = Array.from({ length: n }, (_, i) => i);
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function setSubject(subj, btn) {
   currentSubject = subj;
   currentQuestionIndex = 0;
+  practiceOrder = shuffleOrder(QUESTIONS[subj].length);
+  practiceOrderSubject = subj;
+  practiceSessionCorrect = 0;
+  practiceSessionTotal = 0;
   document.querySelectorAll('.subj-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderQuestion();
@@ -1193,7 +1294,15 @@ function setSubject(subj, btn) {
 
 function renderQuestion() {
   const qs = QUESTIONS[currentSubject];
-  const q = qs[currentQuestionIndex % qs.length];
+  if (practiceOrderSubject !== currentSubject || practiceOrder.length !== qs.length) {
+    practiceOrder = shuffleOrder(qs.length);
+    practiceOrderSubject = currentSubject;
+  }
+  if (currentQuestionIndex >= practiceOrder.length) {
+    practiceOrder = shuffleOrder(qs.length);
+    currentQuestionIndex = 0;
+  }
+  const q = qs[practiceOrder[currentQuestionIndex]];
   const letters = ['A','B','C','D','E','F'];
   const badgeClass = currentSubject;
   const badgeLabels = { math:'📐 Math', science:'🔬 Science', logic:'🧩 Logic', reading:'📖 Reading', vocab:'🔤 Vocab', tj:'🎓 TJ', acl:'🏫 ACL' };
@@ -1202,7 +1311,7 @@ function renderQuestion() {
     <div class="question-card">
       <div class="q-meta">
         <span class="q-badge ${badgeClass}">${badgeLabels[currentSubject]}</span>
-        <span class="q-number">Question ${(currentQuestionIndex % qs.length) + 1} of ${qs.length}</span>
+        <span class="q-number">Question ${currentQuestionIndex + 1} of ${qs.length}</span>
       </div>
       <div class="q-text">${q.q}</div>
       <div class="options" id="options">
@@ -1221,6 +1330,9 @@ function renderQuestion() {
 
 function escHtml(str) { return str.replace(/'/g,"&#39;").replace(/"/g,"&quot;"); }
 
+let practiceSessionCorrect = 0;
+let practiceSessionTotal = 0;
+
 function selectOption(chosen, correct, exp) {
   const btns = document.querySelectorAll('.option-btn');
   btns.forEach((b,i) => {
@@ -1229,17 +1341,38 @@ function selectOption(chosen, correct, exp) {
     else if (i === chosen) b.classList.add('wrong');
   });
   const fb = document.getElementById('feedback');
+
+  const stats = progress.subjectStats[currentSubject];
+  stats.total++;
+  progress.questionsAnswered++;
+  practiceSessionTotal++;
+  logDailyActivity(1);
+
   if (chosen === correct) {
     fb.className = 'feedback-box correct active';
     fb.innerHTML = '✅ ' + dec(exp);
     practiceCorrect++;
+    stats.correct++;
+    progress.correctAnswers++;
+    progress.points += 10;
+    practiceSessionCorrect++;
     toast('Correct! +10 points', 'success');
-    updateKPI();
   } else {
     fb.className = 'feedback-box wrong active';
     fb.innerHTML = '❌ Not quite. ' + dec(exp);
   }
   practiceTotal++;
+
+  if (practiceSessionTotal >= 10) {
+    const icon = currentSubject === 'tj' ? '🎓' : '🏫';
+    const bg = currentSubject === 'tj' ? 'var(--blue-light)' : 'var(--green-light)';
+    logActivity(icon, bg, (currentSubject === 'tj' ? 'TJ' : 'ACL') + ' Practice', `${practiceSessionCorrect}/${practiceSessionTotal}`);
+    practiceSessionCorrect = 0;
+    practiceSessionTotal = 0;
+  }
+  saveProgress();
+  renderHomeStats();
+
   setTimeout(nextQuestion, 2800);
 }
 
@@ -1248,11 +1381,6 @@ function dec(s) { return s.replace(/&#39;/g,"'").replace(/&quot;/g,'"'); }
 function nextQuestion() {
   currentQuestionIndex++;
   renderQuestion();
-}
-
-function updateKPI() {
-  const el = document.getElementById('kpi-questions');
-  if (el) el.textContent = (parseInt(el.textContent)||247) + 1;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1274,6 +1402,7 @@ async function sendMessage() {
   input.value = '';
   appendMsg('user', text);
   chatHistory.push({ role:'user', content: text });
+  saveChatHistory();
 
   const typingId = appendTyping();
 
@@ -1291,6 +1420,7 @@ async function sendMessage() {
     removeTyping(typingId);
     appendMsg('ai', reply);
     chatHistory.push({ role:'assistant', content: reply });
+    saveChatHistory();
   } catch (err) {
     removeTyping(typingId);
     appendMsg('ai', "I'm having trouble connecting right now. Try refreshing or check your internet connection!");
@@ -1385,9 +1515,21 @@ function selectQuizOption(chosen, correct, exp) {
     else if (i === chosen) b.classList.add('wrong');
   });
   const fb = document.getElementById('quiz-feedback');
-  if (chosen === correct) { quizState.score++; fb.className='feedback-box correct active'; fb.innerHTML='✅ ' + dec(exp); }
+  const subj = quizState.questions[quizState.current].subject;
+  const stats = progress.subjectStats[subj];
+  if (stats) stats.total++;
+  progress.questionsAnswered++;
+  logDailyActivity(1);
+  if (chosen === correct) {
+    quizState.score++;
+    fb.className='feedback-box correct active'; fb.innerHTML='✅ ' + dec(exp);
+    if (stats) stats.correct++;
+    progress.correctAnswers++;
+    progress.points += 10;
+  }
   else { fb.className='feedback-box wrong active'; fb.innerHTML='❌ ' + dec(exp); }
   document.getElementById('quiz-score-label').textContent = `Score: ${quizState.score}`;
+  saveProgress();
   setTimeout(() => { quizState.current++; renderQuizQuestion(); }, 2000);
 }
 
@@ -1409,6 +1551,14 @@ function endTest() {
   const score = quizState ? quizState.score : 0;
   const total = quizState ? quizState.total : 0;
   const pct = total ? Math.round(score/total*100) : 0;
+  if (quizState && total > 0) {
+    const subj = quizState.config.subjects[0];
+    const icon = subj === 'tj' ? '🎓' : '🏫';
+    const bg = subj === 'tj' ? 'var(--blue-light)' : 'var(--green-light)';
+    logActivity(icon, bg, quizState.config.label, `${score}/${total}`);
+    saveProgress();
+    renderHomeStats();
+  }
   document.getElementById('quiz-container').innerHTML = `
     <div class="question-card" style="text-align:center;padding:48px">
       <div style="font-size:64px;margin-bottom:20px">${pct >= 80 ? '🎉' : pct >= 60 ? '💪' : '📚'}</div>
@@ -1433,12 +1583,24 @@ function backToTests() {
 // ═══════════════════════════════════════════════════════
 //  PROGRESS
 // ═══════════════════════════════════════════════════════
+function overallAccuracy() {
+  if (!progress.questionsAnswered) return 0;
+  return Math.round((progress.correctAnswers / progress.questionsAnswered) * 100);
+}
+
+function subjectAccuracy(subj) {
+  const s = progress.subjectStats[subj];
+  if (!s || !s.total) return 0;
+  return Math.round((s.correct / s.total) * 100);
+}
+
 function animateRing() {
+  const pct = overallAccuracy();
   setTimeout(() => {
     const circle = document.getElementById('score-ring-circle');
     if (circle) {
       const circumference = 2 * Math.PI * 60;
-      const offset = circumference * (1 - 0.78);
+      const offset = circumference * (1 - pct / 100);
       circle.style.strokeDasharray = circumference;
       circle.style.strokeDashoffset = offset;
     }
@@ -1451,10 +1613,83 @@ function buildHeatmap() {
   if (!container) return;
   container.innerHTML = '';
   const levels = ['','l1','l2','l3','l4','l5'];
-  for (let i = 0; i < 35; i++) {
+  for (let i = 34; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+    const count = progress.dailyActivity[d] || 0;
+    const level = count === 0 ? '' : levels[Math.min(5, Math.ceil(count / 3))];
     const div = document.createElement('div');
-    div.className = 'heat-cell ' + (Math.random() > 0.3 ? levels[Math.floor(Math.random()*5)+1] : '');
+    div.className = 'heat-cell ' + level;
+    div.title = `${d}: ${count} question${count === 1 ? '' : 's'}`;
     container.appendChild(div);
+  }
+}
+
+function getBoardWithYou() {
+  return LEADERBOARD_DATA
+    .filter(p => !p.isYou)
+    .concat([{ name:(currentUser ? currentUser.name.split(' ')[0] : 'Alex') + ' ★ YOU', school:'Your School', pts:progress.points, badge:'🎖️', isYou:true }])
+    .sort((a, b) => b.pts - a.pts);
+}
+
+function renderHomeStats() {
+  const el = (id) => document.getElementById(id);
+  if (el('kpi-questions')) el('kpi-questions').textContent = progress.questionsAnswered;
+  if (el('kpi-accuracy')) el('kpi-accuracy').textContent = overallAccuracy() + '%';
+  if (el('kpi-hours')) el('kpi-hours').textContent = Math.round(progress.studyMinutes / 60) + 'h';
+  if (el('streak-count')) el('streak-count').textContent = progress.streak + '-day';
+  const rank = getBoardWithYou().findIndex(p => p.isYou) + 1;
+  if (el('kpi-rank')) el('kpi-rank').textContent = rank;
+
+  const activityContainer = el('recent-activity-list');
+  if (activityContainer) {
+    activityContainer.innerHTML = progress.recentActivity.map(a => `
+      <div class="activity-item">
+        <div class="act-icon" style="background:${a.bg}">${a.icon}</div>
+        <div class="act-info"><strong>${a.label}</strong><span>${a.time}</span></div>
+        <div class="act-score">${a.score}</div>
+      </div>`).join('') || '<p style="color:var(--gray-400);font-size:14px">No activity yet — try a practice question or mock test!</p>';
+  }
+
+  const masteryHome = el('subject-mastery-home');
+  if (masteryHome) {
+    masteryHome.innerHTML = `
+      <div class="progress-bar-wrap"><div class="progress-label"><span>🎓 TJ</span><span>${subjectAccuracy('tj')}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${subjectAccuracy('tj')}%;background:var(--blue)"></div></div></div>
+      <div class="progress-bar-wrap"><div class="progress-label"><span>🏫 ACL</span><span>${subjectAccuracy('acl')}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${subjectAccuracy('acl')}%;background:var(--green)"></div></div></div>`;
+  }
+}
+
+function renderProgressStats() {
+  const el = (id) => document.getElementById(id);
+  if (el('progress-accuracy-text')) el('progress-accuracy-text').textContent = overallAccuracy() + '%';
+  if (el('progress-questions-count')) el('progress-questions-count').textContent = `Based on ${progress.questionsAnswered} questions answered`;
+
+  const masteryProgress = el('subject-mastery-progress');
+  if (masteryProgress) {
+    masteryProgress.innerHTML = `
+      <div class="progress-bar-wrap" style="margin-top:12px"><div class="progress-label"><span>🎓 TJ</span><span style="color:var(--blue);font-weight:700">${subjectAccuracy('tj')}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${subjectAccuracy('tj')}%;background:var(--blue)"></div></div></div>
+      <div class="progress-bar-wrap"><div class="progress-label"><span>🏫 ACL</span><span style="color:var(--green);font-weight:700">${subjectAccuracy('acl')}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${subjectAccuracy('acl')}%;background:var(--green)"></div></div></div>`;
+  }
+
+  const focusEl = el('focus-areas');
+  if (focusEl) {
+    const tjAcc = subjectAccuracy('tj'), aclAcc = subjectAccuracy('acl');
+    const hasData = progress.subjectStats.tj.total > 0 || progress.subjectStats.acl.total > 0;
+    if (!hasData) {
+      focusEl.innerHTML = `<div style="background:var(--gray-100);color:var(--gray-600);padding:14px 18px;border-radius:var(--radius);font-size:14px;flex:1;min-width:160px">Answer some TJ or ACL practice questions to see personalized focus areas here.</div>`;
+    } else {
+      const weaker = tjAcc <= aclAcc ? 'tj' : 'acl';
+      const stronger = weaker === 'tj' ? 'acl' : 'tj';
+      const labels = { tj:{ name:'🎓 TJ', pct:tjAcc }, acl:{ name:'🏫 ACL', pct:aclAcc } };
+      focusEl.innerHTML = `
+        <div style="background:var(--orange-light);color:#92400e;padding:14px 18px;border-radius:var(--radius);font-size:14px;flex:1;min-width:160px">
+          <strong style="display:block;margin-bottom:4px">${labels[weaker].name}</strong>
+          Your lower subject at ${labels[weaker].pct}%. Keep practicing here to build it up.
+        </div>
+        <div style="background:var(--green-light);color:#065f46;padding:14px 18px;border-radius:var(--radius);font-size:14px;flex:1;min-width:160px">
+          <strong style="display:block;margin-bottom:4px">${labels[stronger].name}</strong>
+          Strong at ${labels[stronger].pct}%. Push into the harder questions here.
+        </div>`;
+    }
   }
 }
 
@@ -1465,13 +1700,24 @@ function renderLeaderboard() {
   const container = document.getElementById('leaderboard-list');
   if (!container) return;
   const rankIcons = ['🥇','🥈','🥉'];
-  container.innerHTML = LEADERBOARD_DATA.map((p,i) => `
+
+  const board = getBoardWithYou();
+
+  container.innerHTML = board.map((p,i) => `
     <div class="lb-row ${p.isYou ? 'you' : ''}">
       <div class="lb-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${rankIcons[i] || (i+1)}</div>
       <div class="lb-badge">${p.isYou ? '⭐' : ''}</div>
       <div style="flex:1"><div class="lb-name">${p.name}</div><div class="lb-school">${p.school}</div></div>
       <div class="lb-score">${p.pts.toLocaleString()} pts</div>
     </div>`).join('');
+
+  const yourRank = board.findIndex(p => p.isYou) + 1;
+  const rankEl = document.getElementById('lb-your-rank');
+  const ptsEl = document.getElementById('lb-your-points');
+  const streakEl = document.getElementById('lb-your-streak');
+  if (rankEl) rankEl.textContent = '#' + yourRank;
+  if (ptsEl) ptsEl.textContent = progress.points.toLocaleString();
+  if (streakEl) streakEl.textContent = '🔥 ' + progress.streak;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1491,38 +1737,24 @@ function tryDemo() {
 
 // Init
 document.addEventListener('DOMContentLoaded', () => {
-  renderQuestion();
+  const saved = loadUser();
+  if (saved && saved.user) {
+    currentUser = saved.user;
+    currentRole = saved.role || 'student';
+    chatHistory = loadChatHistory();
+    if (chatHistory.length) {
+      const container = document.getElementById('chat-messages');
+      container.innerHTML = chatHistory.map(m => `
+        <div class="msg ${m.role === 'assistant' ? 'ai' : 'user'}">
+          <div class="msg-avatar">${m.role === 'assistant' ? '🤖' : '👤'}</div>
+          <div class="msg-body"><div class="msg-bubble">${formatChatText(m.content)}</div></div>
+        </div>`).join('');
+    }
+    enterDashboard(false);
+  } else {
+    renderQuestion();
+  }
 });
-  function renderLeaderboard() {
-
-    const list = document.getElementById("leaderboard-list");
-
-    if (!list) return;
-
-    list.innerHTML = `
-        <h2 style="margin-bottom:20px;">🏆 Equalizer Leaderboard</h2>
-
-        <div style="background:white;padding:18px;border-radius:12px;margin-bottom:12px;">
-            🥇 Kavin — 2450 XP
-        </div>
-
-        <div style="background:white;padding:18px;border-radius:12px;margin-bottom:12px;">
-            🥈 Sophia — 2230 XP
-        </div>
-
-        <div style="background:white;padding:18px;border-radius:12px;margin-bottom:12px;">
-            🥉 Ethan — 2100 XP
-        </div>
-
-        <div style="background:white;padding:18px;border-radius:12px;margin-bottom:12px;">
-            #4 Olivia — 1950 XP
-        </div>
-
-        <div style="background:white;padding:18px;border-radius:12px;">
-            #5 Noah — 1820 XP
-        </div>
-    `;
-}
 </script>
 </body>
 </html>

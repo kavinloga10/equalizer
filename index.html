@@ -730,42 +730,6 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   <div class="dash-panel" id="panel-tests">
     <div id="tests-list">
       <div class="tests-grid">
-        <div class="test-card" onclick="startTest('mini')">
-          <div class="test-icon">⚡</div>
-          <h3>Quick Check</h3>
-          <p>5 mixed questions across all subjects. Perfect for a daily warm-up.</p>
-          <div class="test-meta"><span class="test-tag">5 questions</span><span class="test-tag">~5 min</span><span class="test-tag">Mixed</span></div>
-        </div>
-        <div class="test-card" onclick="startTest('math')">
-          <div class="test-icon">📐</div>
-          <h3>Math Sprint</h3>
-          <p>Algebra, geometry, and problem-solving. Time yourself under real conditions.</p>
-          <div class="test-meta"><span class="test-tag">10 questions</span><span class="test-tag">15 min</span><span class="test-tag">Math</span></div>
-        </div>
-        <div class="test-card" onclick="startTest('science')">
-          <div class="test-icon">🔬</div>
-          <h3>Science Focus</h3>
-          <p>Life science, physical science, and earth science concepts.</p>
-          <div class="test-meta"><span class="test-tag">10 questions</span><span class="test-tag">15 min</span><span class="test-tag">Science</span></div>
-        </div>
-        <div class="test-card" onclick="startTest('logic')">
-          <div class="test-icon">🧩</div>
-          <h3>Logic & Reasoning</h3>
-          <p>Patterns, analogies, and deductive reasoning challenges.</p>
-          <div class="test-meta"><span class="test-tag">8 questions</span><span class="test-tag">12 min</span><span class="test-tag">Logic</span></div>
-        </div>
-        <div class="test-card" onclick="startTest('full')">
-          <div class="test-icon">🎓</div>
-          <h3>Full Mock Exam</h3>
-          <p>Comprehensive test covering all subjects. Closest to the real thing.</p>
-          <div class="test-meta"><span class="test-tag">40 questions</span><span class="test-tag">60 min</span><span class="test-tag">All subjects</span></div>
-        </div>
-        <div class="test-card" onclick="startTest('vocab')">
-          <div class="test-icon">🔤</div>
-          <h3>Vocabulary Blitz</h3>
-          <p>Word meanings, context clues, and analogies.</p>
-          <div class="test-meta"><span class="test-tag">15 questions</span><span class="test-tag">10 min</span><span class="test-tag">Vocab</span></div>
-        </div>
         <div class="test-card" onclick="startTest('tj')">
           <div class="test-icon">🎓</div>
           <h3>TJ / ACL Critical Thinking</h3>
@@ -1257,12 +1221,6 @@ function removeTyping(id) {
 //  MOCK TESTS
 // ═══════════════════════════════════════════════════════
 const TEST_CONFIGS = {
-  mini:    { label:'Quick Check', subjects:['math','science','logic','reading','vocab'], count:5, time:300 },
-  math:    { label:'Math Sprint', subjects:['math'], count:10, time:900 },
-  science: { label:'Science Focus', subjects:['science'], count:10, time:900 },
-  logic:   { label:'Logic & Reasoning', subjects:['logic'], count:8, time:720 },
-  full:    { label:'Full Mock Exam', subjects:['math','science','logic','reading','vocab'], count:20, time:3600 },
-  vocab:   { label:'Vocabulary Blitz', subjects:['vocab'], count:15, time:600 },
   tj:      { label:'TJ / ACL Critical Thinking', subjects:['tj'], count:63, time:5400 },
 };
 

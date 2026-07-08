@@ -732,9 +732,15 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
       <div class="tests-grid">
         <div class="test-card" onclick="startTest('tj')">
           <div class="test-icon">🎓</div>
-          <h3>TJ / ACL Critical Thinking</h3>
-          <p>Real STEM critical-thinking questions from TJHSST/Academies of Loudoun-style practice tests — math reasoning, logic, spatial visualization, circuits, and data interpretation.</p>
-          <div class="test-meta"><span class="test-tag">63 questions</span><span class="test-tag">90 min</span><span class="test-tag">TJ/ACL Prep</span></div>
+          <h3>TJ Critical Thinking Prep</h3>
+          <p>STEM critical-thinking questions in the style of the TJHSST admissions test — math reasoning, logic, spatial visualization, circuits, and data interpretation.</p>
+          <div class="test-meta"><span class="test-tag">31 questions</span><span class="test-tag">45 min</span><span class="test-tag">TJ Prep</span></div>
+        </div>
+        <div class="test-card" onclick="startTest('acl')">
+          <div class="test-icon">🏫</div>
+          <h3>ACL Critical Thinking Prep</h3>
+          <p>STEM critical-thinking questions in the style of the Academies of Loudoun admissions test — math reasoning, logic, spatial visualization, circuits, and data interpretation.</p>
+          <div class="test-meta"><span class="test-tag">32 questions</span><span class="test-tag">45 min</span><span class="test-tag">ACL Prep</span></div>
         </div>
       </div>
     </div>
@@ -923,6 +929,8 @@ const QUESTIONS = {
     { q:"Two friends had lunch using a two-for-one coupon, plus tax and a fixed 15% tip on the food charges. What was their percentage savings on the whole transaction (compared to paying full price for both meals)?", opts:["30%","40%","50%","Cannot be determined"], ans:2, exp:"Paying for one meal instead of two — with tax and tip scaling proportionally with the food charge — works out to exactly half the total bill either way, so savings = 50%. ✓" },
     { q:"The Eagles finished a baseball season winning 10 more games than they lost. What was their winning percentage?", opts:["70%","65%","60%","Cannot be determined"], ans:3, exp:"Without knowing the total number of games played, a fixed margin of 10 wins over losses doesn't pin down a winning percentage (11-1 and 20-10 both fit 'won 10 more' but give very different percentages). ✓" },
     { q:"Every home in a neighborhood has at least one car. 24 homes own at least one foreign car, 18 own at least one American car, and 4 own both. How many homes are in the neighborhood?", opts:["46","38","22","Cannot be determined"], ans:1, exp:"By inclusion-exclusion, homes with at least one car = 24 + 18 − 4 = 38, and since every home has a car, that's the total. ✓" },
+  ],
+  acl: [
     { q:"In how many ways can five people sit on five chairs around a circular table?", opts:["120","24","5","60","Cannot be determined"], ans:1, exp:"Circular permutations of n people = (n−1)!. For 5 people: 4! = 24. ✓" },
     { q:"If it is 6:00 am in Detroit, it's 3:30 pm in Mumbai. A flight takes 17 hours to Mumbai and leaves Detroit at 2:30 pm on March 10. When does it land in Mumbai?", opts:["March 10 at 11:00 pm","March 11 at 11:00 am","March 11 at 1:00 pm","March 11 at 5:00 pm"], ans:3, exp:"Mumbai is 9.5 hours ahead. Landing Detroit-time = 2:30pm + 17h = 7:30am (Mar 11). Convert to Mumbai time: 7:30am + 9:30 = 5:00pm March 11. ✓" },
     { q:"A contractor was supposed to install concrete letters spelling SUNNY but installed SYNUN by mistake. What is the least number of letter swaps needed to fix it?", opts:["2","3","4","5"], ans:0, exp:"Comparing S-Y-N-U-N to S-U-N-N-Y position by position, the mismatched letters (Y, U, N at positions 2, 4, 5) form a single 3-letter cycle, which needs exactly 2 swaps to correct. ✓" },
@@ -1221,7 +1229,8 @@ function removeTyping(id) {
 //  MOCK TESTS
 // ═══════════════════════════════════════════════════════
 const TEST_CONFIGS = {
-  tj:      { label:'TJ / ACL Critical Thinking', subjects:['tj'], count:63, time:5400 },
+  tj:  { label:'TJ Critical Thinking Prep', subjects:['tj'], count:31, time:2700 },
+  acl: { label:'ACL Critical Thinking Prep', subjects:['acl'], count:32, time:2700 },
 };
 
 function startTest(type) {
@@ -1245,7 +1254,7 @@ function renderQuizQuestion() {
   document.getElementById('quiz-score-label').textContent = `Score: ${quizState.score}`;
   document.getElementById('quiz-progress-fill').style.width = progress + '%';
   const letters = ['A','B','C','D'];
-  const badgeColors = { math:'var(--blue-light)', science:'var(--green-light)', logic:'var(--purple-light)', reading:'var(--orange-light)', vocab:'#fce7f3', tj:'#fef3c7' };
+  const badgeColors = { math:'var(--blue-light)', science:'var(--green-light)', logic:'var(--purple-light)', reading:'var(--orange-light)', vocab:'#fce7f3', tj:'#fef3c7', acl:'#dbeafe' };
   document.getElementById('quiz-container').innerHTML = `
     <div class="question-card">
       <div class="q-meta"><span class="q-badge ${q.subject}" style="background:${badgeColors[q.subject]}">${q.subject.toUpperCase()}</span></div>

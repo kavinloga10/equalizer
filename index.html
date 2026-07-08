@@ -851,6 +851,7 @@ let currentUser = null;
 let currentRole = 'student';
 let currentSubject = 'tj';
 let currentQuestionIndex = 0;
+let currentQuestion = null;
 let practiceCorrect = 0;
 let practiceTotal = 0;
 let quizState = null;
@@ -1303,6 +1304,7 @@ function renderQuestion() {
     currentQuestionIndex = 0;
   }
   const q = qs[practiceOrder[currentQuestionIndex]];
+  currentQuestion = q;
   const letters = ['A','B','C','D','E','F'];
   const badgeClass = currentSubject;
   const badgeLabels = { math:'📐 Math', science:'🔬 Science', logic:'🧩 Logic', reading:'📖 Reading', vocab:'🔤 Vocab', tj:'🎓 TJ', acl:'🏫 ACL' };
@@ -1316,7 +1318,7 @@ function renderQuestion() {
       <div class="q-text">${q.q}</div>
       <div class="options" id="options">
         ${q.opts.map((o,i) => `
-          <button class="option-btn" onclick="selectOption(${i},${q.ans},'${escHtml(q.exp)}')">
+          <button class="option-btn" onclick="selectOption(${i})">
             <span class="option-letter">${letters[i]}</span> ${o}
           </button>
         `).join('')}
@@ -1328,12 +1330,12 @@ function renderQuestion() {
     </div>`;
 }
 
-function escHtml(str) { return str.replace(/'/g,"&#39;").replace(/"/g,"&quot;"); }
-
 let practiceSessionCorrect = 0;
 let practiceSessionTotal = 0;
 
-function selectOption(chosen, correct, exp) {
+function selectOption(chosen) {
+  const correct = currentQuestion.ans;
+  const exp = currentQuestion.exp;
   const btns = document.querySelectorAll('.option-btn');
   btns.forEach((b,i) => {
     b.disabled = true;
@@ -1350,7 +1352,7 @@ function selectOption(chosen, correct, exp) {
 
   if (chosen === correct) {
     fb.className = 'feedback-box correct active';
-    fb.innerHTML = '✅ ' + dec(exp);
+    fb.innerHTML = '✅ ' + exp;
     practiceCorrect++;
     stats.correct++;
     progress.correctAnswers++;
@@ -1359,7 +1361,7 @@ function selectOption(chosen, correct, exp) {
     toast('Correct! +10 points', 'success');
   } else {
     fb.className = 'feedback-box wrong active';
-    fb.innerHTML = '❌ Not quite. ' + dec(exp);
+    fb.innerHTML = '❌ Not quite. ' + exp;
   }
   practiceTotal++;
 
@@ -1375,8 +1377,6 @@ function selectOption(chosen, correct, exp) {
 
   setTimeout(nextQuestion, 2800);
 }
-
-function dec(s) { return s.replace(/&#39;/g,"'").replace(/&quot;/g,'"'); }
 
 function nextQuestion() {
   currentQuestionIndex++;
@@ -1502,32 +1502,34 @@ function renderQuizQuestion() {
       <div class="q-meta"><span class="q-badge ${q.subject}" style="background:${badgeColors[q.subject]}">${q.subject.toUpperCase()}</span></div>
       <div class="q-text">${q.q}</div>
       <div class="options" id="quiz-options">
-        ${q.opts.map((o,i) => `<button class="option-btn" onclick="selectQuizOption(${i},${q.ans},'${escHtml(q.exp)}')">${letters[i]}. ${o}</button>`).join('')}
+        ${q.opts.map((o,i) => `<button class="option-btn" onclick="selectQuizOption(${i})">${letters[i]}. ${o}</button>`).join('')}
       </div>
       <div class="feedback-box" id="quiz-feedback"></div>
     </div>`;
 }
 
-function selectQuizOption(chosen, correct, exp) {
+function selectQuizOption(chosen) {
+  const q = quizState.questions[quizState.current];
+  const correct = q.ans;
+  const exp = q.exp;
   document.querySelectorAll('#quiz-options .option-btn').forEach((b,i) => {
     b.disabled = true;
     if (i === correct) b.classList.add('correct');
     else if (i === chosen) b.classList.add('wrong');
   });
   const fb = document.getElementById('quiz-feedback');
-  const subj = quizState.questions[quizState.current].subject;
-  const stats = progress.subjectStats[subj];
+  const stats = progress.subjectStats[q.subject];
   if (stats) stats.total++;
   progress.questionsAnswered++;
   logDailyActivity(1);
   if (chosen === correct) {
     quizState.score++;
-    fb.className='feedback-box correct active'; fb.innerHTML='✅ ' + dec(exp);
+    fb.className='feedback-box correct active'; fb.innerHTML='✅ ' + exp;
     if (stats) stats.correct++;
     progress.correctAnswers++;
     progress.points += 10;
   }
-  else { fb.className='feedback-box wrong active'; fb.innerHTML='❌ ' + dec(exp); }
+  else { fb.className='feedback-box wrong active'; fb.innerHTML='❌ ' + exp; }
   document.getElementById('quiz-score-label').textContent = `Score: ${quizState.score}`;
   saveProgress();
   setTimeout(() => { quizState.current++; renderQuizQuestion(); }, 2000);

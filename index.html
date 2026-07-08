@@ -742,6 +742,12 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
           <p>STEM critical-thinking questions in the style of the Academies of Loudoun admissions test — math reasoning, logic, spatial visualization, circuits, and data interpretation.</p>
           <div class="test-meta"><span class="test-tag">32 questions</span><span class="test-tag">45 min</span><span class="test-tag">ACL Prep</span></div>
         </div>
+        <div class="test-card" onclick="startWritingTest()">
+          <div class="test-icon">✍️</div>
+          <h3>SPS Writing Practice</h3>
+          <p>Write a real SPS prompt and get instant AI feedback, graded against the actual 0–5 TJ/ACL rubric with specific, actionable comments.</p>
+          <div class="test-meta"><span class="test-tag">13 prompts</span><span class="test-tag">AI-graded</span><span class="test-tag">Writing</span></div>
+        </div>
       </div>
     </div>
     <div id="test-runner" style="display:none;">
@@ -754,6 +760,25 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
         <button class="btn btn-outline" onclick="endTest()" style="margin-left:20px">End test</button>
       </div>
       <div class="quiz-container" id="quiz-container"></div>
+    </div>
+    <div id="writing-runner" style="display:none;max-width:760px;">
+      <div class="quiz-header">
+        <h2 style="font-size:20px;font-weight:700">SPS Writing Practice</h2>
+        <button class="btn btn-outline" onclick="backToTests()" style="margin-left:auto">End practice</button>
+      </div>
+      <div class="question-card" id="writing-prompt-card">
+        <div class="q-meta">
+          <span class="q-badge" style="background:#dbeafe">SPS</span>
+          <span class="q-number" id="writing-category"></span>
+        </div>
+        <div class="q-text" id="writing-prompt-text"></div>
+        <textarea id="writing-response" rows="12" oninput="updateWritingCharCount()" placeholder="Write your response here…" style="width:100%;padding:16px;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;resize:vertical;outline:none;"></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+          <span id="writing-char-count" style="font-size:13px;color:var(--gray-400)">0 characters</span>
+          <button class="btn btn-primary" id="writing-submit-btn" onclick="submitWritingResponse()">Submit for grading</button>
+        </div>
+      </div>
+      <div class="question-card" id="writing-result-card" style="display:none;"></div>
     </div>
   </div>
 
@@ -965,6 +990,94 @@ const QUESTIONS = {
     { q:"Three boxes are labeled 'calculators', 'i-phones', and 'calculators and i-phones' — but all labels are wrong. Which box(es) must you open to correctly relabel all three?", opts:["Box marked 'calculators'","Box marked 'i-phones'","Box marked 'calculators and i-phones'","Any one of the three boxes","Any two of the three boxes"], ans:2, exp:"Since every label is wrong, the box marked 'calculators and i-phones' can't actually be mixed — it must be a single item. Opening just that box reveals its true content, letting you deduce the other two by elimination. ✓" },
   ],
 };
+
+const SPS_PROMPTS = [
+  { category:'ethical global', text:"Should individuals take responsibility for issues and problems that do not affect them directly? Provide and reflect on one example of how you've done such work." },
+  { category:'critical/creative', text:"What STEM topic do you find most compelling to research? Why? Make a case for the importance of this topic to a non-STEM audience." },
+  { category:'collaboration', text:"Recount an experience where you collaborated with others. What did you contribute to the group, and what did this experience teach you about teamwork?" },
+  { category:'ethical global', text:"What does it mean to be an ethical and global citizen? What things have you done that fit this definition?" },
+  { category:'critical/creative', text:"Describe a time where you needed to use creative thinking to solve a problem. What made this approach so effective (or not), and where has it led you so far?" },
+  { category:'goal oriented', text:"Discuss your most important goal. What motivates this goal and how does it help direct the choices you make in life?" },
+  { category:'ethical global, goal oriented', text:"What event in your life has been most significant in shaping your character? Where has this led you so far, and where might it be leading you next?" },
+  { category:'collaborator', text:"Discuss a time where you experienced an issue with teamwork. What would you do differently now to correct this?" },
+  { category:'collaborator', text:"What activity that requires teamwork are you looking forward to next? Why? How does this activity connect to your larger STEM and/or academic interests?" },
+  { category:'ethical global and leadership', text:"If you could undertake one specific project to benefit your community, what would it be and why?" },
+  { category:'communicator', text:"Imagine that you are writing a letter to your local government (board of supervisors, town council, etc) about an issue in your community that you want to bring to their attention. Demonstrate your communication skills by writing that letter." },
+  { category:'communicator', text:"Describe a time where you've used communication to solve a conflict with others. Include both your process for determining the best way to communicate and a description of how you communicated and how others responded." },
+  { category:'communicator', text:"What do you prioritize the most in communicating with others? Provide one example of such communication and reflect on what makes it effective." },
+];
+
+let currentWritingPrompt = null;
+
+function startWritingTest() {
+  document.getElementById('tests-list').style.display = 'none';
+  document.getElementById('test-runner').style.display = 'none';
+  document.getElementById('writing-runner').style.display = 'block';
+  loadRandomWritingPrompt();
+}
+
+function loadRandomWritingPrompt() {
+  currentWritingPrompt = SPS_PROMPTS[Math.floor(Math.random() * SPS_PROMPTS.length)];
+  document.getElementById('writing-category').textContent = currentWritingPrompt.category;
+  document.getElementById('writing-prompt-text').textContent = currentWritingPrompt.text;
+  document.getElementById('writing-response').value = '';
+  document.getElementById('writing-char-count').textContent = '0 characters';
+  document.getElementById('writing-result-card').style.display = 'none';
+  document.getElementById('writing-result-card').innerHTML = '';
+  document.getElementById('writing-prompt-card').style.display = 'block';
+}
+
+function updateWritingCharCount() {
+  const len = document.getElementById('writing-response').value.length;
+  document.getElementById('writing-char-count').textContent = `${len} characters`;
+}
+
+async function submitWritingResponse() {
+  const text = document.getElementById('writing-response').value.trim();
+  if (!text) { toast('Please write a response first.', 'error'); return; }
+
+  const btn = document.getElementById('writing-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Grading...';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/grade-sps`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: currentWritingPrompt.text, response: text }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Grading failed');
+    renderWritingResult(data);
+  } catch (err) {
+    toast("Grading failed. Try again in a moment!", 'error');
+    btn.disabled = false;
+    btn.textContent = 'Submit for grading';
+  }
+}
+
+function renderWritingResult(data) {
+  document.getElementById('writing-prompt-card').style.display = 'none';
+  const card = document.getElementById('writing-result-card');
+  card.style.display = 'block';
+  card.innerHTML = `
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:52px;font-weight:700;color:var(--blue)">${data.score}<span style="font-size:22px;color:var(--gray-400)">/5</span></div>
+      <p style="color:var(--gray-600);max-width:520px;margin:12px auto 0">${formatChatText(data.summary)}</p>
+    </div>
+    <div style="margin-bottom:20px">
+      <h3 style="margin-bottom:10px">✅ Strengths</h3>
+      <ul style="padding-left:20px;line-height:1.8;color:var(--gray-700)">${data.strengths.map(s => `<li>${formatChatText(s)}</li>`).join('')}</ul>
+    </div>
+    <div style="margin-bottom:8px">
+      <h3 style="margin-bottom:10px">📝 Areas to improve</h3>
+      <ul style="padding-left:20px;line-height:1.8;color:var(--gray-700)">${data.improvements.map(s => `<li>${formatChatText(s)}</li>`).join('')}</ul>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:28px;flex-wrap:wrap">
+      <button class="btn btn-primary btn-lg" onclick="loadRandomWritingPrompt()">Try another prompt</button>
+      <button class="btn btn-outline btn-lg" onclick="backToTests()">Back to tests</button>
+    </div>`;
+}
 
 const LEADERBOARD_DATA = [
   { name:"Jordan K.", school:"Loudoun County", pts:2440, badge:"🥇" },
@@ -1315,6 +1428,7 @@ function endTest() {
 function backToTests() {
   document.getElementById('tests-list').style.display = 'block';
   document.getElementById('test-runner').style.display = 'none';
+  document.getElementById('writing-runner').style.display = 'none';
 }
 
 // ═══════════════════════════════════════════════════════

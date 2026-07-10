@@ -833,6 +833,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ═══════════════════════════════════════════════════════
 //  CONFIG
@@ -843,6 +844,12 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 const API_BASE = location.hostname === 'kavinloga10.github.io'
   ? 'https://equalizer-imi3.onrender.com'
   : '';
+
+// Anon/public key — safe to expose in frontend code by design; access is
+// restricted per-user via the Row Level Security policies in supabase/schema.sql.
+const SUPABASE_URL = 'https://xdsrpjsrtwqqppoxwsot.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_jgVEA917RWIrOav8Hcq42w_YwaFTdA7';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ═══════════════════════════════════════════════════════
 //  STATE
@@ -862,10 +869,9 @@ let timerSeconds = 0;
 let chatHistory = [];
 
 // ═══════════════════════════════════════════════════════
-//  PERSISTENCE (localStorage — keeps login + progress across reloads)
+//  PERSISTENCE (Supabase — real accounts + progress, synced across devices.
+//  Chat history stays in localStorage: low-stakes, not worth syncing.)
 // ═══════════════════════════════════════════════════════
-const USER_KEY = 'equalizer_user';
-const PROGRESS_KEY = 'equalizer_progress';
 const CHAT_KEY = 'equalizer_chat';
 
 function defaultProgress() {
@@ -883,21 +889,62 @@ function defaultProgress() {
   };
 }
 
-function loadProgress() {
-  try {
-    const raw = localStorage.getItem(PROGRESS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return Object.assign(defaultProgress(), parsed);
-    }
-  } catch (e) {}
-  return defaultProgress();
+// camelCase (JS) <-> snake_case (SQL) boundary, so every other function keeps
+// using the same progress shape as before regardless of storage backend.
+function progressToRow(p) {
+  return {
+    questions_answered: p.questionsAnswered,
+    correct_answers: p.correctAnswers,
+    study_minutes: p.studyMinutes,
+    streak: p.streak,
+    last_active_date: p.lastActiveDate,
+    points: p.points,
+    subject_stats: p.subjectStats,
+    recent_activity: p.recentActivity,
+    daily_activity: p.dailyActivity,
+    daily_study_minutes: p.dailyStudyMinutes,
+  };
 }
 
-let progress = loadProgress();
+function rowToProgress(row) {
+  return Object.assign(defaultProgress(), {
+    questionsAnswered: row.questions_answered,
+    correctAnswers: row.correct_answers,
+    studyMinutes: Number(row.study_minutes),
+    streak: row.streak,
+    lastActiveDate: row.last_active_date,
+    points: row.points,
+    subjectStats: row.subject_stats,
+    recentActivity: row.recent_activity,
+    dailyActivity: row.daily_activity,
+    dailyStudyMinutes: row.daily_study_minutes,
+  });
+}
 
-function saveProgress() {
-  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch (e) {}
+// Safe placeholder until a session resolves (landing page, logged-out view).
+let progress = defaultProgress();
+
+async function loadProgress(userId) {
+  const { data, error } = await sb.from('progress').select('*').eq('user_id', userId).single();
+  if (error || !data) return defaultProgress();
+  return rowToProgress(data);
+}
+
+async function saveProgress() {
+  if (!currentUser) return;
+  await sb.from('progress').update(progressToRow(progress)).eq('user_id', currentUser.id);
+}
+
+// Resolves the active Supabase session (if any) into currentUser/currentRole/progress.
+async function loadUserSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return false;
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+  if (!profile) return false;
+  currentUser = { id: session.user.id, name: profile.name };
+  currentRole = profile.role || 'student';
+  progress = await loadProgress(session.user.id);
+  return true;
 }
 
 function todayKey() {
@@ -938,22 +985,6 @@ function sumLastNDays(obj, n) {
 function logActivity(icon, bg, label, score) {
   progress.recentActivity.unshift({ icon, bg, label, time:'Just now', score });
   progress.recentActivity = progress.recentActivity.slice(0, 6);
-}
-
-function saveUser() {
-  try { localStorage.setItem(USER_KEY, JSON.stringify({ user: currentUser, role: currentRole })); } catch (e) {}
-}
-
-function loadUser() {
-  try {
-    const raw = localStorage.getItem(USER_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {}
-  return null;
-}
-
-function clearUser() {
-  try { localStorage.removeItem(USER_KEY); } catch (e) {}
 }
 
 function saveChatHistory() {
@@ -1238,20 +1269,33 @@ function showPanel(id, el) {
 // ═══════════════════════════════════════════════════════
 //  AUTH
 // ═══════════════════════════════════════════════════════
-function doLogin() {
+async function doLogin() {
   const email = document.getElementById('login-email').value;
-  if (!email) { toast('Please enter your email.', 'error'); return; }
-  currentUser = { name: email.split('@')[0].replace(/\./g,' '), role: currentRole };
-  saveUser();
+  const password = document.getElementById('login-pw').value;
+  if (!email || !password) { toast('Please enter your email and password.', 'error'); return; }
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) { toast(error.message, 'error'); return; }
+  const loaded = await loadUserSession();
+  if (!loaded) { toast('Signed in, but something went wrong loading your dashboard.', 'error'); return; }
   enterDashboard(true);
 }
 
-function doSignup() {
+async function doSignup() {
   const name = document.getElementById('signup-name').value;
   const email = document.getElementById('signup-email').value;
-  if (!name || !email) { toast('Please fill in all fields.', 'error'); return; }
-  currentUser = { name, role: currentRole };
-  saveUser();
+  const password = document.getElementById('signup-pw').value;
+  const grade = document.getElementById('signup-grade').value;
+  if (!name || !email || !password) { toast('Please fill in all fields.', 'error'); return; }
+  const { data, error } = await sb.auth.signUp({ email, password });
+  if (error) { toast(error.message, 'error'); return; }
+  if (!data.session) { toast('Check your inbox to confirm your email, then sign in.', 'error'); return; }
+  const userId = data.user.id;
+  const { error: profileError } = await sb.from('profiles').insert({ id: userId, name, role: currentRole, grade });
+  if (profileError) { toast(profileError.message, 'error'); return; }
+  const { error: progressError } = await sb.from('progress').insert({ user_id: userId, ...progressToRow(defaultProgress()) });
+  if (progressError) { toast(progressError.message, 'error'); return; }
+  const loaded = await loadUserSession();
+  if (!loaded) { toast('Account created, but something went wrong loading your dashboard. Try signing in.', 'error'); return; }
   enterDashboard(true);
 }
 
@@ -1263,13 +1307,15 @@ function enterDashboard(showToast) {
   touchStreak();
   renderQuestion();
   renderHomeStats();
+  refreshLeaderboard().then(renderHomeStats);
   if (showToast) toast('Welcome back, ' + firstName + '!', 'success');
 }
 
-function doLogout() {
+async function doLogout() {
+  await sb.auth.signOut();
   currentUser = null;
+  progress = defaultProgress();
   chatHistory = [];
-  clearUser();
   try { localStorage.removeItem(CHAT_KEY); } catch (e) {}
   document.getElementById('chat-messages').innerHTML = `<div class="msg ai"><div class="msg-avatar">🤖</div><div class="msg-body"><div class="msg-bubble">Hi! I'm your Equalizer tutor. Ask me anything — algebra, chemistry, reading strategies, logic puzzles, vocabulary, you name it. What would you like help with today?</div><div class="msg-time">Just now</div></div></div>`;
   showPage('landing');
@@ -1647,10 +1693,21 @@ function buildHeatmap() {
   }
 }
 
+let leaderboardCache = [];
+
+async function refreshLeaderboard() {
+  const { data } = await sb.from('leaderboard_view').select('*').order('points', { ascending: false });
+  leaderboardCache = data || [];
+}
+
 function getBoardWithYou() {
-  return LEADERBOARD_DATA
-    .filter(p => !p.isYou)
-    .concat([{ name:(currentUser ? currentUser.name.split(' ')[0] : 'Alex') + ' ★ YOU', school:'Your School', pts:progress.points, badge:'🎖️', isYou:true }])
+  const realStudents = leaderboardCache
+    .filter(p => !currentUser || p.user_id !== currentUser.id)
+    .map(p => ({ name: p.name, school: '', pts: p.points, badge: '🎖️' }));
+  const you = { name: (currentUser ? currentUser.name.split(' ')[0] : 'Alex') + ' ★ YOU', school: 'Your School', pts: progress.points, badge: '🎖️', isYou: true };
+  return realStudents
+    .concat(LEADERBOARD_DATA)
+    .concat([you])
     .sort((a, b) => b.pts - a.pts);
 }
 
@@ -1735,11 +1792,12 @@ function renderProgressStats() {
 // ═══════════════════════════════════════════════════════
 //  LEADERBOARD
 // ═══════════════════════════════════════════════════════
-function renderLeaderboard() {
+async function renderLeaderboard() {
   const container = document.getElementById('leaderboard-list');
   if (!container) return;
   const rankIcons = ['🥇','🥈','🥉'];
 
+  await refreshLeaderboard();
   const board = getBoardWithYou();
 
   container.innerHTML = board.map((p,i) => `
@@ -1775,11 +1833,9 @@ function tryDemo() {
 }
 
 // Init
-document.addEventListener('DOMContentLoaded', () => {
-  const saved = loadUser();
-  if (saved && saved.user) {
-    currentUser = saved.user;
-    currentRole = saved.role || 'student';
+document.addEventListener('DOMContentLoaded', async () => {
+  const hasSession = await loadUserSession();
+  if (hasSession) {
     chatHistory = loadChatHistory();
     if (chatHistory.length) {
       const container = document.getElementById('chat-messages');

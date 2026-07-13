@@ -295,6 +295,26 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .feedback-box.correct { background:var(--green-light); color:#065f46; border:1px solid #a7f3d0; }
 .feedback-box.wrong { background:var(--red-light); color:#7f1d1d; border:1px solid #fca5a5; }
 .feedback-box.active { display:block; }
+.feedback-actions { display:flex; gap:12px; margin-top:16px; }
+
+/* ── ASK TUTOR DRAWER ── */
+.tutor-drawer {
+  position:fixed; top:0; right:0; width:380px; max-width:100vw; height:100vh;
+  background:var(--white); border-left:1px solid var(--gray-200); box-shadow:var(--shadow-lg);
+  display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease;
+  z-index:300;
+}
+.tutor-drawer.open { transform:translateX(0); }
+.tutor-drawer-header {
+  padding:18px 20px; border-bottom:1px solid var(--gray-200);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.tutor-drawer-header h3 { font-size:15px; }
+.tutor-drawer-close {
+  background:none; border:none; cursor:pointer; font-size:18px; color:var(--gray-500);
+  width:32px; height:32px; border-radius:99px; transition:.2s;
+}
+.tutor-drawer-close:hover { background:var(--gray-100); color:var(--gray-900); }
 
 /* ── AI TUTOR ── */
 .tutor-wrap { display:grid; grid-template-columns:1fr 360px; gap:24px; height:calc(100vh - 90px); }
@@ -832,6 +852,18 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 </div><!-- end dashboard -->
 
 <div class="toast" id="toast"></div>
+
+<div class="tutor-drawer" id="tutor-drawer">
+  <div class="tutor-drawer-header">
+    <h3>🤖 Ask Tutor</h3>
+    <button class="tutor-drawer-close" onclick="closeTutorDrawer()" title="Close">✕</button>
+  </div>
+  <div class="chat-messages" id="drawer-chat-messages"></div>
+  <div class="chat-input-bar">
+    <textarea class="chat-input" id="drawer-chat-input" placeholder="Ask about this problem…" rows="1" onkeydown="handleDrawerChatKey(event)"></textarea>
+    <button class="send-btn" onclick="sendDrawerMessage()" title="Send">➤</button>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1426,7 +1458,12 @@ function selectOption(chosen) {
     toast('Correct! +10 points', 'success');
   } else {
     fb.className = 'feedback-box wrong active';
-    fb.innerHTML = '❌ Not quite. ' + exp;
+    fb.innerHTML = `
+      <div>❌ Not quite. ${exp}</div>
+      <div class="feedback-actions">
+        <button class="btn btn-outline" onclick="askTutorAboutQuestion()">🤖 Ask Tutor</button>
+        <button class="btn btn-primary" onclick="nextQuestion()">Next Question →</button>
+      </div>`;
   }
   practiceTotal++;
 
@@ -1440,10 +1477,11 @@ function selectOption(chosen) {
   saveProgress();
   renderHomeStats();
 
-  setTimeout(nextQuestion, 2800);
+  if (chosen === correct) setTimeout(nextQuestion, 2800);
 }
 
 function nextQuestion() {
+  closeTutorDrawer();
   currentQuestionIndex++;
   renderQuestion();
 }
@@ -1499,8 +1537,8 @@ function formatChatText(text) {
     .replace(/\n/g, '<br>');
 }
 
-function appendMsg(role, text) {
-  const container = document.getElementById('chat-messages');
+function appendMsg(role, text, containerId = 'chat-messages') {
+  const container = document.getElementById(containerId);
   const now = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
   const div = document.createElement('div');
   div.className = 'msg ' + role;
@@ -1515,8 +1553,8 @@ function appendMsg(role, text) {
   return div;
 }
 
-function appendTyping() {
-  const container = document.getElementById('chat-messages');
+function appendTyping(containerId = 'chat-messages') {
+  const container = document.getElementById(containerId);
   const id = 'typing-' + Date.now();
   const div = document.createElement('div');
   div.className = 'msg ai';
@@ -1530,6 +1568,73 @@ function appendTyping() {
 function removeTyping(id) {
   const el = document.getElementById(id);
   if (el) el.remove();
+}
+
+// ═══════════════════════════════════════════════════════
+//  ASK TUTOR DRAWER (practice-question help, side panel)
+// ═══════════════════════════════════════════════════════
+let drawerContext = '';
+let drawerMessages = [];
+
+function askTutorAboutQuestion() {
+  const q = currentQuestion;
+  drawerContext = `A student is reviewing this practice problem, which they just answered incorrectly. Here is the problem so you can see it:
+
+Question: ${q.q}
+Answer options: ${q.opts.join(' / ')}
+Correct answer: ${q.opts[q.ans]}
+Explanation: ${q.exp}
+
+Help the student understand their mistake and the underlying concept. Don't just repeat the explanation verbatim — help them reason through it, and answer whatever follow-up questions they have about this specific problem.`;
+  drawerMessages = [];
+  document.getElementById('drawer-chat-messages').innerHTML = `<div class="msg ai"><div class="msg-avatar">🤖</div><div class="msg-body"><div class="msg-bubble">Hi! I can see the problem you're working on — what would you like help with?</div><div class="msg-time">Just now</div></div></div>`;
+  openTutorDrawer();
+}
+
+function openTutorDrawer() {
+  document.getElementById('tutor-drawer').classList.add('open');
+}
+
+function closeTutorDrawer() {
+  document.getElementById('tutor-drawer').classList.remove('open');
+}
+
+function handleDrawerChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendDrawerMessage(); }
+}
+
+async function sendDrawerMessage() {
+  const input = document.getElementById('drawer-chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  appendMsg('user', text, 'drawer-chat-messages');
+  drawerMessages.push({ role: 'user', content: text });
+
+  const typingId = appendTyping('drawer-chat-messages');
+
+  try {
+    const messages = [
+      { role: 'user', content: drawerContext },
+      { role: 'assistant', content: 'Got it, I can see the problem. What would you like help with?' },
+      ...drawerMessages.slice(-10),
+    ];
+
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages })
+    });
+
+    const data = await res.json();
+    const reply = data.reply || "I'm here to help! Could you rephrase your question?";
+    removeTyping(typingId);
+    appendMsg('ai', reply, 'drawer-chat-messages');
+    drawerMessages.push({ role: 'assistant', content: reply });
+  } catch (err) {
+    removeTyping(typingId);
+    appendMsg('ai', "I'm having trouble connecting right now. Try again in a moment!", 'drawer-chat-messages');
+  }
 }
 
 // ═══════════════════════════════════════════════════════

@@ -34,9 +34,33 @@
   --shadow: 0 4px 6px -1px rgba(0,0,0,.08), 0 2px 4px -1px rgba(0,0,0,.04);
   --shadow-md: 0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -2px rgba(0,0,0,.04);
   --shadow-lg: 0 20px 25px -5px rgba(0,0,0,.08), 0 10px 10px -5px rgba(0,0,0,.03);
+  /* Fixed tokens for surfaces that are intentionally always dark (sidebar, toasts,
+     the landing page's dark section) regardless of light/dark theme. */
+  --ink: #111827;
+  --paper: #ffffff;
+  --paper-muted: #9ca3af;
+}
+[data-theme="dark"] {
+  --white: #1a1f2e;
+  --gray-50: #12151f;
+  --gray-100: #1e2433;
+  --gray-200: #2a3142;
+  --gray-300: #3a4257;
+  --gray-400: #7c8493;
+  --gray-500: #9aa1ae;
+  --gray-600: #b0b8c4;
+  --gray-700: #ccd2db;
+  --gray-800: #e2e6ec;
+  --gray-900: #f3f4f6;
+  /* *-light tint vars intentionally NOT overridden here — they pair with hardcoded
+     dark text colors (e.g. #065f46) throughout the app, so keeping them light
+     preserves contrast; they just read as pastel chips against the dark page. */
+  --shadow: 0 4px 6px -1px rgba(0,0,0,.4), 0 2px 4px -1px rgba(0,0,0,.3);
+  --shadow-md: 0 10px 15px -3px rgba(0,0,0,.4), 0 4px 6px -2px rgba(0,0,0,.3);
+  --shadow-lg: 0 20px 25px -5px rgba(0,0,0,.5), 0 10px 10px -5px rgba(0,0,0,.3);
 }
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--gray-900); }
+body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--gray-900); transition:background .2s,color .2s; }
 
 /* ── PAGES ── */
 .page { display:none; min-height:100vh; }
@@ -126,19 +150,19 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .feat-card h3 { font-size:17px; font-weight:600; margin-bottom:8px; }
 .feat-card p { font-size:14px; color:var(--gray-500); line-height:1.7; }
 
-.subjects-section { background:var(--gray-900); padding:80px 64px; text-align:center; }
-.subjects-section .section-title { color:var(--white); }
-.subjects-section .section-sub { color:var(--gray-400); margin:0 auto 48px; }
+.subjects-section { background:var(--ink); padding:80px 64px; text-align:center; }
+.subjects-section .section-title { color:var(--paper); }
+.subjects-section .section-sub { color:var(--paper-muted); margin:0 auto 48px; }
 .subjects-grid { display:flex; justify-content:center; flex-wrap:wrap; gap:16px; }
 .subject-pill {
-  background:rgba(255,255,255,.08); color:var(--white); padding:14px 28px;
+  background:rgba(255,255,255,.08); color:var(--paper); padding:14px 28px;
   border-radius:99px; font-size:15px; font-weight:500; border:1px solid rgba(255,255,255,.15);
   transition:.2s; cursor:pointer;
 }
 .subject-pill:hover { background:var(--blue); border-color:var(--blue); }
 
 .land-footer {
-  background:var(--gray-900); color:var(--gray-400); text-align:center;
+  background:var(--ink); color:var(--paper-muted); text-align:center;
   padding:40px; font-size:14px; border-top:1px solid rgba(255,255,255,.07);
 }
 .land-footer span { color:var(--blue); font-weight:600; }
@@ -181,18 +205,18 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 /* ── DASHBOARD SHELL ── */
 #dashboard { min-height:100vh; }
 .sidebar {
-  width:240px; background:var(--gray-900); padding:28px 0; display:flex;
+  width:240px; background:var(--ink); padding:28px 0; display:flex;
   flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:50;
 }
-.sidebar-logo { font-family:'DM Serif Display',serif; font-size:22px; color:var(--white); padding:0 24px 28px; border-bottom:1px solid rgba(255,255,255,.08); }
+.sidebar-logo { font-family:'DM Serif Display',serif; font-size:22px; color:var(--paper); padding:0 24px 28px; border-bottom:1px solid rgba(255,255,255,.08); }
 .sidebar-nav { flex:1; padding:20px 12px; display:flex; flex-direction:column; gap:4px; }
 .sidebar-item {
   display:flex; align-items:center; gap:12px; padding:11px 14px;
-  border-radius:10px; color:var(--gray-400); font-size:14px; font-weight:500;
+  border-radius:10px; color:var(--paper-muted); font-size:14px; font-weight:500;
   cursor:pointer; transition:.2s; text-decoration:none;
 }
-.sidebar-item:hover, .sidebar-item.active { background:rgba(255,255,255,.08); color:var(--white); }
-.sidebar-item.active { background:var(--blue); color:var(--white); }
+.sidebar-item:hover, .sidebar-item.active { background:rgba(255,255,255,.08); color:var(--paper); }
+.sidebar-item.active { background:var(--blue); color:var(--paper); }
 .sidebar-item .icon { font-size:18px; width:22px; text-align:center; }
 .sidebar-bottom { padding:16px 12px; border-top:1px solid rgba(255,255,255,.08); }
 
@@ -204,6 +228,12 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 }
 .topbar h1 { font-size:20px; font-weight:700; }
 .topbar-right { display:flex; align-items:center; gap:16px; }
+.theme-toggle {
+  width:36px; height:36px; border-radius:99px; border:1px solid var(--gray-200);
+  background:var(--gray-50); cursor:pointer; font-size:16px; display:flex;
+  align-items:center; justify-content:center; transition:.2s;
+}
+.theme-toggle:hover { background:var(--gray-100); }
 .user-chip {
   display:flex; align-items:center; gap:10px; background:var(--gray-50);
   border:1px solid var(--gray-200); padding:7px 14px; border-radius:99px;
@@ -218,6 +248,13 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .greeting { margin-bottom:32px; }
 .greeting h2 { font-size:26px; font-weight:700; margin-bottom:4px; }
 .greeting p { font-size:15px; color:var(--gray-500); }
+.home-banner {
+  padding:14px 20px; border-radius:var(--radius); font-size:14px; font-weight:500;
+  margin-bottom:14px; cursor:default;
+}
+.home-banner.risk { background:var(--orange-light); color:#92400e; }
+.home-banner.countdown { background:var(--blue-light); color:var(--blue-dark); cursor:pointer; }
+.home-banner.countdown-prompt { background:var(--gray-100); color:var(--gray-600); cursor:pointer; }
 .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:32px; }
 .kpi {
   background:var(--white); border-radius:var(--radius-lg); padding:24px;
@@ -246,6 +283,18 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .progress-label { display:flex; justify-content:space-between; font-size:13px; font-weight:500; margin-bottom:6px; }
 .progress-track { height:8px; background:var(--gray-100); border-radius:99px; overflow:hidden; }
 .progress-fill { height:100%; border-radius:99px; transition:.6s; }
+
+/* ── ACHIEVEMENTS ── */
+.badges-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; }
+.badge-item {
+  border:1.5px solid var(--gray-200); border-radius:var(--radius); padding:16px 14px;
+  text-align:center; transition:.2s;
+}
+.badge-item.earned { border-color:var(--blue-light); background:var(--blue-light); }
+.badge-item.locked { opacity:.45; filter:grayscale(1); }
+.badge-item .badge-icon { font-size:30px; margin-bottom:8px; }
+.badge-item .badge-label { font-size:13px; font-weight:700; margin-bottom:4px; }
+.badge-item .badge-desc { font-size:11px; color:var(--gray-500); line-height:1.5; }
 
 /* ── PRACTICE PANEL ── */
 .subject-picker { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:28px; }
@@ -438,14 +487,32 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 
 /* TOASTS */
 .toast {
-  position:fixed; bottom:28px; right:28px; background:var(--gray-900); color:var(--white);
+  position:fixed; bottom:28px; right:28px; background:var(--ink); color:var(--paper);
   padding:14px 22px; border-radius:var(--radius); font-size:14px; font-weight:500;
   box-shadow:var(--shadow-lg); z-index:999; transform:translateY(80px); opacity:0;
-  transition:.3s; max-width:340px;
+  transition:transform .3s, opacity .3s; max-width:340px;
 }
 .toast.show { transform:translateY(0); opacity:1; }
 .toast.success { background:#065f46; }
 .toast.error { background:#7f1d1d; }
+
+/* CELEBRATIONS */
+.celebration-toast {
+  position:fixed; top:28px; left:50%; transform:translate(-50%,-120%);
+  background:var(--white); border:1px solid var(--gray-200); box-shadow:var(--shadow-lg);
+  border-radius:var(--radius-lg); padding:16px 24px; display:flex; align-items:center; gap:14px;
+  z-index:1000; opacity:0; transition:transform .4s ease, opacity .4s ease;
+}
+.celebration-toast.show { transform:translate(-50%,0); opacity:1; }
+.celebration-icon { font-size:36px; }
+.celebration-label { color:var(--blue); font-weight:700; font-size:16px; }
+.confetti-piece {
+  position:fixed; top:-20px; width:9px; height:9px; z-index:999;
+  animation:confetti-fall linear forwards; pointer-events:none;
+}
+@keyframes confetti-fall {
+  to { transform:translateY(110vh) rotate(540deg); opacity:.3; }
+}
 
 /* LOADING */
 .spinner { width:20px; height:20px; border:2px solid rgba(255,255,255,.3); border-top-color:white; border-radius:99px; animation:spin .7s linear infinite; display:inline-block; }
@@ -624,6 +691,18 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
       </select>
     </div>
     <div class="form-group">
+      <label>Target program</label>
+      <select id="signup-target-test">
+        <option value="tj">TJHSST</option>
+        <option value="acl">Academies of Loudoun</option>
+        <option value="both">Both</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Test date <span style="color:var(--gray-400);font-weight:400">(optional)</span></label>
+      <input type="date" id="signup-target-date">
+    </div>
+    <div class="form-group">
       <label>Password</label>
       <input type="password" id="signup-pw" placeholder="Create a password">
     </div>
@@ -654,6 +733,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   <div class="topbar">
     <h1 id="panel-title">Dashboard</h1>
     <div class="topbar-right">
+      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
       <div class="user-chip">
         <div class="avatar-sm">👤</div>
         <span id="user-display-name">Alex J.</span>
@@ -667,6 +747,8 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
       <h2 id="greeting-text">Good morning, Alex! 👋</h2>
       <p>You're on a <strong id="streak-count">0-day</strong> streak. Keep it going!</p>
     </div>
+    <div id="home-banners"></div>
+    <div class="panel-card" id="daily-goal-card" style="margin-bottom:24px"></div>
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-label">Questions answered</div><div class="kpi-value" id="kpi-questions">0</div><div class="kpi-sub" id="kpi-questions-sub">↑ 0 this week</div></div>
       <div class="kpi"><div class="kpi-label">Overall accuracy</div><div class="kpi-value" id="kpi-accuracy">0%</div><div class="kpi-sub" id="kpi-accuracy-sub">Based on 0 questions</div></div>
@@ -690,6 +772,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
     <div class="subject-picker">
       <button class="subj-btn active" onclick="setSubject('tj',this)">🎓 TJ</button>
       <button class="subj-btn" onclick="setSubject('acl',this)">🏫 ACL</button>
+      <button class="subj-btn" onclick="setReviewMode(this)">🔁 Review Mistakes</button>
     </div>
     <div id="question-area">
       <!-- JS renders here -->
@@ -811,7 +894,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
         <p style="font-size:13px;color:var(--gray-500)" id="progress-questions-count">Based on 0 questions answered</p>
       </div>
       <div class="panel-card">
-        <h3>Accuracy by Subject</h3>
+        <h3>Accuracy by Topic</h3>
         <div id="subject-mastery-progress"></div>
       </div>
     </div>
@@ -820,9 +903,13 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
       <div class="heatmap" id="heatmap"></div>
       <p style="font-size:12px;color:var(--gray-400);margin-top:12px">Darker = more questions answered that day</p>
     </div>
-    <div class="panel-card">
+    <div class="panel-card" style="margin-bottom:24px">
       <h3>Recommended Focus Areas</h3>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px" id="focus-areas"></div>
+    </div>
+    <div class="panel-card">
+      <h3 style="margin-bottom:16px">Achievements</h3>
+      <div class="badges-grid" id="badges-grid"></div>
     </div>
   </div>
 
@@ -867,6 +954,27 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// Applied first, before anything else renders, to minimize theme flash.
+(function () {
+  const saved = localStorage.getItem('equalizer_theme');
+  if (saved === 'dark') {
+    document.documentElement.dataset.theme = 'dark';
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('theme-toggle');
+      if (btn) btn.textContent = '☀️';
+    });
+  }
+})();
+
+function toggleTheme() {
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  if (isDark) delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = 'dark';
+  localStorage.setItem('equalizer_theme', isDark ? 'light' : 'dark');
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = isDark ? '🌙' : '☀️';
+}
+
 // ═══════════════════════════════════════════════════════
 //  CONFIG
 // ═══════════════════════════════════════════════════════
@@ -918,6 +1026,13 @@ function defaultProgress() {
     recentActivity: [],
     dailyActivity: {},
     dailyStudyMinutes: {},
+    dailyGoal: 10,
+    missedQuestions: { tj: [], acl: [] },
+    categoryStats: {},
+    mockTestsCompleted: 0,
+    bestMockScore: 0,
+    writingPracticesCompleted: 0,
+    badgesSeen: [],
   };
 }
 
@@ -935,6 +1050,13 @@ function progressToRow(p) {
     recent_activity: p.recentActivity,
     daily_activity: p.dailyActivity,
     daily_study_minutes: p.dailyStudyMinutes,
+    daily_goal: p.dailyGoal,
+    missed_questions: p.missedQuestions,
+    category_stats: p.categoryStats,
+    mock_tests_completed: p.mockTestsCompleted,
+    best_mock_score: p.bestMockScore,
+    writing_practices_completed: p.writingPracticesCompleted,
+    badges_seen: p.badgesSeen,
   };
 }
 
@@ -950,6 +1072,13 @@ function rowToProgress(row) {
     recentActivity: row.recent_activity,
     dailyActivity: row.daily_activity,
     dailyStudyMinutes: row.daily_study_minutes,
+    dailyGoal: row.daily_goal,
+    missedQuestions: row.missed_questions,
+    categoryStats: row.category_stats,
+    mockTestsCompleted: row.mock_tests_completed,
+    bestMockScore: row.best_mock_score,
+    writingPracticesCompleted: row.writing_practices_completed,
+    badgesSeen: row.badges_seen,
   });
 }
 
@@ -973,10 +1102,21 @@ async function loadUserSession() {
   if (!session) return false;
   const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
   if (!profile) return false;
-  currentUser = { id: session.user.id, name: profile.name };
+  currentUser = { id: session.user.id, name: profile.name, targetTest: profile.target_test, targetDate: profile.target_date };
   currentRole = profile.role || 'student';
   progress = await loadProgress(session.user.id);
   return true;
+}
+
+// fields: { target_test, target_date } — snake_case, matches the profiles columns directly.
+async function updateProfile(fields) {
+  if (!currentUser) return;
+  const { error } = await sb.from('profiles').update(fields).eq('id', currentUser.id);
+  if (!error) Object.assign(currentUser, {
+    targetTest: 'target_test' in fields ? fields.target_test : currentUser.targetTest,
+    targetDate: 'target_date' in fields ? fields.target_date : currentUser.targetDate,
+  });
+  return !error;
 }
 
 function todayKey() {
@@ -1017,6 +1157,25 @@ function sumLastNDays(obj, n) {
 function logActivity(icon, bg, label, score) {
   progress.recentActivity.unshift({ icon, bg, label, time:'Just now', score });
   progress.recentActivity = progress.recentActivity.slice(0, 6);
+}
+
+function bumpCategoryStat(cat, wasCorrect) {
+  if (!cat) return;
+  if (!progress.categoryStats[cat]) progress.categoryStats[cat] = { correct: 0, total: 0 };
+  progress.categoryStats[cat].total++;
+  if (wasCorrect) progress.categoryStats[cat].correct++;
+}
+
+// Keeps missedQuestions[subject] in sync with "questions the student is currently
+// still shaky on" — added when missed, removed once answered correctly again.
+function trackMissedQuestion(subject, index, wasCorrect) {
+  const list = progress.missedQuestions[subject];
+  const pos = list.indexOf(index);
+  if (wasCorrect) {
+    if (pos !== -1) list.splice(pos, 1);
+  } else if (pos === -1) {
+    list.push(index);
+  }
 }
 
 function saveChatHistory() {
@@ -1075,71 +1234,71 @@ const QUESTIONS = {
     { q:"What does 'TENACIOUS' mean?", opts:["easily discouraged","holding firm, persistent","generous","forgetful"], ans:1, exp:"Tenacious means holding firmly to something; not giving up easily. A tenacious student never quits! ✓" },
   ],
   tj: [
-    { q:"If x is an integer, which of the following must also be an integer?", opts:["−x","x/2","2/x","√x"], ans:0, exp:"The negative of any integer is always an integer. The other options fail for many integers (e.g. x=3: x/2=1.5, 2/x=0.67, √x isn't whole). ✓" },
-    { q:"In January 2011, the national debt was about 14 trillion dollars and the US population was about 300 million. Someone estimated the debt was about $5,000 per person. How reasonable is this estimate?", opts:["It is too low by a factor of 10","It is too low by a factor of 100","It is too high by a factor of 10","It is too high by a factor of 100"], ans:0, exp:"Actual = 14,000,000,000,000 ÷ 300,000,000 ≈ $46,667 per person. That's about 9-10× more than the $5,000 estimate, so the estimate is too low by roughly a factor of 10. ✓" },
-    { q:"What is the probability that two randomly selected people were born on the same day of the week? Assume all days are equally probable.", opts:["1/7","1/14","1/42","1/49"], ans:0, exp:"The first person's day doesn't matter. The second person just needs to match that day: probability = 1/7. ✓" },
-    { q:"T-shirts are on sale for 20% off. Sonia paid $8.73 for a shirt. Let p represent the regular price. Which equation is correct?", opts:["0.8p = $8.73","$8.73 + 0.2×$8.73 = p","1.2×$8.73 = p","p − 0.2×$8.73 = p"], ans:0, exp:"20% off means she paid 80% of the regular price: 0.8p = $8.73. ✓" },
-    { q:"How many lines of reflective symmetry and centers of rotational symmetry does a (non-rectangular, non-rhombus) parallelogram have?", opts:["2 lines of reflective symmetry and one center of rotational symmetry","0 lines of reflective symmetry and one center of rotational symmetry","4 lines of reflective symmetry and one center of rotational symmetry","2 lines of reflective symmetry and no center of rotational symmetry"], ans:1, exp:"A generic parallelogram has no mirror-symmetry lines, but rotating it 180° about its center maps it onto itself — one center of rotational symmetry. ✓" },
-    { q:"A pattern shows a row of black squares surrounded by a 1-square-thick white border (forming a 3-row rectangle). How many white squares would surround a row of 157 black squares?", opts:["320","324","327","336"], ans:0, exp:"For n black squares, the whole shape is 3 rows × (n+2) columns, all white except the n black squares in the middle row: white = 3(n+2) − n = 2n + 6. For n=157: 2(157)+6 = 320. ✓" },
-    { q:"ADA regulations require wheelchair ramp slope ≤ 1:12 (preferably 1:16–1:20) and max rise of 30 inches. Based on the graph of rise vs. run for ramps B, C, and D, which ramp complies?", opts:["B","C","D","None of these"], ans:0, exp:"Ramp B (~22 ft run, ~1.8 ft rise) gives a slope of about 1:12.2 — within the 1:12 max — and a rise of about 21.6 in, under the 30 in cap. Ramp C is far too steep (~1:7), failing the slope requirement. ✓" },
-    { q:"The speed of sound in dry air at 68°F is 343.2 meters per second. Which expression computes the kilometers traveled by a sound wave in 10 minutes?", opts:["343.2×60×10", "343.2×60×10×(1/1000)", "343.2×(1/60)×10", "343.2×(1/60)×10×(1/1000)"], ans:1, exp:"10 minutes = 600 seconds = 60×10. Meters traveled = 343.2 × 60 × 10. Divide by 1000 to convert to kilometers. ✓" },
-    { q:"On a map, Boston to Detroit is 6 cm and the actual distance is 702 miles. Using the same scale, what map distance is closest to the actual 2,708 miles between Boston and San Francisco?", opts:["21 cm","22 cm","23 cm","25 cm"], ans:2, exp:"Scale: 6 cm / 702 mi. Map distance = 6 × (2708/702) ≈ 23.1 cm, closest to 23 cm. ✓" },
-    { q:"What set of transformations will transform the leftmost L-shaped figure into the rightmost one?", opts:["A 90° clockwise rotation about (2,1) followed by a translation of two units to the right","A translation 3 units up, followed by a reflection about the line y = x","A 90° clockwise rotation about (5,1), followed by a translation of 2 units up","A 90° clockwise rotation about (2,1) followed by a translation of 2 units to the right"], ans:0, exp:"Rotating the shape 90° clockwise about the point (2,1) and then sliding it two units right lands it exactly on the target figure. ✓" },
-    { q:"A study examines the relation between body cameras on police officers and rising deaths of officers in action. Which question is irrelevant to the research?", opts:["Are the body cameras distracting the police officers?","Are there more police officers in the force now than before?","Is smoking weed bad for police?","Are police given proper training on using body cameras in action?"], ans:2, exp:"Whether smoking is 'bad for police' has nothing to do with body cameras or officer deaths in action — it's off-topic. ✓" },
-    { q:"Amy came back from jogging feeling tired and cold. Bianca heard 18% of the town has the flu. Amy asks if she really has the flu. What's the most logical reply?", opts:["You definitely have the flu","Maybe Amy. But, perhaps not","You have an 18% chance of having flu","Let's hope you do not have the flu"], ans:1, exp:"Tiredness and cold could be the flu or something else entirely (exertion, weather). The honest, logical answer acknowledges the uncertainty. ✓" },
-    { q:"If the sum of base (B) and height (H) of a triangle is constant, what must be true for the area to be at its maximum?", opts:["B = H","B = 2H","B = 0.5H","B = 0.3H"], ans:0, exp:"For a fixed sum, the product of two numbers is maximized when they're equal (basic optimization result) — so B = H maximizes Area = ½BH. ✓" },
-    { q:"A city's transportation study found 60 buses, 285 cars, and 387 motorcycles crossing a junction. A pie chart shows Motorcycles=210°, Buses=30°, Cars=120°. Does this pie chart correctly represent the data?", opts:["Yes","No","May be","Cannot be determined"], ans:1, exp:"Total = 732. Expected angles: buses ≈30° (matches), cars ≈285/732×360≈140° (chart shows 120° — wrong), motorcycles ≈387/732×360≈190° (chart shows 210° — wrong). The chart is inaccurate. ✓" },
-    { q:"A table shows buyer percentages for soap brands: A=20%, B=35%, C=30%, D=15%. If shown in a pie chart, what is the sector angle for brand D?", opts:["60°","72°","45°","54°"], ans:3, exp:"Sector angle = percentage × 360°. For D: 0.15 × 360 = 54°. ✓" },
-    { q:"A big cube assembled from 216 unit cubes (6×6×6) is cut at a 45° angle starting from one of its edges. How many unit cubes are cut in the process?", opts:["24","36","48","60","72"], ans:1, exp:"For an n×n×n cube (n=6), a 45° diagonal plane cut starting along one edge slices through n² = 36 unit cubes. ✓" },
-    { q:"A big cube assembled from 125 unit cubes (5×5×5) is cut at a 45° angle starting from one of its corners. How many unit cubes are cut in the process?", opts:["30","25","20","15","10"], ans:1, exp:"For an n×n×n cube (n=5), the diagonal cutting plane passes through n² = 25 unit cubes. ✓" },
-    { q:"If the pattern triangle, square, pentagon, hexagon... continues, what shape does it approach?", opts:["A cube","A point","A circle","Cannot be determined"], ans:2, exp:"As the number of sides of a regular polygon increases without bound, the shape approaches a circle. ✓" },
-    { q:"Amy invested $10,000 in a stock that increases 2% per year. What is the value at the end of the second year?", opts:["$10,240","$10,400","$10,404","$10,440"], ans:2, exp:"Value = $10,000 × 1.02² = $10,000 × 1.0404 = $10,404. ✓" },
-    { q:"John's stock increased 10% in value in year one and lost 20% in year two. What is the net percentage change over the two years?", opts:["6% decrease","8% decrease","10% decrease","12% decrease"], ans:3, exp:"Net factor = 1.10 × 0.80 = 0.88, which is a 12% decrease from the original value. ✓" },
-    { q:"A cube painted red is cut into 125 unit cubes (5×5×5). How many unit cubes have exactly two faces painted red?", opts:["27","36","44","54"], ans:1, exp:"Edge cubes (excluding corners) have exactly 2 painted faces: 12 edges × (n−2) = 12 × 3 = 36 for n=5. ✓" },
-    { q:"A kitchen sink holds 21 gallons. The faucet adds 1 gallon every 20 seconds. Once the sink reaches 18 gallons, an outlet also removes 1 gallon every 40 seconds. Nila turns on the faucet (sink starts empty) and leaves. How many minutes until the sink overflows?", opts:["8","7","6","5.5"], ans:0, exp:"Filling to 18 gal at 3 gal/min takes 6 min. From 18 to 21 gal (3 more gallons), net rate = 3 − 1.5 = 1.5 gal/min, taking 2 more minutes. Total = 6 + 2 = 8 minutes. ✓" },
-    { q:"In a circuit, bulb B1 is wired directly in the main loop with the battery, while bulbs B2 and B3 each sit on their own switch (S1, S2) in parallel branches. Which switch positions make bulb B1 glow?", opts:["Close S1 only","Close S2 only","Close both S1 and S2","All of these"], ans:3, exp:"Since B1's branch has no switch and is always connected to the battery, it glows regardless of what S1 and S2 are doing. ✓" },
-    { q:"A sphere is cut 6 times, all cuts passing through a common axis (like slicing an orange), evenly spaced. What is the greatest number of pieces possible?", opts:["6","8","10","12"], ans:3, exp:"n cuts through a common axis produce 2n pieces (like a pizza cut through the center). For n=6: 2×6 = 12 pieces. ✓" },
-    { q:"Nina worries about being selected for a school concert. Valarie tells her, 'You're one of the best musicians, and everyone who is good gets a chance to perform, so you'll certainly get a chance.' Assuming Valarie's premise about Nina's talent is true, is her conclusion true?", opts:["Cannot be false","Cannot be true","Probably true, but may be false","Probably false, but may be true"], ans:0, exp:"If 'everyone good gets a chance' (universal) and Nina is good, then logically Nina must get a chance — this is a valid syllogism, so the conclusion cannot be false. ✓" },
-    { q:"A hexagonal pool (1 m high) holds 75 cubic meters. A second pool has the same hexagonal shape but with sides twice as long, also 1 m high. How much water does it hold?", opts:["75 cubic meters","150 cubic meters","300 cubic meters","600 cubic meters"], ans:2, exp:"Doubling the side length of a 2D shape quadruples its area. Volume = new area × height = 4 × 75 × 1 = 300 m³. ✓" },
-    { q:"Nuts normally cost $4.99/lb. Gordon wants 3 pounds. Store A: buy 2, get 3rd half price. Store B: 15% off per pound. Store C: 1/4 off of three pounds. Store D: $1 off per pound. Which store is cheapest?", opts:["Store A","Store B","Store C","Store D"], ans:2, exp:"A: 2(4.99)+0.5(4.99) = $12.48. B: 3(4.99)(0.85) = $12.72. C: 3(4.99)(0.75) = $11.23. D: 3(4.99−1) = $11.97. Store C is cheapest. ✓" },
-    { q:"M is a multiple of 26. Which of the following cannot be true?", opts:["M is odd","M is a multiple of 3","M is 26","M is 0"], ans:0, exp:"26 is even, so every multiple of 26 is even — M can never be odd. (M=78 is a multiple of 3, M=26 works, and 0 is a multiple of every integer.) ✓" },
-    { q:"Two friends had lunch using a two-for-one coupon, plus tax and a fixed 15% tip on the food charges. What was their percentage savings on the whole transaction (compared to paying full price for both meals)?", opts:["30%","40%","50%","Cannot be determined"], ans:2, exp:"Paying for one meal instead of two — with tax and tip scaling proportionally with the food charge — works out to exactly half the total bill either way, so savings = 50%. ✓" },
-    { q:"The Eagles finished a baseball season winning 10 more games than they lost. What was their winning percentage?", opts:["70%","65%","60%","Cannot be determined"], ans:3, exp:"Without knowing the total number of games played, a fixed margin of 10 wins over losses doesn't pin down a winning percentage (11-1 and 20-10 both fit 'won 10 more' but give very different percentages). ✓" },
-    { q:"Every home in a neighborhood has at least one car. 24 homes own at least one foreign car, 18 own at least one American car, and 4 own both. How many homes are in the neighborhood?", opts:["46","38","22","Cannot be determined"], ans:1, exp:"By inclusion-exclusion, homes with at least one car = 24 + 18 − 4 = 38, and since every home has a car, that's the total. ✓" },
+    { q:"If x is an integer, which of the following must also be an integer?", opts:["−x","x/2","2/x","√x"], ans:0, exp:"The negative of any integer is always an integer. The other options fail for many integers (e.g. x=3: x/2=1.5, 2/x=0.67, √x isn't whole). ✓", cat:"Math/Quant" },
+    { q:"In January 2011, the national debt was about 14 trillion dollars and the US population was about 300 million. Someone estimated the debt was about $5,000 per person. How reasonable is this estimate?", opts:["It is too low by a factor of 10","It is too low by a factor of 100","It is too high by a factor of 10","It is too high by a factor of 100"], ans:0, exp:"Actual = 14,000,000,000,000 ÷ 300,000,000 ≈ $46,667 per person. That's about 9-10× more than the $5,000 estimate, so the estimate is too low by roughly a factor of 10. ✓", cat:"Math/Quant" },
+    { q:"What is the probability that two randomly selected people were born on the same day of the week? Assume all days are equally probable.", opts:["1/7","1/14","1/42","1/49"], ans:0, exp:"The first person's day doesn't matter. The second person just needs to match that day: probability = 1/7. ✓", cat:"Math/Quant" },
+    { q:"T-shirts are on sale for 20% off. Sonia paid $8.73 for a shirt. Let p represent the regular price. Which equation is correct?", opts:["0.8p = $8.73","$8.73 + 0.2×$8.73 = p","1.2×$8.73 = p","p − 0.2×$8.73 = p"], ans:0, exp:"20% off means she paid 80% of the regular price: 0.8p = $8.73. ✓", cat:"Math/Quant" },
+    { q:"How many lines of reflective symmetry and centers of rotational symmetry does a (non-rectangular, non-rhombus) parallelogram have?", opts:["2 lines of reflective symmetry and one center of rotational symmetry","0 lines of reflective symmetry and one center of rotational symmetry","4 lines of reflective symmetry and one center of rotational symmetry","2 lines of reflective symmetry and no center of rotational symmetry"], ans:1, exp:"A generic parallelogram has no mirror-symmetry lines, but rotating it 180° about its center maps it onto itself — one center of rotational symmetry. ✓", cat:"Spatial/Geometric" },
+    { q:"A pattern shows a row of black squares surrounded by a 1-square-thick white border (forming a 3-row rectangle). How many white squares would surround a row of 157 black squares?", opts:["320","324","327","336"], ans:0, exp:"For n black squares, the whole shape is 3 rows × (n+2) columns, all white except the n black squares in the middle row: white = 3(n+2) − n = 2n + 6. For n=157: 2(157)+6 = 320. ✓", cat:"Math/Quant" },
+    { q:"ADA regulations require wheelchair ramp slope ≤ 1:12 (preferably 1:16–1:20) and max rise of 30 inches. Based on the graph of rise vs. run for ramps B, C, and D, which ramp complies?", opts:["B","C","D","None of these"], ans:0, exp:"Ramp B (~22 ft run, ~1.8 ft rise) gives a slope of about 1:12.2 — within the 1:12 max — and a rise of about 21.6 in, under the 30 in cap. Ramp C is far too steep (~1:7), failing the slope requirement. ✓", cat:"Math/Quant" },
+    { q:"The speed of sound in dry air at 68°F is 343.2 meters per second. Which expression computes the kilometers traveled by a sound wave in 10 minutes?", opts:["343.2×60×10", "343.2×60×10×(1/1000)", "343.2×(1/60)×10", "343.2×(1/60)×10×(1/1000)"], ans:1, exp:"10 minutes = 600 seconds = 60×10. Meters traveled = 343.2 × 60 × 10. Divide by 1000 to convert to kilometers. ✓", cat:"Math/Quant" },
+    { q:"On a map, Boston to Detroit is 6 cm and the actual distance is 702 miles. Using the same scale, what map distance is closest to the actual 2,708 miles between Boston and San Francisco?", opts:["21 cm","22 cm","23 cm","25 cm"], ans:2, exp:"Scale: 6 cm / 702 mi. Map distance = 6 × (2708/702) ≈ 23.1 cm, closest to 23 cm. ✓", cat:"Math/Quant" },
+    { q:"What set of transformations will transform the leftmost L-shaped figure into the rightmost one?", opts:["A 90° clockwise rotation about (2,1) followed by a translation of two units to the right","A translation 3 units up, followed by a reflection about the line y = x","A 90° clockwise rotation about (5,1), followed by a translation of 2 units up","A 90° clockwise rotation about (2,1) followed by a translation of 2 units to the right"], ans:0, exp:"Rotating the shape 90° clockwise about the point (2,1) and then sliding it two units right lands it exactly on the target figure. ✓", cat:"Spatial/Geometric" },
+    { q:"A study examines the relation between body cameras on police officers and rising deaths of officers in action. Which question is irrelevant to the research?", opts:["Are the body cameras distracting the police officers?","Are there more police officers in the force now than before?","Is smoking weed bad for police?","Are police given proper training on using body cameras in action?"], ans:2, exp:"Whether smoking is 'bad for police' has nothing to do with body cameras or officer deaths in action — it's off-topic. ✓", cat:"Logic/Reasoning" },
+    { q:"Amy came back from jogging feeling tired and cold. Bianca heard 18% of the town has the flu. Amy asks if she really has the flu. What's the most logical reply?", opts:["You definitely have the flu","Maybe Amy. But, perhaps not","You have an 18% chance of having flu","Let's hope you do not have the flu"], ans:1, exp:"Tiredness and cold could be the flu or something else entirely (exertion, weather). The honest, logical answer acknowledges the uncertainty. ✓", cat:"Logic/Reasoning" },
+    { q:"If the sum of base (B) and height (H) of a triangle is constant, what must be true for the area to be at its maximum?", opts:["B = H","B = 2H","B = 0.5H","B = 0.3H"], ans:0, exp:"For a fixed sum, the product of two numbers is maximized when they're equal (basic optimization result) — so B = H maximizes Area = ½BH. ✓", cat:"Math/Quant" },
+    { q:"A city's transportation study found 60 buses, 285 cars, and 387 motorcycles crossing a junction. A pie chart shows Motorcycles=210°, Buses=30°, Cars=120°. Does this pie chart correctly represent the data?", opts:["Yes","No","May be","Cannot be determined"], ans:1, exp:"Total = 732. Expected angles: buses ≈30° (matches), cars ≈285/732×360≈140° (chart shows 120° — wrong), motorcycles ≈387/732×360≈190° (chart shows 210° — wrong). The chart is inaccurate. ✓", cat:"Math/Quant" },
+    { q:"A table shows buyer percentages for soap brands: A=20%, B=35%, C=30%, D=15%. If shown in a pie chart, what is the sector angle for brand D?", opts:["60°","72°","45°","54°"], ans:3, exp:"Sector angle = percentage × 360°. For D: 0.15 × 360 = 54°. ✓", cat:"Math/Quant" },
+    { q:"A big cube assembled from 216 unit cubes (6×6×6) is cut at a 45° angle starting from one of its edges. How many unit cubes are cut in the process?", opts:["24","36","48","60","72"], ans:1, exp:"For an n×n×n cube (n=6), a 45° diagonal plane cut starting along one edge slices through n² = 36 unit cubes. ✓", cat:"Spatial/Geometric" },
+    { q:"A big cube assembled from 125 unit cubes (5×5×5) is cut at a 45° angle starting from one of its corners. How many unit cubes are cut in the process?", opts:["30","25","20","15","10"], ans:1, exp:"For an n×n×n cube (n=5), the diagonal cutting plane passes through n² = 25 unit cubes. ✓", cat:"Spatial/Geometric" },
+    { q:"If the pattern triangle, square, pentagon, hexagon... continues, what shape does it approach?", opts:["A cube","A point","A circle","Cannot be determined"], ans:2, exp:"As the number of sides of a regular polygon increases without bound, the shape approaches a circle. ✓", cat:"Spatial/Geometric" },
+    { q:"Amy invested $10,000 in a stock that increases 2% per year. What is the value at the end of the second year?", opts:["$10,240","$10,400","$10,404","$10,440"], ans:2, exp:"Value = $10,000 × 1.02² = $10,000 × 1.0404 = $10,404. ✓", cat:"Math/Quant" },
+    { q:"John's stock increased 10% in value in year one and lost 20% in year two. What is the net percentage change over the two years?", opts:["6% decrease","8% decrease","10% decrease","12% decrease"], ans:3, exp:"Net factor = 1.10 × 0.80 = 0.88, which is a 12% decrease from the original value. ✓", cat:"Math/Quant" },
+    { q:"A cube painted red is cut into 125 unit cubes (5×5×5). How many unit cubes have exactly two faces painted red?", opts:["27","36","44","54"], ans:1, exp:"Edge cubes (excluding corners) have exactly 2 painted faces: 12 edges × (n−2) = 12 × 3 = 36 for n=5. ✓", cat:"Spatial/Geometric" },
+    { q:"A kitchen sink holds 21 gallons. The faucet adds 1 gallon every 20 seconds. Once the sink reaches 18 gallons, an outlet also removes 1 gallon every 40 seconds. Nila turns on the faucet (sink starts empty) and leaves. How many minutes until the sink overflows?", opts:["8","7","6","5.5"], ans:0, exp:"Filling to 18 gal at 3 gal/min takes 6 min. From 18 to 21 gal (3 more gallons), net rate = 3 − 1.5 = 1.5 gal/min, taking 2 more minutes. Total = 6 + 2 = 8 minutes. ✓", cat:"Math/Quant" },
+    { q:"In a circuit, bulb B1 is wired directly in the main loop with the battery, while bulbs B2 and B3 each sit on their own switch (S1, S2) in parallel branches. Which switch positions make bulb B1 glow?", opts:["Close S1 only","Close S2 only","Close both S1 and S2","All of these"], ans:3, exp:"Since B1's branch has no switch and is always connected to the battery, it glows regardless of what S1 and S2 are doing. ✓", cat:"Logic/Reasoning" },
+    { q:"A sphere is cut 6 times, all cuts passing through a common axis (like slicing an orange), evenly spaced. What is the greatest number of pieces possible?", opts:["6","8","10","12"], ans:3, exp:"n cuts through a common axis produce 2n pieces (like a pizza cut through the center). For n=6: 2×6 = 12 pieces. ✓", cat:"Spatial/Geometric" },
+    { q:"Nina worries about being selected for a school concert. Valarie tells her, 'You're one of the best musicians, and everyone who is good gets a chance to perform, so you'll certainly get a chance.' Assuming Valarie's premise about Nina's talent is true, is her conclusion true?", opts:["Cannot be false","Cannot be true","Probably true, but may be false","Probably false, but may be true"], ans:0, exp:"If 'everyone good gets a chance' (universal) and Nina is good, then logically Nina must get a chance — this is a valid syllogism, so the conclusion cannot be false. ✓", cat:"Logic/Reasoning" },
+    { q:"A hexagonal pool (1 m high) holds 75 cubic meters. A second pool has the same hexagonal shape but with sides twice as long, also 1 m high. How much water does it hold?", opts:["75 cubic meters","150 cubic meters","300 cubic meters","600 cubic meters"], ans:2, exp:"Doubling the side length of a 2D shape quadruples its area. Volume = new area × height = 4 × 75 × 1 = 300 m³. ✓", cat:"Spatial/Geometric" },
+    { q:"Nuts normally cost $4.99/lb. Gordon wants 3 pounds. Store A: buy 2, get 3rd half price. Store B: 15% off per pound. Store C: 1/4 off of three pounds. Store D: $1 off per pound. Which store is cheapest?", opts:["Store A","Store B","Store C","Store D"], ans:2, exp:"A: 2(4.99)+0.5(4.99) = $12.48. B: 3(4.99)(0.85) = $12.72. C: 3(4.99)(0.75) = $11.23. D: 3(4.99−1) = $11.97. Store C is cheapest. ✓", cat:"Math/Quant" },
+    { q:"M is a multiple of 26. Which of the following cannot be true?", opts:["M is odd","M is a multiple of 3","M is 26","M is 0"], ans:0, exp:"26 is even, so every multiple of 26 is even — M can never be odd. (M=78 is a multiple of 3, M=26 works, and 0 is a multiple of every integer.) ✓", cat:"Math/Quant" },
+    { q:"Two friends had lunch using a two-for-one coupon, plus tax and a fixed 15% tip on the food charges. What was their percentage savings on the whole transaction (compared to paying full price for both meals)?", opts:["30%","40%","50%","Cannot be determined"], ans:2, exp:"Paying for one meal instead of two — with tax and tip scaling proportionally with the food charge — works out to exactly half the total bill either way, so savings = 50%. ✓", cat:"Math/Quant" },
+    { q:"The Eagles finished a baseball season winning 10 more games than they lost. What was their winning percentage?", opts:["70%","65%","60%","Cannot be determined"], ans:3, exp:"Without knowing the total number of games played, a fixed margin of 10 wins over losses doesn't pin down a winning percentage (11-1 and 20-10 both fit 'won 10 more' but give very different percentages). ✓", cat:"Math/Quant" },
+    { q:"Every home in a neighborhood has at least one car. 24 homes own at least one foreign car, 18 own at least one American car, and 4 own both. How many homes are in the neighborhood?", opts:["46","38","22","Cannot be determined"], ans:1, exp:"By inclusion-exclusion, homes with at least one car = 24 + 18 − 4 = 38, and since every home has a car, that's the total. ✓", cat:"Math/Quant" },
   ],
   acl: [
-    { q:"In how many ways can five people sit on five chairs around a circular table?", opts:["120","24","5","60","Cannot be determined"], ans:1, exp:"Circular permutations of n people = (n−1)!. For 5 people: 4! = 24. ✓" },
-    { q:"If it is 6:00 am in Detroit, it's 3:30 pm in Mumbai. A flight takes 17 hours to Mumbai and leaves Detroit at 2:30 pm on March 10. When does it land in Mumbai?", opts:["March 10 at 11:00 pm","March 11 at 11:00 am","March 11 at 1:00 pm","March 11 at 5:00 pm"], ans:3, exp:"Mumbai is 9.5 hours ahead. Landing Detroit-time = 2:30pm + 17h = 7:30am (Mar 11). Convert to Mumbai time: 7:30am + 9:30 = 5:00pm March 11. ✓" },
-    { q:"A contractor was supposed to install concrete letters spelling SUNNY but installed SYNUN by mistake. What is the least number of letter swaps needed to fix it?", opts:["2","3","4","5"], ans:0, exp:"Comparing S-Y-N-U-N to S-U-N-N-Y position by position, the mismatched letters (Y, U, N at positions 2, 4, 5) form a single 3-letter cycle, which needs exactly 2 swaps to correct. ✓" },
-    { q:"A restaurant has 12 round tables, seating up to 5 guests each, with at least 1 guest per table. If 25 guests are seated, what's the greatest possible number of tables seated with exactly 5 guests?", opts:["1","2","3","4"], ans:2, exp:"With k tables full at 5 and the rest at minimum 1 guest: 5k + (12−k) ≤ 25. Solving, k=4 needs at least 28 guests (too many); k=3 needs at least 24, leaving 1 extra guest to distribute — it fits. Max is 3. ✓" },
-    { q:"A gym had 42 members at the end of week 1, growing by an average of 'n' members per week. If membership was 97 at the end of week 12, what is n?", opts:["5","6","7","8"], ans:0, exp:"From week 1 to week 12 is 11 weeks of growth: 42 + 11n = 97 → 11n = 55 → n = 5. ✓" },
-    { q:"A steel tube's wall thickness 't' (in mills) must be between 101 and 105, inclusive. Which represents the allowable values of t?", opts:["|t − 103| ≤ 2","|105 − t| ≤ 4","|t − 101| ≤ 4","|103 − t| ≤ 4"], ans:0, exp:"The midpoint of 101 and 105 is 103, and the allowed range extends 2 in each direction: |t − 103| ≤ 2. ✓" },
-    { q:"Researchers want to find the optimum amount of sunlight for a new plant's growth, keeping soil and water constant across 5 pots. What is the best experimental design?", opts:["Conduct the experiment in the Amazon forest only","Conduct the experiment in a glass house with ability to control sunlight","Conduct the experiment in the US but in a natural forest","Any one of the above"], ans:1, exp:"To isolate sunlight as the variable being tested, you need a controlled environment (like a glass house) where sunlight amount can be precisely varied while everything else stays constant. ✓" },
-    { q:"Six people (Abe, Bob, Camila, David, Emily, Frank) were born in 2000–2005, one per year. Abe was born before Bob but after Camila. Bob was born in 2003. Emily and David are both younger than Frank. Which must be true?", opts:["Frank is older than Bob","Emily is younger than David","Abe is older than Frank","Bob is younger than Emily"], ans:0, exp:"Camila and Abe both fall before 2003, using 2 of the 3 years in {2000,2001,2002}. Since Emily and David must both be younger than Frank, Frank can't be stuck with the later years {2004,2005} — he must take the leftover early year, making Frank older than Bob (2003). ✓" },
-    { q:"Five applications of a pesticide failed to rid an area of mites — only the most resistant mites survived each time, and their offspring resisted even more effectively. What conclusion best fits?", opts:["The mites that survived each exposure grew more resistant with each application","The pesticide was formulated to kill the mites in one application","The pesticide application did not coincide with the mating season of the mites","Resistance to the pesticide is passed from parent to offspring"], ans:3, exp:"Offspring of survivors being more resistant than their parents is a direct sign that the resistance trait is heritable — passed from parent to offspring. ✓" },
-    { q:"How many real solutions are there for the equation x⁶ = x²?", opts:["none","one","two","three"], ans:3, exp:"x⁶ − x² = 0 → x²(x⁴−1) = 0 → x²=0 or x⁴=1. Real solutions: x=0, x=1, x=−1 — three solutions. ✓" },
-    { q:"In a circuit, a light bulb is wired so that either of two switches (S1 or S2), in parallel, can complete the loop on its own. Which switch settings make the light glow?", opts:["Close S1 only","Close S2 only","Close both S1 and S2","All the above except opening both"], ans:3, exp:"Since S1 and S2 are parallel paths to the same bulb, closing either one (or both) completes the circuit — only leaving both open keeps the bulb off. ✓" },
-    { q:"A red-painted 6×6×6 cube is cut into unit cubes. How many unit cubes have no more than one face painted red?", opts:["56","112","160","168"], ans:2, exp:"Cubes with 1 painted face: 6(n−2)² = 6(16) = 96. Cubes with 0 painted faces: (n−2)³ = 64. Total with ≤1 face painted: 96 + 64 = 160. ✓" },
-    { q:"What is the smallest number of cuts needed to create 64 unit cubes from a 4×4×4 block of wood, if you're allowed to restack the pieces between cuts?", opts:["12","10","8","6"], ans:3, exp:"Restacking lets each cut double along one dimension; you need ⌈log₂4⌉=2 cuts per dimension × 3 dimensions = 6 cuts total. ✓" },
-    { q:"Of several six-square nets shown, how many fold up into a valid cube?", opts:["None","one","two","three"], ans:3, exp:"Checking each net for valid cube-folding (no overlapping faces, correct hexomino shape), three of the four shown fold into a proper cube. ✓" },
-    { q:"In a gear train, the center gear has 12 teeth and the large wheels on either side have 30 teeth each. If the left wheel spins at 10 rpm, what is the rpm of the right wheel?", opts:["50","25","10","5"], ans:2, exp:"Left wheel (30 teeth, 10 rpm) drives the center gear (12 teeth) at 10×30/12=25 rpm, which drives the right wheel (30 teeth) back down to 25×12/30=10 rpm — matching the left wheel by symmetry. ✓" },
-    { q:"In a gear train A→B→C→D→E where Gear A rotates counter-clockwise, which direction does Gear E move?", opts:["Clockwise","Counter-clockwise","In either direction","Cannot be determined"], ans:1, exp:"Every other gear in a meshed gear train shares the same rotation direction. Gear E, being an even number of steps removed from A along the chain, ends up rotating the same direction as A: counter-clockwise. ✓" },
-    { q:"A wooden sphere is cut 6 times, all the way through a common axis, each cut 30° from the last. How many pieces result?", opts:["16","12","8","6","Cannot be determined"], ans:1, exp:"6 evenly-spaced cuts through a common axis produce 2×6 = 12 wedge-shaped pieces. ✓" },
-    { q:"Two 2-Ohm resistors R1 and R2 are in parallel between terminals a and b. Terminal b is connected to c, and two more 2-Ohm resistors R3, R4 are in series between c and d. What is the net resistance between a and d?", opts:["8 Ohms","6 Ohms","5 Ohms","4 Ohms","3 Ohms"], ans:2, exp:"R1∥R2 = 1 Ohm. R3+R4 in series = 4 Ohms. Since b and c are joined, total = 1 + 4 = 5 Ohms. ✓" },
-    { q:"A circuit combines two AND gates (fed by inverted and non-inverted a, b) into an OR gate — a standard XOR construction. If a=1 and b=0, what is output S?", opts:["0","1","either 0 or 1","cannot be determined"], ans:1, exp:"This circuit computes a XOR b. For a=1, b=0: 1 XOR 0 = 1. ✓" },
-    { q:"A state budget pie chart shows Electricity 9%, Roads 9%, Dairy 6%, Others 17%, Agriculture 59%. What is the sector angle for Roads?", opts:["68.2°","52.7°","45.6°","32.4°"], ans:3, exp:"Sector angle = 9% × 360° = 32.4°. ✓" },
-    { q:"A bar graph shows how students get to school: Bus=5, Taxi=1, Bike=3, Train=2, Car=6, Walk=5. As a pie chart, what angle (to the nearest degree) represents students who walk?", opts:["82°","73°","67°","54°"], ans:0, exp:"Total students = 22. Walk angle = 5/22 × 360° ≈ 81.8°, rounding to 82°. ✓" },
-    { q:"A company's value increased 50% in year one and decreased 50% in year two. What is the net percentage change?", opts:["0%","15% increase","25% decrease","35% decrease"], ans:2, exp:"Net factor = 1.5 × 0.5 = 0.75, a 25% decrease from the original value. ✓" },
-    { q:"Mona drove to her sister's house at 60 mph and returned at 40 mph over the same distance. What was her average speed for the round trip?", opts:["50 mph","48 mph","45 mph","42 mph","None of these"], ans:1, exp:"For equal distances at two speeds, average speed is the harmonic mean: 2(60)(40)/(60+40) = 4800/100 = 48 mph. ✓" },
-    { q:"Briana and Charlie have 5 sons attending 4-year colleges. Ned (eldest) starts this year, 2 years ahead of Kevin (middle). Larry (youngest) starts 3 years behind Kevin. For how many years will at least one son be in college?", opts:["6","7","8","9","11"], ans:3, exp:"Ned enrolls years 0–3, Kevin (starts year 2) enrolls years 2–5, Larry (starts year 5) enrolls years 5–8. Combined, at least one son is enrolled continuously from year 0 through year 8 — 9 years total. ✓" },
-    { q:"A 520-gallon tank starts empty with Valve 1 open (7 gal/20 sec). At 9:10 Valve 3 (drain, 3 gal/10 sec) opens, and at 9:20 Valve 2 (8 gal/15 sec) also opens. Both valves opened at 9:00. At what time is the tank full?", opts:["9:24 am","9:28 am","9:32 am","9:36 am"], ans:1, exp:"9:00–9:10 (Valve 1 only, 21 gal/min): fills to 210 gal. 9:10–9:20 (Valve1−Valve3 = 3 gal/min net): +30 gal → 240 gal. From 9:20 (V1+V2−V3 = 35 gal/min net), remaining 280 gal takes 8 min → full at 9:28 am. ✓" },
-    { q:"In a 3×3 grid with values a, b, 14 / c, 11, d / e, 15, 10 arranged by a hidden numeric pattern, what is b?", opts:["5","7","12","13"], ans:1, exp:"Following the grid's numeric pattern, b works out to 7. ✓" },
-    { q:"Which of four graphs shows an inverse variation relationship between two quantities?", opts:["A straight line through the origin with positive slope","A steep line through the origin in a different quadrant","A curve approaching both axes without touching them (hyperbola)", "A line with negative slope not through the origin"], ans:2, exp:"Inverse variation (xy = k) produces a hyperbola-shaped curve that approaches, but never touches, both axes. ✓" },
-    { q:"How many real solutions does the equation w³ = w⁸ have?", opts:["one","two","three","None","Infinite"], ans:1, exp:"w⁸ − w³ = 0 → w³(w⁵−1) = 0 → w=0 or w⁵=1 (real solution w=1). That's 2 real solutions: w=0 and w=1. ✓" },
-    { q:"Monroeville's population was 1,720 in 2010 and increases 10% every 5 years. What is the approximate net percentage change in population by 2025?", opts:["25%","29%","33%","37%"], ans:2, exp:"2025 is 15 years (3 five-year periods) later: growth factor = 1.10³ = 1.331, a 33.1% increase. ✓" },
-    { q:"What is the maximum number of 3-inch wooden cubes that fit in a 2 ft × 1.5 ft × 1 ft box?", opts:["124","148","175","192"], ans:3, exp:"Convert to inches: 24×18×12. Cubes per dimension: 24/3=8, 18/3=6, 12/3=4. Total = 8×6×4 = 192. ✓" },
-    { q:"What is the maximum number of 8×6×4 inch blocks that fit in a 2 ft × 1.75 ft × 1 ft box?", opts:["25","30","35","40"], ans:1, exp:"Convert box to inches: 24×21×12. Orienting the 8-inch side along the 24-inch side (3 exact), the 6-inch side along the 12-inch side (2 exact), and the 4-inch side along the 21-inch side (5 fit, some waste) gives 3×2×5 = 30 blocks — the best of the tested orientations. ✓" },
-    { q:"Three boxes are labeled 'calculators', 'i-phones', and 'calculators and i-phones' — but all labels are wrong. Which box(es) must you open to correctly relabel all three?", opts:["Box marked 'calculators'","Box marked 'i-phones'","Box marked 'calculators and i-phones'","Any one of the three boxes","Any two of the three boxes"], ans:2, exp:"Since every label is wrong, the box marked 'calculators and i-phones' can't actually be mixed — it must be a single item. Opening just that box reveals its true content, letting you deduce the other two by elimination. ✓" },
+    { q:"In how many ways can five people sit on five chairs around a circular table?", opts:["120","24","5","60","Cannot be determined"], ans:1, exp:"Circular permutations of n people = (n−1)!. For 5 people: 4! = 24. ✓", cat:"Math/Quant" },
+    { q:"If it is 6:00 am in Detroit, it's 3:30 pm in Mumbai. A flight takes 17 hours to Mumbai and leaves Detroit at 2:30 pm on March 10. When does it land in Mumbai?", opts:["March 10 at 11:00 pm","March 11 at 11:00 am","March 11 at 1:00 pm","March 11 at 5:00 pm"], ans:3, exp:"Mumbai is 9.5 hours ahead. Landing Detroit-time = 2:30pm + 17h = 7:30am (Mar 11). Convert to Mumbai time: 7:30am + 9:30 = 5:00pm March 11. ✓", cat:"Math/Quant" },
+    { q:"A contractor was supposed to install concrete letters spelling SUNNY but installed SYNUN by mistake. What is the least number of letter swaps needed to fix it?", opts:["2","3","4","5"], ans:0, exp:"Comparing S-Y-N-U-N to S-U-N-N-Y position by position, the mismatched letters (Y, U, N at positions 2, 4, 5) form a single 3-letter cycle, which needs exactly 2 swaps to correct. ✓", cat:"Logic/Reasoning" },
+    { q:"A restaurant has 12 round tables, seating up to 5 guests each, with at least 1 guest per table. If 25 guests are seated, what's the greatest possible number of tables seated with exactly 5 guests?", opts:["1","2","3","4"], ans:2, exp:"With k tables full at 5 and the rest at minimum 1 guest: 5k + (12−k) ≤ 25. Solving, k=4 needs at least 28 guests (too many); k=3 needs at least 24, leaving 1 extra guest to distribute — it fits. Max is 3. ✓", cat:"Math/Quant" },
+    { q:"A gym had 42 members at the end of week 1, growing by an average of 'n' members per week. If membership was 97 at the end of week 12, what is n?", opts:["5","6","7","8"], ans:0, exp:"From week 1 to week 12 is 11 weeks of growth: 42 + 11n = 97 → 11n = 55 → n = 5. ✓", cat:"Math/Quant" },
+    { q:"A steel tube's wall thickness 't' (in mills) must be between 101 and 105, inclusive. Which represents the allowable values of t?", opts:["|t − 103| ≤ 2","|105 − t| ≤ 4","|t − 101| ≤ 4","|103 − t| ≤ 4"], ans:0, exp:"The midpoint of 101 and 105 is 103, and the allowed range extends 2 in each direction: |t − 103| ≤ 2. ✓", cat:"Math/Quant" },
+    { q:"Researchers want to find the optimum amount of sunlight for a new plant's growth, keeping soil and water constant across 5 pots. What is the best experimental design?", opts:["Conduct the experiment in the Amazon forest only","Conduct the experiment in a glass house with ability to control sunlight","Conduct the experiment in the US but in a natural forest","Any one of the above"], ans:1, exp:"To isolate sunlight as the variable being tested, you need a controlled environment (like a glass house) where sunlight amount can be precisely varied while everything else stays constant. ✓", cat:"Logic/Reasoning" },
+    { q:"Six people (Abe, Bob, Camila, David, Emily, Frank) were born in 2000–2005, one per year. Abe was born before Bob but after Camila. Bob was born in 2003. Emily and David are both younger than Frank. Which must be true?", opts:["Frank is older than Bob","Emily is younger than David","Abe is older than Frank","Bob is younger than Emily"], ans:0, exp:"Camila and Abe both fall before 2003, using 2 of the 3 years in {2000,2001,2002}. Since Emily and David must both be younger than Frank, Frank can't be stuck with the later years {2004,2005} — he must take the leftover early year, making Frank older than Bob (2003). ✓", cat:"Logic/Reasoning" },
+    { q:"Five applications of a pesticide failed to rid an area of mites — only the most resistant mites survived each time, and their offspring resisted even more effectively. What conclusion best fits?", opts:["The mites that survived each exposure grew more resistant with each application","The pesticide was formulated to kill the mites in one application","The pesticide application did not coincide with the mating season of the mites","Resistance to the pesticide is passed from parent to offspring"], ans:3, exp:"Offspring of survivors being more resistant than their parents is a direct sign that the resistance trait is heritable — passed from parent to offspring. ✓", cat:"Logic/Reasoning" },
+    { q:"How many real solutions are there for the equation x⁶ = x²?", opts:["none","one","two","three"], ans:3, exp:"x⁶ − x² = 0 → x²(x⁴−1) = 0 → x²=0 or x⁴=1. Real solutions: x=0, x=1, x=−1 — three solutions. ✓", cat:"Math/Quant" },
+    { q:"In a circuit, a light bulb is wired so that either of two switches (S1 or S2), in parallel, can complete the loop on its own. Which switch settings make the light glow?", opts:["Close S1 only","Close S2 only","Close both S1 and S2","All the above except opening both"], ans:3, exp:"Since S1 and S2 are parallel paths to the same bulb, closing either one (or both) completes the circuit — only leaving both open keeps the bulb off. ✓", cat:"Logic/Reasoning" },
+    { q:"A red-painted 6×6×6 cube is cut into unit cubes. How many unit cubes have no more than one face painted red?", opts:["56","112","160","168"], ans:2, exp:"Cubes with 1 painted face: 6(n−2)² = 6(16) = 96. Cubes with 0 painted faces: (n−2)³ = 64. Total with ≤1 face painted: 96 + 64 = 160. ✓", cat:"Spatial/Geometric" },
+    { q:"What is the smallest number of cuts needed to create 64 unit cubes from a 4×4×4 block of wood, if you're allowed to restack the pieces between cuts?", opts:["12","10","8","6"], ans:3, exp:"Restacking lets each cut double along one dimension; you need ⌈log₂4⌉=2 cuts per dimension × 3 dimensions = 6 cuts total. ✓", cat:"Spatial/Geometric" },
+    { q:"Of several six-square nets shown, how many fold up into a valid cube?", opts:["None","one","two","three"], ans:3, exp:"Checking each net for valid cube-folding (no overlapping faces, correct hexomino shape), three of the four shown fold into a proper cube. ✓", cat:"Spatial/Geometric" },
+    { q:"In a gear train, the center gear has 12 teeth and the large wheels on either side have 30 teeth each. If the left wheel spins at 10 rpm, what is the rpm of the right wheel?", opts:["50","25","10","5"], ans:2, exp:"Left wheel (30 teeth, 10 rpm) drives the center gear (12 teeth) at 10×30/12=25 rpm, which drives the right wheel (30 teeth) back down to 25×12/30=10 rpm — matching the left wheel by symmetry. ✓", cat:"Math/Quant" },
+    { q:"In a gear train A→B→C→D→E where Gear A rotates counter-clockwise, which direction does Gear E move?", opts:["Clockwise","Counter-clockwise","In either direction","Cannot be determined"], ans:1, exp:"Every other gear in a meshed gear train shares the same rotation direction. Gear E, being an even number of steps removed from A along the chain, ends up rotating the same direction as A: counter-clockwise. ✓", cat:"Logic/Reasoning" },
+    { q:"A wooden sphere is cut 6 times, all the way through a common axis, each cut 30° from the last. How many pieces result?", opts:["16","12","8","6","Cannot be determined"], ans:1, exp:"6 evenly-spaced cuts through a common axis produce 2×6 = 12 wedge-shaped pieces. ✓", cat:"Spatial/Geometric" },
+    { q:"Two 2-Ohm resistors R1 and R2 are in parallel between terminals a and b. Terminal b is connected to c, and two more 2-Ohm resistors R3, R4 are in series between c and d. What is the net resistance between a and d?", opts:["8 Ohms","6 Ohms","5 Ohms","4 Ohms","3 Ohms"], ans:2, exp:"R1∥R2 = 1 Ohm. R3+R4 in series = 4 Ohms. Since b and c are joined, total = 1 + 4 = 5 Ohms. ✓", cat:"Math/Quant" },
+    { q:"A circuit combines two AND gates (fed by inverted and non-inverted a, b) into an OR gate — a standard XOR construction. If a=1 and b=0, what is output S?", opts:["0","1","either 0 or 1","cannot be determined"], ans:1, exp:"This circuit computes a XOR b. For a=1, b=0: 1 XOR 0 = 1. ✓", cat:"Logic/Reasoning" },
+    { q:"A state budget pie chart shows Electricity 9%, Roads 9%, Dairy 6%, Others 17%, Agriculture 59%. What is the sector angle for Roads?", opts:["68.2°","52.7°","45.6°","32.4°"], ans:3, exp:"Sector angle = 9% × 360° = 32.4°. ✓", cat:"Math/Quant" },
+    { q:"A bar graph shows how students get to school: Bus=5, Taxi=1, Bike=3, Train=2, Car=6, Walk=5. As a pie chart, what angle (to the nearest degree) represents students who walk?", opts:["82°","73°","67°","54°"], ans:0, exp:"Total students = 22. Walk angle = 5/22 × 360° ≈ 81.8°, rounding to 82°. ✓", cat:"Math/Quant" },
+    { q:"A company's value increased 50% in year one and decreased 50% in year two. What is the net percentage change?", opts:["0%","15% increase","25% decrease","35% decrease"], ans:2, exp:"Net factor = 1.5 × 0.5 = 0.75, a 25% decrease from the original value. ✓", cat:"Math/Quant" },
+    { q:"Mona drove to her sister's house at 60 mph and returned at 40 mph over the same distance. What was her average speed for the round trip?", opts:["50 mph","48 mph","45 mph","42 mph","None of these"], ans:1, exp:"For equal distances at two speeds, average speed is the harmonic mean: 2(60)(40)/(60+40) = 4800/100 = 48 mph. ✓", cat:"Math/Quant" },
+    { q:"Briana and Charlie have 5 sons attending 4-year colleges. Ned (eldest) starts this year, 2 years ahead of Kevin (middle). Larry (youngest) starts 3 years behind Kevin. For how many years will at least one son be in college?", opts:["6","7","8","9","11"], ans:3, exp:"Ned enrolls years 0–3, Kevin (starts year 2) enrolls years 2–5, Larry (starts year 5) enrolls years 5–8. Combined, at least one son is enrolled continuously from year 0 through year 8 — 9 years total. ✓", cat:"Logic/Reasoning" },
+    { q:"A 520-gallon tank starts empty with Valve 1 open (7 gal/20 sec). At 9:10 Valve 3 (drain, 3 gal/10 sec) opens, and at 9:20 Valve 2 (8 gal/15 sec) also opens. Both valves opened at 9:00. At what time is the tank full?", opts:["9:24 am","9:28 am","9:32 am","9:36 am"], ans:1, exp:"9:00–9:10 (Valve 1 only, 21 gal/min): fills to 210 gal. 9:10–9:20 (Valve1−Valve3 = 3 gal/min net): +30 gal → 240 gal. From 9:20 (V1+V2−V3 = 35 gal/min net), remaining 280 gal takes 8 min → full at 9:28 am. ✓", cat:"Math/Quant" },
+    { q:"In a 3×3 grid with values a, b, 14 / c, 11, d / e, 15, 10 arranged by a hidden numeric pattern, what is b?", opts:["5","7","12","13"], ans:1, exp:"Following the grid's numeric pattern, b works out to 7. ✓", cat:"Logic/Reasoning" },
+    { q:"Which of four graphs shows an inverse variation relationship between two quantities?", opts:["A straight line through the origin with positive slope","A steep line through the origin in a different quadrant","A curve approaching both axes without touching them (hyperbola)", "A line with negative slope not through the origin"], ans:2, exp:"Inverse variation (xy = k) produces a hyperbola-shaped curve that approaches, but never touches, both axes. ✓", cat:"Math/Quant" },
+    { q:"How many real solutions does the equation w³ = w⁸ have?", opts:["one","two","three","None","Infinite"], ans:1, exp:"w⁸ − w³ = 0 → w³(w⁵−1) = 0 → w=0 or w⁵=1 (real solution w=1). That's 2 real solutions: w=0 and w=1. ✓", cat:"Math/Quant" },
+    { q:"Monroeville's population was 1,720 in 2010 and increases 10% every 5 years. What is the approximate net percentage change in population by 2025?", opts:["25%","29%","33%","37%"], ans:2, exp:"2025 is 15 years (3 five-year periods) later: growth factor = 1.10³ = 1.331, a 33.1% increase. ✓", cat:"Math/Quant" },
+    { q:"What is the maximum number of 3-inch wooden cubes that fit in a 2 ft × 1.5 ft × 1 ft box?", opts:["124","148","175","192"], ans:3, exp:"Convert to inches: 24×18×12. Cubes per dimension: 24/3=8, 18/3=6, 12/3=4. Total = 8×6×4 = 192. ✓", cat:"Spatial/Geometric" },
+    { q:"What is the maximum number of 8×6×4 inch blocks that fit in a 2 ft × 1.75 ft × 1 ft box?", opts:["25","30","35","40"], ans:1, exp:"Convert box to inches: 24×21×12. Orienting the 8-inch side along the 24-inch side (3 exact), the 6-inch side along the 12-inch side (2 exact), and the 4-inch side along the 21-inch side (5 fit, some waste) gives 3×2×5 = 30 blocks — the best of the tested orientations. ✓", cat:"Spatial/Geometric" },
+    { q:"Three boxes are labeled 'calculators', 'i-phones', and 'calculators and i-phones' — but all labels are wrong. Which box(es) must you open to correctly relabel all three?", opts:["Box marked 'calculators'","Box marked 'i-phones'","Box marked 'calculators and i-phones'","Any one of the three boxes","Any two of the three boxes"], ans:2, exp:"Since every label is wrong, the box marked 'calculators and i-phones' can't actually be mixed — it must be a single item. Opening just that box reveals its true content, letting you deduce the other two by elimination. ✓", cat:"Logic/Reasoning" },
   ],
 };
 
@@ -1212,8 +1371,10 @@ async function submitWritingResponse() {
 function renderWritingResult(data) {
   logActivity('✍️', '#fce7f3', 'SPS Writing Practice', `${data.score}/5`);
   progress.points += Math.round(data.score * 20);
+  progress.writingPracticesCompleted++;
   logDailyActivity(1);
   if (writingPromptShownAt) logStudyMinutes((Date.now() - writingPromptShownAt) / 60000);
+  checkForNewBadges();
   saveProgress();
   renderHomeStats();
 
@@ -1237,6 +1398,63 @@ function renderWritingResult(data) {
       <button class="btn btn-primary btn-lg" onclick="loadRandomWritingPrompt()">Try another prompt</button>
       <button class="btn btn-outline btn-lg" onclick="backToTests()">Back to tests</button>
     </div>`;
+}
+
+// Every badge is derived live from `progress` — nothing about "which badges are
+// earned" is stored separately, only which ones the student has already seen
+// (progress.badgesSeen) so we know when to fire a celebration just once.
+const BADGES = [
+  { id:'first-steps', icon:'🎯', label:'First Steps', description:'Answer your first practice question', check: p => p.questionsAnswered >= 1 },
+  { id:'getting-started', icon:'📈', label:'Getting Started', description:'Answer 25 practice questions', check: p => p.questionsAnswered >= 25 },
+  { id:'century-club', icon:'💯', label:'Century Club', description:'Answer 100 practice questions', check: p => p.questionsAnswered >= 100 },
+  { id:'streak-3', icon:'🔥', label:'3-Day Streak', description:'Practice 3 days in a row', check: p => p.streak >= 3 },
+  { id:'streak-7', icon:'🔥', label:'7-Day Streak', description:'Practice 7 days in a row', check: p => p.streak >= 7 },
+  { id:'streak-30', icon:'🔥', label:'30-Day Streak', description:'Practice 30 days in a row', check: p => p.streak >= 30 },
+  { id:'first-mock', icon:'🏁', label:'First Mock Test', description:'Complete your first mock test', check: p => p.mockTestsCompleted >= 1 },
+  { id:'perfect-score', icon:'⭐', label:'Perfect Score', description:'Score 100% on a mock test', check: p => p.bestMockScore >= 100 },
+  { id:'tj-scholar', icon:'🎓', label:'TJ Scholar', description:'80%+ accuracy across 20+ TJ questions', check: p => p.subjectStats.tj.total >= 20 && (p.subjectStats.tj.correct / p.subjectStats.tj.total) >= 0.8 },
+  { id:'acl-scholar', icon:'🏫', label:'ACL Scholar', description:'80%+ accuracy across 20+ ACL questions', check: p => p.subjectStats.acl.total >= 20 && (p.subjectStats.acl.correct / p.subjectStats.acl.total) >= 0.8 },
+  { id:'first-essay', icon:'✍️', label:'First Essay', description:'Submit your first SPS writing practice', check: p => p.writingPracticesCompleted >= 1 },
+  { id:'point-milestone', icon:'🏆', label:'500 Points', description:'Earn 500 total points', check: p => p.points >= 500 },
+];
+
+function earnedBadges() {
+  return BADGES.filter(b => b.check(progress));
+}
+
+// Call after any action that mutates progress stats — diffs earned badges
+// against what's already been celebrated and fires a celebration for new ones.
+function checkForNewBadges() {
+  const newlyEarned = earnedBadges().filter(b => !progress.badgesSeen.includes(b.id));
+  if (!newlyEarned.length) return;
+  progress.badgesSeen.push(...newlyEarned.map(b => b.id));
+  newlyEarned.forEach(b => celebrate(b));
+}
+
+function celebrate(badge) {
+  launchConfetti();
+  const el = document.createElement('div');
+  el.className = 'celebration-toast';
+  el.innerHTML = `
+    <div class="celebration-icon">${badge.icon}</div>
+    <div><strong>Achievement unlocked!</strong><div class="celebration-label">${badge.label}</div></div>`;
+  document.body.appendChild(el);
+  setTimeout(() => el.classList.add('show'), 10);
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, 4200);
+}
+
+function launchConfetti() {
+  const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  for (let i = 0; i < 40; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDuration = (2 + Math.random() * 1.5) + 's';
+    piece.style.animationDelay = (Math.random() * 0.3) + 's';
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 4000);
+  }
 }
 
 const LEADERBOARD_DATA = [
@@ -1317,12 +1535,14 @@ async function doSignup() {
   const email = document.getElementById('signup-email').value;
   const password = document.getElementById('signup-pw').value;
   const grade = document.getElementById('signup-grade').value;
+  const targetTest = document.getElementById('signup-target-test').value;
+  const targetDate = document.getElementById('signup-target-date').value || null;
   if (!name || !email || !password) { toast('Please fill in all fields.', 'error'); return; }
   const { data, error } = await sb.auth.signUp({ email, password });
   if (error) { toast(error.message, 'error'); return; }
   if (!data.session) { toast('Check your inbox to confirm your email, then sign in.', 'error'); return; }
   const userId = data.user.id;
-  const { error: profileError } = await sb.from('profiles').insert({ id: userId, name, role: currentRole, grade });
+  const { error: profileError } = await sb.from('profiles').insert({ id: userId, name, role: currentRole, grade, target_test: targetTest, target_date: targetDate });
   if (profileError) { toast(profileError.message, 'error'); return; }
   const { error: progressError } = await sb.from('progress').insert({ user_id: userId, ...progressToRow(defaultProgress()) });
   if (progressError) { toast(progressError.message, 'error'); return; }
@@ -1378,6 +1598,7 @@ function shuffleOrder(n) {
 
 function setSubject(subj, btn) {
   currentSubject = subj;
+  reviewMode = false;
   currentQuestionIndex = 0;
   practiceOrder = shuffleOrder(QUESTIONS[subj].length);
   practiceOrderSubject = subj;
@@ -1388,28 +1609,65 @@ function setSubject(subj, btn) {
   renderQuestion();
 }
 
+let reviewMode = false;
+let reviewQueue = [];
+let currentQuestionSubject = null;
+let currentQuestionOrigIndex = null;
+
+function setReviewMode(btn) {
+  reviewMode = true;
+  currentQuestionIndex = 0;
+  reviewQueue = ['tj', 'acl'].flatMap(subj => progress.missedQuestions[subj].map(index => ({ subject: subj, index })));
+  document.querySelectorAll('.subj-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderQuestion();
+}
+
 function renderQuestion() {
   questionShownAt = Date.now();
-  const qs = QUESTIONS[currentSubject];
-  if (practiceOrderSubject !== currentSubject || practiceOrder.length !== qs.length) {
-    practiceOrder = shuffleOrder(qs.length);
-    practiceOrderSubject = currentSubject;
+
+  if (reviewMode) {
+    if (reviewQueue.length === 0) {
+      document.getElementById('question-area').innerHTML = `
+        <div class="question-card" style="text-align:center;padding:48px">
+          <div style="font-size:48px;margin-bottom:16px">🎉</div>
+          <h3 style="margin-bottom:8px">No mistakes to review!</h3>
+          <p style="color:var(--gray-500)">Anything you get wrong in TJ or ACL practice shows up here so you can revisit it.</p>
+        </div>`;
+      currentQuestion = null;
+      return;
+    }
+    if (currentQuestionIndex >= reviewQueue.length) currentQuestionIndex = 0;
+    const entry = reviewQueue[currentQuestionIndex];
+    currentQuestionSubject = entry.subject;
+    currentQuestionOrigIndex = entry.index;
+    currentQuestion = QUESTIONS[entry.subject][entry.index];
+  } else {
+    const qs = QUESTIONS[currentSubject];
+    if (practiceOrderSubject !== currentSubject || practiceOrder.length !== qs.length) {
+      practiceOrder = shuffleOrder(qs.length);
+      practiceOrderSubject = currentSubject;
+    }
+    if (currentQuestionIndex >= practiceOrder.length) {
+      practiceOrder = shuffleOrder(qs.length);
+      currentQuestionIndex = 0;
+    }
+    currentQuestionSubject = currentSubject;
+    currentQuestionOrigIndex = practiceOrder[currentQuestionIndex];
+    currentQuestion = qs[currentQuestionOrigIndex];
   }
-  if (currentQuestionIndex >= practiceOrder.length) {
-    practiceOrder = shuffleOrder(qs.length);
-    currentQuestionIndex = 0;
-  }
-  const q = qs[practiceOrder[currentQuestionIndex]];
-  currentQuestion = q;
+
+  const q = currentQuestion;
   const letters = ['A','B','C','D','E','F'];
-  const badgeClass = currentSubject;
+  const badgeClass = currentQuestionSubject;
   const badgeLabels = { math:'📐 Math', science:'🔬 Science', logic:'🧩 Logic', reading:'📖 Reading', vocab:'🔤 Vocab', tj:'🎓 TJ', acl:'🏫 ACL' };
+  const totalCount = reviewMode ? reviewQueue.length : QUESTIONS[currentSubject].length;
 
   document.getElementById('question-area').innerHTML = `
     <div class="question-card">
       <div class="q-meta">
-        <span class="q-badge ${badgeClass}">${badgeLabels[currentSubject]}</span>
-        <span class="q-number">Question ${currentQuestionIndex + 1} of ${qs.length}</span>
+        <span class="q-badge ${badgeClass}">${badgeLabels[currentQuestionSubject]}</span>
+        <span class="q-number">Question ${currentQuestionIndex + 1} of ${totalCount}</span>
       </div>
       <div class="q-text">${q.q}</div>
       <div class="options" id="options">
@@ -1432,6 +1690,7 @@ let practiceSessionTotal = 0;
 function selectOption(chosen) {
   const correct = currentQuestion.ans;
   const exp = currentQuestion.exp;
+  const wasCorrect = chosen === correct;
   const btns = document.querySelectorAll('.option-btn');
   btns.forEach((b,i) => {
     b.disabled = true;
@@ -1440,14 +1699,16 @@ function selectOption(chosen) {
   });
   const fb = document.getElementById('feedback');
 
-  const stats = progress.subjectStats[currentSubject];
+  const stats = progress.subjectStats[currentQuestionSubject];
   stats.total++;
   progress.questionsAnswered++;
   practiceSessionTotal++;
   logDailyActivity(1);
   if (questionShownAt) logStudyMinutes((Date.now() - questionShownAt) / 60000);
+  bumpCategoryStat(currentQuestion.cat, wasCorrect);
+  trackMissedQuestion(currentQuestionSubject, currentQuestionOrigIndex, wasCorrect);
 
-  if (chosen === correct) {
+  if (wasCorrect) {
     fb.className = 'feedback-box correct active';
     fb.innerHTML = '✅ ' + exp;
     practiceCorrect++;
@@ -1468,16 +1729,18 @@ function selectOption(chosen) {
   practiceTotal++;
 
   if (practiceSessionTotal >= 10) {
-    const icon = currentSubject === 'tj' ? '🎓' : '🏫';
-    const bg = currentSubject === 'tj' ? 'var(--blue-light)' : 'var(--green-light)';
-    logActivity(icon, bg, (currentSubject === 'tj' ? 'TJ' : 'ACL') + ' Practice', `${practiceSessionCorrect}/${practiceSessionTotal}`);
+    const icon = reviewMode ? '🔁' : (currentSubject === 'tj' ? '🎓' : '🏫');
+    const bg = reviewMode ? 'var(--purple-light)' : (currentSubject === 'tj' ? 'var(--blue-light)' : 'var(--green-light)');
+    const label = reviewMode ? 'Review Mistakes' : (currentSubject === 'tj' ? 'TJ' : 'ACL') + ' Practice';
+    logActivity(icon, bg, label, `${practiceSessionCorrect}/${practiceSessionTotal}`);
     practiceSessionCorrect = 0;
     practiceSessionTotal = 0;
   }
+  checkForNewBadges();
   saveProgress();
   renderHomeStats();
 
-  if (chosen === correct) setTimeout(nextQuestion, 2800);
+  if (wasCorrect) setTimeout(nextQuestion, 2800);
 }
 
 function nextQuestion() {
@@ -1648,7 +1911,7 @@ const TEST_CONFIGS = {
 function startTest(type) {
   const cfg = TEST_CONFIGS[type];
   const pool = [];
-  cfg.subjects.forEach(s => { QUESTIONS[s].forEach(q => pool.push({...q, subject:s})); });
+  cfg.subjects.forEach(s => { QUESTIONS[s].forEach((q,i) => pool.push({...q, subject:s, origIndex:i})); });
   const shuffled = pool.sort(() => Math.random() - .5).slice(0, cfg.count);
   quizState = { questions: shuffled, current:0, score:0, total: cfg.count, config: cfg };
   timerSeconds = cfg.time;
@@ -1683,6 +1946,7 @@ function selectQuizOption(chosen) {
   const q = quizState.questions[quizState.current];
   const correct = q.ans;
   const exp = q.exp;
+  const wasCorrect = chosen === correct;
   document.querySelectorAll('#quiz-options .option-btn').forEach((b,i) => {
     b.disabled = true;
     if (i === correct) b.classList.add('correct');
@@ -1694,7 +1958,9 @@ function selectQuizOption(chosen) {
   progress.questionsAnswered++;
   logDailyActivity(1);
   if (questionShownAt) logStudyMinutes((Date.now() - questionShownAt) / 60000);
-  if (chosen === correct) {
+  bumpCategoryStat(q.cat, wasCorrect);
+  trackMissedQuestion(q.subject, q.origIndex, wasCorrect);
+  if (wasCorrect) {
     quizState.score++;
     fb.className='feedback-box correct active'; fb.innerHTML='✅ ' + exp;
     if (stats) stats.correct++;
@@ -1730,6 +1996,9 @@ function endTest() {
     const icon = subj === 'tj' ? '🎓' : '🏫';
     const bg = subj === 'tj' ? 'var(--blue-light)' : 'var(--green-light)';
     logActivity(icon, bg, quizState.config.label, `${score}/${total}`);
+    progress.mockTestsCompleted++;
+    progress.bestMockScore = Math.max(progress.bestMockScore, pct);
+    checkForNewBadges();
     saveProgress();
     renderHomeStats();
   }
@@ -1764,6 +2033,19 @@ function overallAccuracy() {
 
 function subjectAccuracy(subj) {
   const s = progress.subjectStats[subj];
+  if (!s || !s.total) return 0;
+  return Math.round((s.correct / s.total) * 100);
+}
+
+const CATEGORY_COLORS = {
+  'Math/Quant': 'var(--blue)',
+  'Logic/Reasoning': 'var(--purple)',
+  'Spatial/Geometric': 'var(--orange)',
+  'Reading/Verbal': 'var(--green)',
+};
+
+function categoryAccuracy(cat) {
+  const s = progress.categoryStats[cat];
   if (!s || !s.total) return 0;
   return Math.round((s.correct / s.total) * 100);
 }
@@ -1857,6 +2139,69 @@ function renderHomeStats() {
       <div class="progress-bar-wrap"><div class="progress-label"><span>🎓 TJ</span><span>${subjectAccuracy('tj')}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${subjectAccuracy('tj')}%;background:var(--blue)"></div></div></div>
       <div class="progress-bar-wrap"><div class="progress-label"><span>🏫 ACL</span><span>${subjectAccuracy('acl')}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${subjectAccuracy('acl')}%;background:var(--green)"></div></div></div>`;
   }
+
+  renderHomeBanners();
+  renderDailyGoalCard();
+}
+
+function daysUntil(dateStr) {
+  const target = new Date(dateStr + 'T00:00:00');
+  const today = new Date(todayKey() + 'T00:00:00');
+  return Math.round((target - today) / 86400000);
+}
+
+function renderHomeBanners() {
+  const el = document.getElementById('home-banners');
+  if (!el) return;
+  let html = '';
+
+  const todayCount = progress.dailyActivity[todayKey()] || 0;
+  if (progress.streak > 0 && todayCount === 0) {
+    html += `<div class="home-banner risk">🔥 Don't lose your ${progress.streak}-day streak — answer a question today!</div>`;
+  }
+
+  if (currentUser && currentUser.targetDate) {
+    const days = daysUntil(currentUser.targetDate);
+    const testLabel = { tj: 'TJ', acl: 'ACL', both: 'TJ/ACL' }[currentUser.targetTest] || 'your';
+    if (days > 0) html += `<div class="home-banner countdown" onclick="showTargetDatePrompt()">🎯 <strong>${days}</strong> day${days === 1 ? '' : 's'} until your ${testLabel} exam</div>`;
+    else if (days === 0) html += `<div class="home-banner countdown" onclick="showTargetDatePrompt()">🎯 Your ${testLabel} exam is today — good luck!</div>`;
+  } else if (currentUser) {
+    html += `<div class="home-banner countdown-prompt" onclick="showTargetDatePrompt()">🎯 Set your target test date to see a countdown here →</div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+async function showTargetDatePrompt() {
+  const test = prompt('Which test are you preparing for? Type: tj, acl, or both', currentUser.targetTest || 'tj');
+  if (!test || !['tj', 'acl', 'both'].includes(test.trim().toLowerCase())) return;
+  const date = prompt('Test date (YYYY-MM-DD):', currentUser.targetDate || '');
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date.trim())) return;
+  await updateProfile({ target_test: test.trim().toLowerCase(), target_date: date.trim() });
+  renderHomeBanners();
+}
+
+function renderDailyGoalCard() {
+  const el = document.getElementById('daily-goal-card');
+  if (!el) return;
+  const todayCount = progress.dailyActivity[todayKey()] || 0;
+  const goal = progress.dailyGoal;
+  const pct = Math.min(100, Math.round((todayCount / goal) * 100));
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h3 style="margin:0">Today's Goal</h3>
+      <span style="font-size:13px;color:var(--gray-500);cursor:pointer" onclick="editDailyGoal()">${todayCount}/${goal} questions ✏️</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:${pct >= 100 ? 'var(--green)' : 'var(--blue)'}"></div></div>`;
+}
+
+function editDailyGoal() {
+  const input = prompt('Set your daily question goal:', progress.dailyGoal);
+  const n = parseInt(input, 10);
+  if (!n || n < 1) return;
+  progress.dailyGoal = n;
+  saveProgress();
+  renderDailyGoalCard();
 }
 
 function renderProgressStats() {
@@ -1864,33 +2209,45 @@ function renderProgressStats() {
   if (el('progress-accuracy-text')) el('progress-accuracy-text').textContent = overallAccuracy() + '%';
   if (el('progress-questions-count')) el('progress-questions-count').textContent = `Based on ${progress.questionsAnswered} questions answered`;
 
+  const categories = Object.keys(CATEGORY_COLORS).filter(c => progress.categoryStats[c] && progress.categoryStats[c].total > 0);
+
   const masteryProgress = el('subject-mastery-progress');
   if (masteryProgress) {
-    masteryProgress.innerHTML = `
-      <div class="progress-bar-wrap" style="margin-top:12px"><div class="progress-label"><span>🎓 TJ</span><span style="color:var(--blue);font-weight:700">${subjectAccuracy('tj')}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${subjectAccuracy('tj')}%;background:var(--blue)"></div></div></div>
-      <div class="progress-bar-wrap"><div class="progress-label"><span>🏫 ACL</span><span style="color:var(--green);font-weight:700">${subjectAccuracy('acl')}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${subjectAccuracy('acl')}%;background:var(--green)"></div></div></div>`;
+    masteryProgress.innerHTML = categories.length
+      ? categories.map(cat => `
+        <div class="progress-bar-wrap" style="margin-top:12px"><div class="progress-label"><span>${cat}</span><span style="color:${CATEGORY_COLORS[cat]};font-weight:700">${categoryAccuracy(cat)}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${categoryAccuracy(cat)}%;background:${CATEGORY_COLORS[cat]}"></div></div></div>`).join('')
+      : '<p style="color:var(--gray-400);font-size:14px">Answer some practice questions to see your accuracy by topic here.</p>';
   }
 
   const focusEl = el('focus-areas');
   if (focusEl) {
-    const tjAcc = subjectAccuracy('tj'), aclAcc = subjectAccuracy('acl');
-    const hasData = progress.subjectStats.tj.total > 0 || progress.subjectStats.acl.total > 0;
-    if (!hasData) {
+    if (!categories.length) {
       focusEl.innerHTML = `<div style="background:var(--gray-100);color:var(--gray-600);padding:14px 18px;border-radius:var(--radius);font-size:14px;flex:1;min-width:160px">Answer some TJ or ACL practice questions to see personalized focus areas here.</div>`;
     } else {
-      const weaker = tjAcc <= aclAcc ? 'tj' : 'acl';
-      const stronger = weaker === 'tj' ? 'acl' : 'tj';
-      const labels = { tj:{ name:'🎓 TJ', pct:tjAcc }, acl:{ name:'🏫 ACL', pct:aclAcc } };
+      const sorted = [...categories].sort((a, b) => categoryAccuracy(a) - categoryAccuracy(b));
+      const weakest = sorted[0];
+      const strongest = sorted[sorted.length - 1];
       focusEl.innerHTML = `
         <div style="background:var(--orange-light);color:#92400e;padding:14px 18px;border-radius:var(--radius);font-size:14px;flex:1;min-width:160px">
-          <strong style="display:block;margin-bottom:4px">${labels[weaker].name}</strong>
-          Your lower subject at ${labels[weaker].pct}%. Keep practicing here to build it up.
+          <strong style="display:block;margin-bottom:4px">${weakest}</strong>
+          Your weakest topic at ${categoryAccuracy(weakest)}%. Keep practicing here to build it up.
         </div>
         <div style="background:var(--green-light);color:#065f46;padding:14px 18px;border-radius:var(--radius);font-size:14px;flex:1;min-width:160px">
-          <strong style="display:block;margin-bottom:4px">${labels[stronger].name}</strong>
-          Strong at ${labels[stronger].pct}%. Push into the harder questions here.
+          <strong style="display:block;margin-bottom:4px">${strongest}</strong>
+          Strong at ${categoryAccuracy(strongest)}%. Push into the harder questions here.
         </div>`;
     }
+  }
+
+  const badgesEl = el('badges-grid');
+  if (badgesEl) {
+    const earnedIds = new Set(earnedBadges().map(b => b.id));
+    badgesEl.innerHTML = BADGES.map(b => `
+      <div class="badge-item ${earnedIds.has(b.id) ? 'earned' : 'locked'}">
+        <div class="badge-icon">${b.icon}</div>
+        <div class="badge-label">${b.label}</div>
+        <div class="badge-desc">${b.description}</div>
+      </div>`).join('');
   }
 }
 

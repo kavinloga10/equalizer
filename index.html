@@ -723,6 +723,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
     <a class="sidebar-item" onclick="showPanel('tests',this)"><span class="icon">⏱️</span> Mock Tests</a>
     <a class="sidebar-item" onclick="showPanel('progress',this)"><span class="icon">📊</span> Progress</a>
     <a class="sidebar-item" onclick="showPanel('leaderboard',this)"><span class="icon">🏆</span> Leaderboard</a>
+    <a class="sidebar-item" id="admin-nav-item" style="display:none" onclick="showPanel('admin',this)"><span class="icon">⚙️</span> Admin</a>
   </nav>
   <div class="sidebar-bottom">
     <a class="sidebar-item" onclick="doLogout()"><span class="icon">🚪</span> Sign out</a>
@@ -772,7 +773,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
     <div class="subject-picker">
       <button class="subj-btn active" onclick="setSubject('tj',this)">🎓 TJ</button>
       <button class="subj-btn" onclick="setSubject('acl',this)">🏫 ACL</button>
-      <button class="subj-btn" onclick="setReviewMode(this)">🔁 Review Mistakes</button>
+      <button class="subj-btn" onclick="setReviewMode(this)">🔁 Review</button>
     </div>
     <div id="question-area">
       <!-- JS renders here -->
@@ -935,6 +936,63 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
     </div>
   </div>
 
+  <!-- ADMIN -->
+  <div class="dash-panel" id="panel-admin">
+    <div class="panel-card" style="margin-bottom:24px">
+      <h3 id="admin-form-title" style="margin-bottom:20px">Add a Question</h3>
+      <input type="hidden" id="admin-edit-id">
+      <div class="form-group">
+        <label>Subject</label>
+        <select id="admin-subject">
+          <option value="tj">TJ</option>
+          <option value="acl">ACL</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="admin-category">
+          <option>Math/Quant</option>
+          <option>Logic/Reasoning</option>
+          <option>Spatial/Geometric</option>
+          <option>Reading/Verbal</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Question</label>
+        <textarea id="admin-question" rows="3" style="width:100%;padding:11px 14px;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--gray-800);background:var(--white)"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Answer options (mark the correct one)</label>
+        <div id="admin-options"></div>
+        <button class="btn btn-outline" style="margin-top:8px" onclick="addAdminOption()">+ Add option</button>
+      </div>
+      <div class="form-group">
+        <label>Explanation</label>
+        <textarea id="admin-explanation" rows="3" style="width:100%;padding:11px 14px;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--gray-800);background:var(--white)"></textarea>
+      </div>
+      <div style="display:flex;gap:12px">
+        <button class="btn btn-primary" onclick="saveAdminQuestion()" id="admin-save-btn">Add Question</button>
+        <button class="btn btn-outline" onclick="resetAdminForm()" style="display:none" id="admin-cancel-btn">Cancel edit</button>
+      </div>
+    </div>
+    <div class="panel-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+        <h3>All Questions</h3>
+        <select id="admin-filter-subject" onchange="renderAdminList()" style="padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:13px">
+          <option value="">All subjects</option>
+          <option value="tj">TJ</option>
+          <option value="acl">ACL</option>
+        </select>
+      </div>
+      <div id="admin-question-list"></div>
+      <div style="display:flex;justify-content:center;gap:12px;margin-top:20px">
+        <button class="btn btn-outline" onclick="adminChangePage(-1)">← Prev</button>
+        <span id="admin-page-label" style="align-self:center;font-size:13px;color:var(--gray-500)"></span>
+        <button class="btn btn-outline" onclick="adminChangePage(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+
 </div><!-- end main-area -->
 </div><!-- end dashboard -->
 
@@ -1033,6 +1091,7 @@ function defaultProgress() {
     bestMockScore: 0,
     writingPracticesCompleted: 0,
     badgesSeen: [],
+    questionSchedule: {},
   };
 }
 
@@ -1057,6 +1116,7 @@ function progressToRow(p) {
     best_mock_score: p.bestMockScore,
     writing_practices_completed: p.writingPracticesCompleted,
     badges_seen: p.badgesSeen,
+    question_schedule: p.questionSchedule,
   };
 }
 
@@ -1079,6 +1139,7 @@ function rowToProgress(row) {
     bestMockScore: row.best_mock_score,
     writingPracticesCompleted: row.writing_practices_completed,
     badgesSeen: row.badges_seen,
+    questionSchedule: row.question_schedule,
   });
 }
 
@@ -1102,10 +1163,15 @@ async function loadUserSession() {
   if (!session) return false;
   const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
   if (!profile) return false;
-  currentUser = { id: session.user.id, name: profile.name, targetTest: profile.target_test, targetDate: profile.target_date };
+  currentUser = { id: session.user.id, name: profile.name, email: session.user.email, targetTest: profile.target_test, targetDate: profile.target_date };
   currentRole = profile.role || 'student';
   progress = await loadProgress(session.user.id);
   return true;
+}
+
+const ADMIN_EMAIL = 'kavinloga10@gmail.com';
+function isAdmin() {
+  return !!currentUser && currentUser.email === ADMIN_EMAIL;
 }
 
 // fields: { target_test, target_date } — snake_case, matches the profiles columns directly.
@@ -1176,6 +1242,23 @@ function trackMissedQuestion(subject, index, wasCorrect) {
   } else if (pos === -1) {
     list.push(index);
   }
+}
+
+// Spaced repetition: on a correct answer, push the question's next-due date out
+// further each time (capped at 30 days); on a wrong answer, it's due again right away.
+const SPACED_INTERVALS_DAYS = [1, 3, 7, 14, 30];
+function updateQuestionSchedule(id, wasCorrect) {
+  const key = String(id);
+  const entry = progress.questionSchedule[key] || { streak: 0 };
+  if (wasCorrect) {
+    entry.streak = (entry.streak || 0) + 1;
+    const days = SPACED_INTERVALS_DAYS[Math.min(entry.streak - 1, SPACED_INTERVALS_DAYS.length - 1)];
+    entry.dueAt = new Date(Date.now() + days * 86400000).toISOString();
+  } else {
+    entry.streak = 0;
+    entry.dueAt = new Date().toISOString();
+  }
+  progress.questionSchedule[key] = entry;
 }
 
 function saveChatHistory() {
@@ -1249,6 +1332,133 @@ async function loadQuestions() {
   });
   QUESTIONS.tj = grouped.tj;
   QUESTIONS.acl = grouped.acl;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ADMIN (question editor — gated server-side by RLS, see supabase/migrations_v4.sql)
+// ═══════════════════════════════════════════════════════
+let adminOptionCount = 0;
+let adminPage = 0;
+const ADMIN_PAGE_SIZE = 20;
+
+function renderAdminOptions(opts = ['', '', '', ''], correctIndex = 0) {
+  adminOptionCount = opts.length;
+  const el = document.getElementById('admin-options');
+  el.innerHTML = opts.map((val, i) => `
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+      <input type="radio" name="admin-correct" value="${i}" ${i === correctIndex ? 'checked' : ''} style="flex:0 0 auto;width:auto">
+      <input type="text" class="admin-opt-input" data-idx="${i}" value="${val.replace(/"/g, '&quot;')}" style="flex:1;width:auto;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:14px">
+    </div>`).join('');
+}
+
+function addAdminOption() {
+  const inputs = [...document.querySelectorAll('.admin-opt-input')].map(i => i.value);
+  const checked = document.querySelector('input[name="admin-correct"]:checked');
+  inputs.push('');
+  renderAdminOptions(inputs, checked ? Number(checked.value) : 0);
+}
+
+function resetAdminForm() {
+  document.getElementById('admin-edit-id').value = '';
+  document.getElementById('admin-subject').value = 'tj';
+  document.getElementById('admin-category').value = 'Math/Quant';
+  document.getElementById('admin-question').value = '';
+  document.getElementById('admin-explanation').value = '';
+  renderAdminOptions();
+  document.getElementById('admin-form-title').textContent = 'Add a Question';
+  document.getElementById('admin-save-btn').textContent = 'Add Question';
+  document.getElementById('admin-cancel-btn').style.display = 'none';
+}
+
+async function saveAdminQuestion() {
+  const editId = document.getElementById('admin-edit-id').value;
+  const subject = document.getElementById('admin-subject').value;
+  const category = document.getElementById('admin-category').value;
+  const question = document.getElementById('admin-question').value.trim();
+  const explanation = document.getElementById('admin-explanation').value.trim();
+  const options = [...document.querySelectorAll('.admin-opt-input')].map(i => i.value.trim());
+  const checked = document.querySelector('input[name="admin-correct"]:checked');
+  if (!question || !explanation || options.some(o => !o) || !checked) {
+    toast('Fill in the question, all options, the correct answer, and the explanation.', 'error');
+    return;
+  }
+  const row = { subject, category, question, options, answer_index: Number(checked.value), explanation };
+
+  if (editId) {
+    const { data, error } = await sb.from('questions').update(row).eq('id', Number(editId)).select().single();
+    if (error) { toast(error.message, 'error'); return; }
+    ['tj', 'acl'].forEach(s => {
+      const idx = QUESTIONS[s].findIndex(q => q.id === Number(editId));
+      if (idx !== -1) QUESTIONS[s].splice(idx, 1);
+    });
+    QUESTIONS[data.subject].push({ id: data.id, q: data.question, opts: data.options, ans: data.answer_index, exp: data.explanation, cat: data.category });
+    toast('Question updated!', 'success');
+  } else {
+    const { data, error } = await sb.from('questions').insert(row).select().single();
+    if (error) { toast(error.message, 'error'); return; }
+    QUESTIONS[data.subject].push({ id: data.id, q: data.question, opts: data.options, ans: data.answer_index, exp: data.explanation, cat: data.category });
+    toast('Question added!', 'success');
+  }
+  resetAdminForm();
+  renderAdminList();
+}
+
+function editAdminQuestion(id) {
+  const subject = questionSubject(id);
+  const q = QUESTIONS[subject].find(q => q.id === id);
+  if (!q) return;
+  document.getElementById('admin-edit-id').value = q.id;
+  document.getElementById('admin-subject').value = subject;
+  document.getElementById('admin-category').value = q.cat;
+  document.getElementById('admin-question').value = q.q;
+  document.getElementById('admin-explanation').value = q.exp;
+  renderAdminOptions(q.opts, q.ans);
+  document.getElementById('admin-form-title').textContent = 'Edit Question #' + q.id;
+  document.getElementById('admin-save-btn').textContent = 'Save Changes';
+  document.getElementById('admin-cancel-btn').style.display = 'inline-flex';
+  document.getElementById('admin-form-title').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function deleteAdminQuestion(id) {
+  if (!confirm('Delete this question? This cannot be undone.')) return;
+  const { error } = await sb.from('questions').delete().eq('id', id);
+  if (error) { toast(error.message, 'error'); return; }
+  ['tj', 'acl'].forEach(s => {
+    const idx = QUESTIONS[s].findIndex(q => q.id === id);
+    if (idx !== -1) QUESTIONS[s].splice(idx, 1);
+  });
+  toast('Question deleted.', 'success');
+  renderAdminList();
+}
+
+function adminChangePage(delta) {
+  adminPage = Math.max(0, adminPage + delta);
+  renderAdminList();
+}
+
+function renderAdminList() {
+  if (!document.getElementById('admin-question-list')) return;
+  if (adminOptionCount === 0) renderAdminOptions();
+  const subjectFilter = document.getElementById('admin-filter-subject').value;
+  const all = subjectFilter
+    ? QUESTIONS[subjectFilter].map(q => ({ ...q, subject: subjectFilter }))
+    : [...QUESTIONS.tj.map(q => ({ ...q, subject: 'tj' })), ...QUESTIONS.acl.map(q => ({ ...q, subject: 'acl' }))];
+  all.sort((a, b) => a.id - b.id);
+
+  const totalPages = Math.max(1, Math.ceil(all.length / ADMIN_PAGE_SIZE));
+  adminPage = Math.min(adminPage, totalPages - 1);
+  const pageItems = all.slice(adminPage * ADMIN_PAGE_SIZE, (adminPage + 1) * ADMIN_PAGE_SIZE);
+
+  document.getElementById('admin-page-label').textContent = `Page ${adminPage + 1} of ${totalPages} (${all.length} total)`;
+  document.getElementById('admin-question-list').innerHTML = pageItems.map(q => `
+    <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--gray-100)">
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px">#${q.id} · ${q.subject.toUpperCase()} · ${q.cat}</div>
+        <div style="font-size:14px">${q.q}</div>
+      </div>
+      <button class="btn btn-outline" onclick="editAdminQuestion(${q.id})">Edit</button>
+      <button class="btn btn-outline" onclick="deleteAdminQuestion(${q.id})" style="color:var(--red);border-color:var(--red)">Delete</button>
+    </div>`).join('') || '<p style="color:var(--gray-400);font-size:14px">No questions match this filter.</p>';
 }
 
 const SPS_PROMPTS = [
@@ -1457,12 +1667,13 @@ function showPanel(id, el) {
   document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
   document.getElementById('panel-' + id).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { home:'Dashboard', practice:'Practice Questions', tutor:'AI Tutor', tests:'Mock Tests', progress:'My Progress', leaderboard:'Leaderboard' };
+  const titles = { home:'Dashboard', practice:'Practice Questions', tutor:'AI Tutor', tests:'Mock Tests', progress:'My Progress', leaderboard:'Leaderboard', admin:'Admin' };
   document.getElementById('panel-title').textContent = titles[id] || id;
   if (id === 'home') renderHomeStats();
   if (id === 'practice') renderQuestion();
   if (id === 'progress') { renderProgressStats(); animateRing(); }
   if (id === 'leaderboard') renderLeaderboard();
+  if (id === 'admin') renderAdminList();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1505,6 +1716,8 @@ function enterDashboard(showToast) {
   const firstName = currentUser.name.split(' ')[0];
   document.getElementById('user-display-name').textContent = firstName + '.';
   document.getElementById('greeting-text').textContent = getGreeting() + ', ' + firstName + '! 👋';
+  const adminNavItem = document.getElementById('admin-nav-item');
+  if (adminNavItem) adminNavItem.style.display = isAdmin() ? 'flex' : 'none';
   touchStreak();
   renderQuestion();
   renderHomeStats();
@@ -1563,10 +1776,20 @@ let reviewQueue = [];
 let currentQuestionSubject = null;
 let currentQuestionOrigIndex = null;
 
+function questionSubject(id) {
+  return QUESTIONS.tj.some(q => q.id === id) ? 'tj' : 'acl';
+}
+
 function setReviewMode(btn) {
   reviewMode = true;
   currentQuestionIndex = 0;
-  reviewQueue = ['tj', 'acl'].flatMap(subj => progress.missedQuestions[subj].map(id => ({ subject: subj, id })));
+  const now = new Date().toISOString();
+  const missedIds = ['tj', 'acl'].flatMap(subj => progress.missedQuestions[subj]);
+  const dueIds = Object.entries(progress.questionSchedule)
+    .filter(([, s]) => s.dueAt <= now)
+    .map(([id]) => Number(id));
+  const allIds = [...new Set([...missedIds, ...dueIds])];
+  reviewQueue = allIds.map(id => ({ subject: questionSubject(id), id }));
   document.querySelectorAll('.subj-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderQuestion();
@@ -1580,8 +1803,8 @@ function renderQuestion() {
       document.getElementById('question-area').innerHTML = `
         <div class="question-card" style="text-align:center;padding:48px">
           <div style="font-size:48px;margin-bottom:16px">🎉</div>
-          <h3 style="margin-bottom:8px">No mistakes to review!</h3>
-          <p style="color:var(--gray-500)">Anything you get wrong in TJ or ACL practice shows up here so you can revisit it.</p>
+          <h3 style="margin-bottom:8px">You're all caught up!</h3>
+          <p style="color:var(--gray-500)">Anything you get wrong shows up here, and questions you've mastered resurface over time so they stay fresh.</p>
         </div>`;
       currentQuestion = null;
       return;
@@ -1656,6 +1879,7 @@ function selectOption(chosen) {
   if (questionShownAt) logStudyMinutes((Date.now() - questionShownAt) / 60000);
   bumpCategoryStat(currentQuestion.cat, wasCorrect);
   trackMissedQuestion(currentQuestionSubject, currentQuestionOrigIndex, wasCorrect);
+  updateQuestionSchedule(currentQuestionOrigIndex, wasCorrect);
 
   if (wasCorrect) {
     fb.className = 'feedback-box correct active';
@@ -1680,7 +1904,7 @@ function selectOption(chosen) {
   if (practiceSessionTotal >= 10) {
     const icon = reviewMode ? '🔁' : (currentSubject === 'tj' ? '🎓' : '🏫');
     const bg = reviewMode ? 'var(--purple-light)' : (currentSubject === 'tj' ? 'var(--blue-light)' : 'var(--green-light)');
-    const label = reviewMode ? 'Review Mistakes' : (currentSubject === 'tj' ? 'TJ' : 'ACL') + ' Practice';
+    const label = reviewMode ? 'Review' : (currentSubject === 'tj' ? 'TJ' : 'ACL') + ' Practice';
     logActivity(icon, bg, label, `${practiceSessionCorrect}/${practiceSessionTotal}`);
     practiceSessionCorrect = 0;
     practiceSessionTotal = 0;
@@ -1909,6 +2133,7 @@ function selectQuizOption(chosen) {
   if (questionShownAt) logStudyMinutes((Date.now() - questionShownAt) / 60000);
   bumpCategoryStat(q.cat, wasCorrect);
   trackMissedQuestion(q.subject, q.origIndex, wasCorrect);
+  updateQuestionSchedule(q.origIndex, wasCorrect);
   if (wasCorrect) {
     quizState.score++;
     fb.className='feedback-box correct active'; fb.innerHTML='✅ ' + exp;

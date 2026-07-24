@@ -314,13 +314,18 @@
     <div id="test-runner" style="display:none;">
       <div class="quiz-header">
         <div class="quiz-progress">
-          <div class="progress-label"><span id="quiz-q-label">Question 1 of 5</span><span id="quiz-score-label">Score: 0</span></div>
+          <div class="progress-label"><span id="quiz-q-label">Question 1 of 5</span><span id="quiz-answered-label">0 of 5 answered</span></div>
           <div class="progress-track"><div class="progress-fill" id="quiz-progress-fill" style="width:0%;background:var(--blue)"></div></div>
         </div>
         <div class="quiz-timer" id="quiz-timer">⏱️ 5:00</div>
-        <button class="btn btn-outline" onclick="endTest()" style="margin-left:20px">End test</button>
+        <button class="btn btn-outline" onclick="submitQuizConfirm()" style="margin-left:20px">End test</button>
       </div>
       <div class="quiz-container" id="quiz-container"></div>
+      <div id="quiz-nav-bar" style="display:flex;justify-content:space-between;margin-top:20px">
+        <button class="btn btn-outline" onclick="prevQuizQuestion()" id="quiz-prev-btn">← Previous</button>
+        <button class="btn btn-primary" onclick="submitQuizConfirm()">Submit Test</button>
+        <button class="btn btn-outline" onclick="nextQuizQuestion()" id="quiz-next-btn">Next →</button>
+      </div>
     </div>
     <div id="writing-runner" style="display:none;max-width:760px;">
       <div class="quiz-header">
@@ -1551,65 +1556,59 @@ function startTest(type) {
   const pool = [];
   cfg.subjects.forEach(s => { QUESTIONS[s].forEach(q => pool.push({...q, subject:s, origIndex:q.id})); });
   const shuffled = pool.sort(() => Math.random() - .5).slice(0, cfg.count);
-  quizState = { questions: shuffled, current:0, score:0, total: cfg.count, config: cfg };
+  quizState = { questions: shuffled, current:0, answers: new Array(cfg.count).fill(null), total: cfg.count, config: cfg, startedAt: Date.now() };
   timerSeconds = cfg.time;
   document.getElementById('tests-list').style.display = 'none';
   document.getElementById('test-runner').style.display = 'block';
+  document.getElementById('quiz-nav-bar').style.display = 'flex';
   renderQuizQuestion();
   startTimer();
 }
 
+// No right/wrong feedback and free navigation between questions — like a real
+// exam, you only find out your score after submitting (see endTest()).
 function renderQuizQuestion() {
-  if (!quizState || quizState.current >= quizState.questions.length) { endTest(); return; }
-  questionShownAt = Date.now();
+  if (!quizState) return;
   const q = quizState.questions[quizState.current];
   const pctComplete = ((quizState.current) / quizState.total * 100).toFixed(0);
+  const answeredCount = quizState.answers.filter(a => a !== null).length;
   document.getElementById('quiz-q-label').textContent = `Question ${quizState.current+1} of ${quizState.total}`;
-  document.getElementById('quiz-score-label').textContent = `Score: ${quizState.score}`;
+  document.getElementById('quiz-answered-label').textContent = `${answeredCount} of ${quizState.total} answered`;
   document.getElementById('quiz-progress-fill').style.width = pctComplete + '%';
   const letters = ['A','B','C','D','E','F'];
   const badgeColors = { math:'var(--blue-light)', science:'var(--green-light)', logic:'var(--purple-light)', reading:'var(--orange-light)', vocab:'#fce7f3', tj:'#fef3c7', acl:'#dbeafe' };
+  const selected = quizState.answers[quizState.current];
   document.getElementById('quiz-container').innerHTML = `
     <div class="question-card">
       <div class="q-meta"><span class="q-badge ${q.subject}" style="background:${badgeColors[q.subject]}">${q.subject.toUpperCase()}</span></div>
       <div class="q-text">${q.q}</div>
       <div class="options" id="quiz-options">
-        ${q.opts.map((o,i) => `<button class="option-btn" onclick="selectQuizOption(${i})">${letters[i]}. ${o}</button>`).join('')}
+        ${q.opts.map((o,i) => `<button class="option-btn ${selected === i ? 'selected' : ''}" onclick="selectQuizOption(${i})">${letters[i]}. ${o}</button>`).join('')}
       </div>
-      <div class="feedback-box" id="quiz-feedback"></div>
     </div>`;
+  document.getElementById('quiz-prev-btn').disabled = quizState.current === 0;
+  document.getElementById('quiz-next-btn').disabled = quizState.current === quizState.questions.length - 1;
 }
 
 function selectQuizOption(chosen) {
-  const q = quizState.questions[quizState.current];
-  const correct = q.ans;
-  const exp = q.exp;
-  const wasCorrect = chosen === correct;
-  document.querySelectorAll('#quiz-options .option-btn').forEach((b,i) => {
-    b.disabled = true;
-    if (i === correct) b.classList.add('correct');
-    else if (i === chosen) b.classList.add('wrong');
-  });
-  const fb = document.getElementById('quiz-feedback');
-  const stats = progress.subjectStats[q.subject];
-  if (stats) stats.total++;
-  progress.questionsAnswered++;
-  logDailyActivity(1);
-  if (questionShownAt) logStudyMinutes((Date.now() - questionShownAt) / 60000);
-  bumpCategoryStat(q.cat, wasCorrect);
-  trackMissedQuestion(q.subject, q.origIndex, wasCorrect);
-  updateQuestionSchedule(q.origIndex, wasCorrect);
-  if (wasCorrect) {
-    quizState.score++;
-    fb.className='feedback-box correct active'; fb.innerHTML='✅ ' + exp;
-    if (stats) stats.correct++;
-    progress.correctAnswers++;
-    progress.points += 10;
-  }
-  else { fb.className='feedback-box wrong active'; fb.innerHTML='❌ ' + exp; }
-  document.getElementById('quiz-score-label').textContent = `Score: ${quizState.score}`;
-  saveProgress();
-  setTimeout(() => { quizState.current++; renderQuizQuestion(); }, 2000);
+  quizState.answers[quizState.current] = chosen;
+  renderQuizQuestion();
+}
+
+function nextQuizQuestion() {
+  if (quizState.current < quizState.questions.length - 1) { quizState.current++; renderQuizQuestion(); }
+}
+
+function prevQuizQuestion() {
+  if (quizState.current > 0) { quizState.current--; renderQuizQuestion(); }
+}
+
+function submitQuizConfirm() {
+  const unanswered = quizState.total - quizState.answers.filter(a => a !== null).length;
+  const msg = unanswered > 0
+    ? `You have ${unanswered} unanswered question${unanswered === 1 ? '' : 's'}. Submit anyway?`
+    : 'Submit your test?';
+  if (confirm(msg)) endTest();
 }
 
 function startTimer() {
@@ -1625,10 +1624,39 @@ function startTimer() {
   }, 1000);
 }
 
+// Grades the whole test at once (no per-question feedback during the test), then
+// runs the same per-question stat bookkeeping selectQuizOption() used to do inline.
 function endTest() {
   if (quizTimer) { clearInterval(quizTimer); quizTimer = null; }
-  const score = quizState ? quizState.score : 0;
   const total = quizState ? quizState.total : 0;
+  let score = 0;
+
+  if (quizState && total > 0) {
+    const answeredCount = quizState.answers.filter(a => a !== null).length;
+    const perQuestionMinutes = answeredCount > 0 ? (Date.now() - quizState.startedAt) / 60000 / answeredCount : 0;
+
+    quizState.questions.forEach((q, i) => {
+      const chosen = quizState.answers[i];
+      if (chosen === null) return; // unanswered — skip, doesn't count as a miss
+      const wasCorrect = chosen === q.ans;
+      if (wasCorrect) score++;
+
+      const stats = progress.subjectStats[q.subject];
+      if (stats) stats.total++;
+      progress.questionsAnswered++;
+      logDailyActivity(1);
+      logStudyMinutes(perQuestionMinutes);
+      bumpCategoryStat(q.cat, wasCorrect);
+      trackMissedQuestion(q.subject, q.origIndex, wasCorrect);
+      updateQuestionSchedule(q.origIndex, wasCorrect);
+      if (wasCorrect) {
+        if (stats) stats.correct++;
+        progress.correctAnswers++;
+        progress.points += 10;
+      }
+    });
+  }
+
   const pct = total ? Math.round(score/total*100) : 0;
   if (quizState && total > 0) {
     const subj = quizState.config.subjects[0];
@@ -1641,6 +1669,7 @@ function endTest() {
     saveProgress();
     renderHomeStats();
   }
+  document.getElementById('quiz-nav-bar').style.display = 'none';
   document.getElementById('quiz-container').innerHTML = `
     <div class="question-card" style="text-align:center;padding:48px">
       <div style="font-size:64px;margin-bottom:20px">${pct >= 80 ? '🎉' : pct >= 60 ? '💪' : '📚'}</div>

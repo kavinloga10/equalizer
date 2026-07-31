@@ -123,8 +123,6 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .stat-item strong { font-family:'DM Serif Display',serif; font-size:36px; color:var(--blue); display:block; }
 .stat-item span { font-size:14px; color:var(--gray-500); }
 
-.about-section { padding:80px 64px; max-width:760px; margin:0 auto; }
-.about-section p { font-size:16px; line-height:1.8; color:var(--gray-600); margin-bottom:18px; }
 .features-section { padding:80px 64px; max-width:1200px; margin:0 auto; }
 .section-label { font-size:13px; font-weight:600; color:var(--blue); text-transform:uppercase; letter-spacing:.08em; margin-bottom:12px; }
 .section-title { font-family:'DM Serif Display',serif; font-size:40px; color:var(--gray-900); margin-bottom:16px; }

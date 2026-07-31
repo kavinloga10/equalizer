@@ -18,7 +18,7 @@
     <div class="land-tagline">Your score shouldn't depend on your zip code.</div>
   </div>
   <div class="land-nav-links">
-    <a href="#land-about">About</a>
+    <a onclick="showAboutModal()">About</a>
     <button class="btn btn-outline" onclick="showAuth('login')">Login</button>
     <button class="btn btn-primary" onclick="showAuth('signup')">Sign Up</button>
   </div>
@@ -44,13 +44,6 @@
       <div class="chat-input-demo">💬 Ask anything about math, science, reading…</div>
     </div>
   </div>
-</div>
-
-<div class="about-section" id="land-about">
-  <div class="section-label">About Equalizer</div>
-  <div class="section-title">Why we built this.</div>
-  <p>Equalizer started as a personal study tool built by a student preparing for the TJHSST and Academies of Loudoun admissions process — and frustrated that the best prep resources usually came with a price tag that wasn't in reach for everyone competing for the same spots.</p>
-  <p>What began as a practice tracker for one student has grown into a full study platform, built on the belief that how well you do shouldn't come down to whether your family can afford private tutoring. Equalizer is free, and built to give every student the same tools, practice, and feedback — regardless of zip code.</p>
 </div>
 
 <div class="stats-row">
@@ -458,6 +451,16 @@
       <button class="btn btn-outline" onclick="declinePolicy()">Sign out</button>
       <button class="btn btn-primary" onclick="acceptPolicy()">I Accept</button>
     </div>
+  </div>
+</div>
+
+<div id="about-modal" style="display:none;position:fixed;inset:0;background:rgba(17,24,39,.7);z-index:2000;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this) hideAboutModal()">
+  <div class="panel-card" style="max-width:520px;background:var(--white);position:relative">
+    <button onclick="hideAboutModal()" title="Close" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:18px;color:var(--gray-500);cursor:pointer;width:32px;height:32px;border-radius:99px" onmouseover="this.style.background='var(--gray-100)'" onmouseout="this.style.background='none'">✕</button>
+    <div class="section-label">About Equalizer</div>
+    <h2 style="margin-bottom:16px">Why we built this.</h2>
+    <p style="color:var(--gray-600);font-size:15px;line-height:1.75;margin-bottom:14px">Equalizer started as a personal study tool built by a student preparing for the TJHSST and Academies of Loudoun admissions process — and frustrated that the best prep resources usually came with a price tag that wasn't in reach for everyone competing for the same spots.</p>
+    <p style="color:var(--gray-600);font-size:15px;line-height:1.75">What began as a practice tracker for one student has grown into a full study platform, built on the belief that how well you do shouldn't come down to whether your family can afford private tutoring. Equalizer is free, and built to give every student the same tools, practice, and feedback — regardless of zip code.</p>
   </div>
 </div>
 
@@ -1973,6 +1976,14 @@ function toast(msg, type = '') {
 function tryDemo() {
   showAuth('signup');
   toast('Create a free account to try the full demo!');
+}
+
+function showAboutModal() {
+  document.getElementById('about-modal').style.display = 'flex';
+}
+
+function hideAboutModal() {
+  document.getElementById('about-modal').style.display = 'none';
 }
 
 // Init

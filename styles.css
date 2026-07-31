@@ -66,7 +66,8 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   padding:20px 64px; border-bottom:1px solid var(--gray-200);
   position:sticky; top:0; background:var(--white); z-index:100;
 }
-.land-logo { font-family:'DM Serif Display',serif; font-size:26px; color:var(--blue); }
+.land-logo { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; color:var(--blue); line-height:1.2; letter-spacing:-.02em; }
+.land-tagline { font-size:12px; color:var(--gray-500); font-weight:500; margin-top:2px; }
 .land-nav-links { display:flex; gap:28px; align-items:center; }
 .land-nav-links a {
   text-decoration:none; color:var(--gray-600); font-weight:500;
@@ -85,11 +86,6 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   padding:90px 64px 80px; max-width:1200px; margin:0 auto;
 }
 .hero-left { max-width:540px; }
-.hero-badge {
-  display:inline-flex; align-items:center; gap:8px; background:var(--blue-light);
-  color:var(--blue); padding:7px 14px; border-radius:99px; font-size:13px;
-  font-weight:600; margin-bottom:28px;
-}
 .hero h1 {
   font-family:'DM Serif Display',serif; font-size:58px; line-height:1.12;
   color:var(--gray-900); margin-bottom:22px;
@@ -127,6 +123,8 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .stat-item strong { font-family:'DM Serif Display',serif; font-size:36px; color:var(--blue); display:block; }
 .stat-item span { font-size:14px; color:var(--gray-500); }
 
+.about-section { padding:80px 64px; max-width:760px; margin:0 auto; }
+.about-section p { font-size:16px; line-height:1.8; color:var(--gray-600); margin-bottom:18px; }
 .features-section { padding:80px 64px; max-width:1200px; margin:0 auto; }
 .section-label { font-size:13px; font-weight:600; color:var(--blue); text-transform:uppercase; letter-spacing:.08em; margin-bottom:12px; }
 .section-title { font-family:'DM Serif Display',serif; font-size:40px; color:var(--gray-900); margin-bottom:16px; }
@@ -142,17 +140,6 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .feat-card h3 { font-size:17px; font-weight:600; margin-bottom:8px; }
 .feat-card p { font-size:14px; color:var(--gray-500); line-height:1.7; }
 
-.subjects-section { background:var(--ink); padding:80px 64px; text-align:center; }
-.subjects-section .section-title { color:var(--paper); }
-.subjects-section .section-sub { color:var(--paper-muted); margin:0 auto 48px; }
-.subjects-grid { display:flex; justify-content:center; flex-wrap:wrap; gap:16px; }
-.subject-pill {
-  background:rgba(255,255,255,.08); color:var(--paper); padding:14px 28px;
-  border-radius:99px; font-size:15px; font-weight:500; border:1px solid rgba(255,255,255,.15);
-  transition:.2s; cursor:pointer;
-}
-.subject-pill:hover { background:var(--blue); border-color:var(--blue); }
-
 .land-footer {
   background:var(--ink); color:var(--paper-muted); text-align:center;
   padding:40px; font-size:14px; border-top:1px solid rgba(255,255,255,.07);
@@ -166,7 +153,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   background:var(--white); border-radius:var(--radius-lg); padding:48px 40px;
   width:420px; box-shadow:var(--shadow-lg); border:1px solid var(--gray-200);
 }
-.auth-logo { font-family:'DM Serif Display',serif; font-size:24px; color:var(--blue); margin-bottom:8px; }
+.auth-logo { font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-.02em; font-size:22px; color:var(--blue); margin-bottom:8px; }
 .auth-card h2 { font-size:22px; font-weight:700; margin-bottom:6px; }
 .auth-card p { font-size:14px; color:var(--gray-500); margin-bottom:32px; }
 .role-tabs { display:flex; background:var(--gray-100); border-radius:10px; padding:4px; margin-bottom:28px; }
@@ -200,7 +187,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   width:240px; background:var(--ink); padding:28px 0; display:flex;
   flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:50;
 }
-.sidebar-logo { font-family:'DM Serif Display',serif; font-size:22px; color:var(--paper); padding:0 24px 28px; border-bottom:1px solid rgba(255,255,255,.08); }
+.sidebar-logo { font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-.02em; font-size:20px; color:var(--paper); padding:0 24px 28px; border-bottom:1px solid rgba(255,255,255,.08); }
 .sidebar-nav { flex:1; padding:20px 12px; display:flex; flex-direction:column; gap:4px; }
 .sidebar-item {
   display:flex; align-items:center; gap:12px; padding:11px 14px;
@@ -213,6 +200,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .sidebar-bottom { padding:16px 12px; border-top:1px solid rgba(255,255,255,.08); }
 
 .main-area { margin-left:240px; flex:1; }
+#landing .main-area { margin-left:0; }
 .topbar {
   display:flex; align-items:center; justify-content:space-between;
   padding:18px 36px; background:var(--white); border-bottom:1px solid var(--gray-200);

@@ -4,43 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Equalizer — Level the Playing Field</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <!-- ═══════════════════════════════ LANDING ═══════════════════════════════ -->
 <div id="landing" class="page active">
-<div class="sidebar">
-  <div class="sidebar-logo">Equalizer</div>
-  <nav class="sidebar-nav">
-    <a class="sidebar-item active" onclick="scrollToTop()"><span class="icon">🏠</span> Home</a>
-    <a class="sidebar-item" onclick="showAuth('signup')"><span class="icon">📝</span> Practice</a>
-    <a class="sidebar-item" onclick="showAuth('signup')"><span class="icon">🤖</span> AI Tutor</a>
-    <a class="sidebar-item" onclick="showAuth('signup')"><span class="icon">⏱️</span> Mock Tests</a>
-    <a class="sidebar-item" onclick="showAuth('signup')"><span class="icon">📊</span> Progress</a>
-    <a class="sidebar-item" onclick="showAuth('signup')"><span class="icon">🏆</span> Leaderboard</a>
-  </nav>
-  <div class="sidebar-bottom">
-    <a class="sidebar-item" onclick="showAuth('login')"><span class="icon">👤</span> Sign in</a>
-  </div>
-</div>
-
 <div class="main-area">
 <nav class="land-nav">
-  <div class="land-logo">Equalizer</div>
+  <div>
+    <div class="land-logo">Equalizer</div>
+    <div class="land-tagline">Your score shouldn't depend on your zip code.</div>
+  </div>
   <div class="land-nav-links">
-    <a href="#land-features">Features</a>
-    <a href="#land-subjects">Subjects</a>
     <a href="#land-about">About</a>
-    <button class="btn btn-outline" onclick="showAuth('login')">Sign in</button>
-    <button class="btn btn-primary" onclick="showAuth('signup')">Get started free</button>
+    <button class="btn btn-outline" onclick="showAuth('login')">Login</button>
+    <button class="btn btn-primary" onclick="showAuth('signup')">Sign Up</button>
   </div>
 </nav>
 
 <div class="hero">
   <div class="hero-left">
-    <div class="hero-badge">🎯 Built for Academies of Loudoun & TJHSST prep</div>
     <h1>Level the <span>Playing Field.</span></h1>
     <p>AI-powered exam prep that gives every student access to personalized coaching, adaptive practice, and the tools that used to cost thousands in private tutoring.</p>
     <div class="hero-cta">
@@ -61,7 +46,14 @@
   </div>
 </div>
 
-<div class="stats-row" id="land-about">
+<div class="about-section" id="land-about">
+  <div class="section-label">About Equalizer</div>
+  <div class="section-title">Why we built this.</div>
+  <p>Equalizer started as a personal study tool built by a student preparing for the TJHSST and Academies of Loudoun admissions process — and frustrated that the best prep resources usually came with a price tag that wasn't in reach for everyone competing for the same spots.</p>
+  <p>What began as a practice tracker for one student has grown into a full study platform, built on the belief that how well you do shouldn't come down to whether your family can afford private tutoring. Equalizer is free, and built to give every student the same tools, practice, and feedback — regardless of zip code.</p>
+</div>
+
+<div class="stats-row">
   <div class="stat-item"><strong>12,000+</strong><span>Practice questions</span></div>
   <div class="stat-item"><strong>94%</strong><span>Students improve scores</span></div>
   <div class="stat-item"><strong>6</strong><span>Subject areas</span></div>
@@ -76,23 +68,8 @@
     <div class="feat-card"><div class="feat-icon">🤖</div><h3>AI Tutor</h3><p>Ask any question, get step-by-step explanations tailored to your level. Available 24/7, never impatient.</p></div>
     <div class="feat-card"><div class="feat-icon">📝</div><h3>Adaptive Practice</h3><p>Questions that adjust to your skill level — harder when you're ready, supportive when you're not.</p></div>
     <div class="feat-card"><div class="feat-icon">⏱️</div><h3>Timed Mock Tests</h3><p>Simulate real exam conditions with full-length timed tests. Build the stamina and confidence you need.</p></div>
-    <div class="feat-card"><div class="feat-icon">📊</div><h3>Progress Analytics</h3><p>See exactly where you're strong and where to focus. Daily streaks keep you on track.</p></div>
+    <div class="feat-card"><div class="feat-icon">📊</div><h3>Student Progress</h3><p>See exactly where you're strong and where to focus. Daily streaks keep you on track.</p></div>
     <div class="feat-card"><div class="feat-icon">🏆</div><h3>Leaderboards</h3><p>Healthy competition with classmates and students across the region. Rise through the ranks.</p></div>
-    <div class="feat-card"><div class="feat-icon">👨‍👩‍👧</div><h3>Parent Dashboard</h3><p>Parents can monitor study time, scores, and progress without hovering. Stay informed, stay supportive.</p></div>
-  </div>
-</div>
-
-<div class="subjects-section" id="land-subjects">
-  <div class="section-label" style="color:var(--blue)">Subject Areas</div>
-  <div class="section-title">Six paths to academic excellence.</div>
-  <div class="section-sub">Comprehensive coverage of every skill tested in competitive academic programs.</div>
-  <div class="subjects-grid">
-    <div class="subject-pill">📐 Mathematics</div>
-    <div class="subject-pill">📖 Reading Comprehension</div>
-    <div class="subject-pill">🔬 Science</div>
-    <div class="subject-pill">🧩 Logical Reasoning</div>
-    <div class="subject-pill">🔤 Vocabulary</div>
-    <div class="subject-pill">✍️ Writing</div>
   </div>
 </div>
 
@@ -1126,10 +1103,6 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
-}
-
-function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function showAuth(mode) {

@@ -472,6 +472,18 @@
 
 <div class="toast" id="toast"></div>
 
+<div id="policy-gate" style="display:none;position:fixed;inset:0;background:rgba(17,24,39,.7);z-index:2000;align-items:center;justify-content:center;padding:20px">
+  <div class="panel-card" style="max-width:440px;background:var(--white)">
+    <h2 style="margin-bottom:12px">Before you continue</h2>
+    <p style="color:var(--gray-600);font-size:14px;line-height:1.7;margin-bottom:16px">We've added a Terms &amp; Privacy Policy covering what data Equalizer stores and how AI features work. Please review and accept it to keep using your account.</p>
+    <p style="margin-bottom:24px"><a href="policy.html" target="_blank" style="color:var(--blue);font-size:14px">Read the full policy →</a></p>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-outline" onclick="declinePolicy()">Sign out</button>
+      <button class="btn btn-primary" onclick="acceptPolicy()">I Accept</button>
+    </div>
+  </div>
+</div>
+
 <div class="tutor-drawer" id="tutor-drawer">
   <div class="tutor-drawer-header">
     <h3>🤖 Ask Tutor</h3>
@@ -637,7 +649,7 @@ async function loadUserSession() {
   if (!session) return false;
   const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
   if (!profile) return false;
-  currentUser = { id: session.user.id, name: profile.name, email: session.user.email, targetTest: profile.target_test, targetDate: profile.target_date };
+  currentUser = { id: session.user.id, name: profile.name, email: session.user.email, targetTest: profile.target_test, targetDate: profile.target_date, policyAccepted: !!profile.policy_accepted };
   currentRole = profile.role || 'student';
   progress = await loadProgress(session.user.id);
   return true;
@@ -1177,7 +1189,7 @@ async function doSignup() {
   if (error) { toast(error.message, 'error'); return; }
   if (!data.session) { toast('Check your inbox to confirm your email, then sign in.', 'error'); return; }
   const userId = data.user.id;
-  const { error: profileError } = await sb.from('profiles').insert({ id: userId, name, role: currentRole, grade, target_test: targetTest, target_date: targetDate });
+  const { error: profileError } = await sb.from('profiles').insert({ id: userId, name, role: currentRole, grade, target_test: targetTest, target_date: targetDate, policy_accepted: true });
   if (profileError) { toast(profileError.message, 'error'); return; }
   const { error: progressError } = await sb.from('progress').insert({ user_id: userId, ...progressToRow(defaultProgress()) });
   if (progressError) { toast(progressError.message, 'error'); return; }
@@ -1198,6 +1210,29 @@ function enterDashboard(showToast) {
   renderHomeStats();
   refreshLeaderboard().then(renderHomeStats);
   if (showToast) toast('Welcome back, ' + firstName + '!', 'success');
+  if (!currentUser.policyAccepted) showPolicyGate();
+}
+
+// Blocks app use for accounts created before the Terms & Privacy Policy existed,
+// until they accept it. New signups already have policy_accepted set at signup.
+function showPolicyGate() {
+  document.getElementById('policy-gate').style.display = 'flex';
+}
+
+function hidePolicyGate() {
+  document.getElementById('policy-gate').style.display = 'none';
+}
+
+async function acceptPolicy() {
+  const { error } = await sb.from('profiles').update({ policy_accepted: true }).eq('id', currentUser.id);
+  if (error) { toast(error.message, 'error'); return; }
+  currentUser.policyAccepted = true;
+  hidePolicyGate();
+}
+
+function declinePolicy() {
+  hidePolicyGate();
+  doLogout();
 }
 
 async function doLogout() {

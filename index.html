@@ -171,6 +171,10 @@
       <label>Password</label>
       <input type="password" id="signup-pw" placeholder="Create a password">
     </div>
+    <div class="form-group" style="display:flex;align-items:flex-start;gap:8px">
+      <input type="checkbox" id="signup-agree" style="width:auto;margin-top:3px">
+      <label for="signup-agree" style="font-size:13px;font-weight:400;color:var(--gray-600)">I agree to the <a href="policy.html" target="_blank" style="color:var(--blue)">Terms &amp; Privacy Policy</a></label>
+    </div>
     <button class="auth-submit" onclick="doSignup()">Create account</button>
     <div class="auth-switch">Already have an account? <a onclick="toggleAuthView('login')">Sign in</a></div>
   </div>
@@ -1168,6 +1172,7 @@ async function doSignup() {
   const targetTest = document.getElementById('signup-target-test').value;
   const targetDate = document.getElementById('signup-target-date').value || null;
   if (!name || !email || !password) { toast('Please fill in all fields.', 'error'); return; }
+  if (!document.getElementById('signup-agree').checked) { toast('Please agree to the Terms & Privacy Policy to continue.', 'error'); return; }
   const { data, error } = await sb.auth.signUp({ email, password });
   if (error) { toast(error.message, 'error'); return; }
   if (!data.session) { toast('Check your inbox to confirm your email, then sign in.', 'error'); return; }

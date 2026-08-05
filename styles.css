@@ -52,6 +52,7 @@
   --shadow-lg: 0 20px 25px -5px rgba(0,0,0,.5), 0 10px 10px -5px rgba(0,0,0,.3);
 }
 * { margin:0; padding:0; box-sizing:border-box; }
+html, body { overflow-x:hidden; max-width:100%; }
 body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--gray-900); transition:background .2s,color .2s; }
 
 /* ── PAGES ── */
@@ -206,6 +207,11 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 }
 .topbar h1 { font-size:20px; font-weight:700; }
 .topbar-right { display:flex; align-items:center; gap:16px; }
+.mobile-menu-btn {
+  display:none; width:36px; height:36px; border-radius:var(--radius); border:1px solid var(--gray-200);
+  background:var(--gray-50); cursor:pointer; font-size:18px; margin-right:14px; flex-shrink:0;
+}
+.sidebar-backdrop { display:none; }
 .theme-toggle {
   width:36px; height:36px; border-radius:99px; border:1px solid var(--gray-200);
   background:var(--gray-50); cursor:pointer; font-size:16px; display:flex;
@@ -510,12 +516,25 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   .hero h1 { font-size:38px; }
   .hero-card { width:100%; }
   .hero-cta { justify-content:center; }
-  .land-nav { padding:16px 24px; }
+  .land-nav { flex-direction:column; align-items:flex-start; gap:14px; padding:16px 24px; }
+  .land-nav-links { width:100%; justify-content:space-between; gap:12px; }
   .features-section, .stats-row { padding:48px 24px; }
   .features-grid { grid-template-columns:1fr; }
-  .sidebar { transform:translateX(-240px); }
+  .stats-row { flex-wrap:wrap; gap:28px; }
+  .stats-row .stat-item { flex:1 1 40%; }
+
+  /* Dashboard sidebar becomes an off-canvas drawer, opened via the hamburger button */
+  .sidebar { transform:translateX(-240px); transition:transform .25s ease; z-index:300; }
+  .sidebar.open { transform:translateX(0); }
+  .sidebar-backdrop.show { display:block; position:fixed; inset:0; background:rgba(17,24,39,.6); z-index:250; }
+  .mobile-menu-btn { display:block; }
   .main-area { margin-left:0; }
   .kpi-row { grid-template-columns:1fr 1fr; }
   .progress-grid { grid-template-columns:1fr; }
   .two-col { grid-template-columns:1fr; }
+  .tests-grid { grid-template-columns:1fr; }
+  .quiz-header { flex-wrap:wrap; gap:14px; }
+  .quiz-progress { max-width:100%; flex-basis:100%; order:1; }
+  .quiz-timer { order:2; }
+  .quiz-header .btn { order:3; margin-left:0 !important; }
 }

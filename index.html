@@ -47,9 +47,9 @@
 </div>
 
 <div class="stats-row">
-  <div class="stat-item"><strong>12,000+</strong><span>Practice questions</span></div>
-  <div class="stat-item"><strong>94%</strong><span>Students improve scores</span></div>
-  <div class="stat-item"><strong>6</strong><span>Subject areas</span></div>
+  <div class="stat-item"><strong>400+</strong><span>Practice questions</span></div>
+  <div class="stat-item"><strong>TJ &amp; ACL</strong><span>Programs covered</span></div>
+  <div class="stat-item"><strong>24/7</strong><span>AI tutor access</span></div>
   <div class="stat-item"><strong>Free</strong><span>No credit card needed</span></div>
 </div>
 
@@ -105,7 +105,7 @@
   <!-- Signup form -->
   <div id="auth-signup-form" style="display:none;">
     <h2>Create your account</h2>
-    <p>Join thousands of students preparing for their futures.</p>
+    <p>Start preparing for TJHSST or Academies of Loudoun today.</p>
     <div class="role-tabs">
       <button class="role-tab active" onclick="setRole('student',this)">Student</button>
       <button class="role-tab" onclick="setRole('parent',this)">Parent</button>
@@ -153,7 +153,8 @@
 
 <!-- ═══════════════════════════════ DASHBOARD ═══════════════════════════════ -->
 <div id="dashboard" class="page">
-<div class="sidebar">
+<div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
+<div class="sidebar" id="dashboard-sidebar">
   <div class="sidebar-logo">Equalizer</div>
   <nav class="sidebar-nav">
     <a class="sidebar-item active" onclick="showPanel('home',this)"><span class="icon">🏠</span> Home</a>
@@ -171,6 +172,7 @@
 
 <div class="main-area">
   <div class="topbar">
+    <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileSidebar()" title="Menu">☰</button>
     <h1 id="panel-title">Dashboard</h1>
     <div class="topbar-right">
       <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
@@ -1136,6 +1138,17 @@ function showPanel(id, el) {
   if (id === 'progress') { renderProgressStats(); animateRing(); }
   if (id === 'leaderboard') renderLeaderboard();
   if (id === 'admin') renderAdminList();
+  closeMobileSidebar();
+}
+
+function toggleMobileSidebar() {
+  document.getElementById('dashboard-sidebar').classList.toggle('open');
+  document.getElementById('sidebar-backdrop').classList.toggle('show');
+}
+
+function closeMobileSidebar() {
+  document.getElementById('dashboard-sidebar').classList.remove('open');
+  document.getElementById('sidebar-backdrop').classList.remove('show');
 }
 
 // ═══════════════════════════════════════════════════════

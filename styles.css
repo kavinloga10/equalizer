@@ -61,7 +61,13 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 #dashboard.active { display:flex; }
 
 /* ── LANDING ── */
-#landing { background:var(--white); }
+#landing { background:var(--gray-50); flex-direction:column; align-items:center; justify-content:center; min-height:100vh; gap:16px; }
+#landing.active { display:flex; }
+.auth-forgot { text-align:right; margin:-10px 0 18px; font-size:13px; }
+.auth-forgot a { color:var(--blue); cursor:pointer; }
+.auth-about-link { text-align:center; }
+.auth-about-link a { color:var(--gray-400); font-size:13px; cursor:pointer; }
+.auth-about-link a:hover { color:var(--gray-600); }
 .land-nav {
   display:flex; align-items:center; justify-content:space-between;
   padding:20px 64px; border-bottom:1px solid var(--gray-200);
@@ -199,7 +205,6 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .sidebar-bottom { padding:16px 12px; border-top:1px solid rgba(255,255,255,.08); }
 
 .main-area { margin-left:240px; flex:1; }
-#landing .main-area { margin-left:0; }
 .topbar {
   display:flex; align-items:center; justify-content:space-between;
   padding:18px 36px; background:var(--white); border-bottom:1px solid var(--gray-200);

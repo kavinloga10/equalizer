@@ -11,99 +11,35 @@
 
 <!-- ═══════════════════════════════ LANDING ═══════════════════════════════ -->
 <div id="landing" class="page active">
-<div class="main-area">
-<nav class="land-nav">
-  <div>
-    <div class="land-logo">Equalizer</div>
-    <div class="land-tagline">Your score shouldn't depend on your zip code.</div>
+<div class="auth-card">
+  <div class="auth-logo">Equalizer</div>
+  <h2>Welcome back</h2>
+  <p>Sign in to continue your prep.</p>
+  <div class="form-group">
+    <label>Email address</label>
+    <input type="email" id="login-email" placeholder="you@example.com">
   </div>
-  <div class="land-nav-links">
-    <a onclick="showAboutModal()">About</a>
-    <button class="btn btn-outline" onclick="showAuth('login')">Login</button>
-    <button class="btn btn-primary" onclick="showAuth('signup')">Sign Up</button>
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="login-pw" placeholder="••••••••">
   </div>
-</nav>
-
-<div class="hero">
-  <div class="hero-left">
-    <h1>Level the <span>Playing Field.</span></h1>
-    <p>AI-powered exam prep that gives every student access to personalized coaching, adaptive practice, and the tools that used to cost thousands in private tutoring.</p>
-    <div class="hero-cta">
-      <button class="btn btn-primary btn-lg" onclick="showAuth('signup')">Start for free →</button>
-      <button class="btn btn-outline btn-lg" onclick="tryDemo()">See how it works</button>
-    </div>
-  </div>
-  <div class="hero-right">
-    <div class="hero-card">
-      <div class="hero-card-head">
-        <div class="avatar">🤖</div>
-        <div><strong>Equalizer AI Tutor</strong><span>Online now</span></div>
-      </div>
-      <div class="chat-bubble user">What's the difference between mean, median, and mode?</div>
-      <div class="chat-bubble ai">Great question! These are three ways to describe the "center" of data: <strong>Mean</strong> = add all values ÷ count. <strong>Median</strong> = the middle value when sorted. <strong>Mode</strong> = the most frequent value. Want a practice problem?</div>
-      <div class="chat-input-demo">💬 Ask anything about math, science, reading…</div>
-    </div>
-  </div>
+  <div class="auth-forgot"><a onclick="showForgotPassword()">Forgot password?</a></div>
+  <button class="auth-submit" onclick="doLogin()">Sign in</button>
+  <div class="auth-switch">Don't have an account? <a onclick="showPage('auth')">Sign up free</a></div>
 </div>
-
-<div class="stats-row">
-  <div class="stat-item"><strong>400+</strong><span>Practice questions</span></div>
-  <div class="stat-item"><strong>TJ &amp; ACL</strong><span>Programs covered</span></div>
-  <div class="stat-item"><strong>24/7</strong><span>AI tutor access</span></div>
-  <div class="stat-item"><strong>Free</strong><span>No credit card needed</span></div>
-</div>
-
-<div class="features-section" id="land-features">
-  <div class="section-label">Platform Features</div>
-  <div class="section-title">Everything you need to compete.</div>
-  <div class="section-sub">From your first practice problem to your mock exam, Equalizer adapts to how you learn.</div>
-  <div class="features-grid">
-    <div class="feat-card"><div class="feat-icon">🤖</div><h3>AI Tutor</h3><p>Ask any question, get step-by-step explanations tailored to your level. Available 24/7, never impatient.</p></div>
-    <div class="feat-card"><div class="feat-icon">📝</div><h3>Adaptive Practice</h3><p>Questions that adjust to your skill level — harder when you're ready, supportive when you're not.</p></div>
-    <div class="feat-card"><div class="feat-icon">⏱️</div><h3>Timed Mock Tests</h3><p>Simulate real exam conditions with full-length timed tests. Build the stamina and confidence you need.</p></div>
-    <div class="feat-card"><div class="feat-icon">📊</div><h3>Student Progress</h3><p>See exactly where you're strong and where to focus. Daily streaks keep you on track.</p></div>
-    <div class="feat-card"><div class="feat-icon">🏆</div><h3>Leaderboards</h3><p>Healthy competition with classmates and students across the region. Rise through the ranks.</p></div>
-  </div>
-</div>
-
-<div class="land-footer">
-  <span>Equalizer</span> — Making elite academic preparation accessible to every student.<br>
-  <small style="opacity:.6">© 2026 Equalizer. Not affiliated with any school or district.</small>
-</div>
-</div><!-- end main-area -->
+<div class="auth-about-link"><a onclick="showAboutModal()">About Equalizer</a></div>
 </div><!-- end landing -->
 
 <!-- ═══════════════════════════════ AUTH ═══════════════════════════════ -->
 <div id="auth" class="page">
 <div class="auth-card">
   <div style="cursor:pointer;margin-bottom:20px;" onclick="showPage('landing')">
-    <span class="auth-back">← Back to home</span>
+    <span class="auth-back">← Back to sign in</span>
   </div>
   <div class="auth-logo">Equalizer</div>
 
-  <!-- Login form -->
-  <div id="auth-login-form">
-    <h2>Welcome back</h2>
-    <p>Sign in to your account to continue learning.</p>
-    <div class="role-tabs">
-      <button class="role-tab active" onclick="setRole('student',this)">Student</button>
-      <button class="role-tab" onclick="setRole('parent',this)">Parent</button>
-      <button class="role-tab" onclick="setRole('teacher',this)">Teacher</button>
-    </div>
-    <div class="form-group">
-      <label>Email address</label>
-      <input type="email" id="login-email" placeholder="you@example.com" value="alex@student.com">
-    </div>
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" id="login-pw" placeholder="••••••••" value="password">
-    </div>
-    <button class="auth-submit" onclick="doLogin()">Sign in</button>
-    <div class="auth-switch">Don't have an account? <a onclick="toggleAuthView('signup')">Sign up free</a></div>
-  </div>
-
   <!-- Signup form -->
-  <div id="auth-signup-form" style="display:none;">
+  <div id="auth-signup-form">
     <h2>Create your account</h2>
     <p>Start preparing for TJHSST or Academies of Loudoun today.</p>
     <div class="role-tabs">
@@ -146,7 +82,7 @@
       <label for="signup-agree" style="font-size:13px;font-weight:400;color:var(--gray-600)">I agree to the <a href="policy.html" target="_blank" style="color:var(--blue)">Terms &amp; Privacy Policy</a></label>
     </div>
     <button class="auth-submit" onclick="doSignup()">Create account</button>
-    <div class="auth-switch">Already have an account? <a onclick="toggleAuthView('login')">Sign in</a></div>
+    <div class="auth-switch">Already have an account? <a onclick="showPage('landing')">Sign in</a></div>
   </div>
 </div>
 </div>
@@ -466,6 +402,33 @@
   </div>
 </div>
 
+<div id="forgot-password-modal" style="display:none;position:fixed;inset:0;background:rgba(17,24,39,.7);z-index:2000;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this) hideForgotPassword()">
+  <div class="panel-card" style="max-width:400px;background:var(--white)">
+    <h2 style="margin-bottom:8px">Reset your password</h2>
+    <p style="color:var(--gray-500);font-size:14px;margin-bottom:20px">Enter your email and we'll send you a link to reset your password.</p>
+    <div class="form-group">
+      <label>Email address</label>
+      <input type="email" id="forgot-email" placeholder="you@example.com">
+    </div>
+    <div style="display:flex;gap:12px;margin-top:8px">
+      <button class="btn btn-outline" onclick="hideForgotPassword()" style="flex:1">Cancel</button>
+      <button class="btn btn-primary" onclick="sendPasswordReset()" style="flex:1">Send reset link</button>
+    </div>
+  </div>
+</div>
+
+<div id="reset-password-modal" style="display:none;position:fixed;inset:0;background:rgba(17,24,39,.7);z-index:2000;align-items:center;justify-content:center;padding:20px">
+  <div class="panel-card" style="max-width:400px;background:var(--white)">
+    <h2 style="margin-bottom:8px">Choose a new password</h2>
+    <p style="color:var(--gray-500);font-size:14px;margin-bottom:20px">You clicked a password reset link. Enter a new password below.</p>
+    <div class="form-group">
+      <label>New password</label>
+      <input type="password" id="reset-pw" placeholder="Create a new password">
+    </div>
+    <button class="auth-submit" onclick="submitPasswordReset()">Update password</button>
+  </div>
+</div>
+
 <div class="tutor-drawer" id="tutor-drawer">
   <div class="tutor-drawer-header">
     <h3>🤖 Ask Tutor</h3>
@@ -516,6 +479,9 @@ const API_BASE = location.hostname === 'kavinloga10.github.io'
 const SUPABASE_URL = 'https://xdsrpjsrtwqqppoxwsot.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_jgVEA917RWIrOav8Hcq42w_YwaFTdA7';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+sb.auth.onAuthStateChange((event) => {
+  if (event === 'PASSWORD_RECOVERY') document.getElementById('reset-password-modal').style.display = 'flex';
+});
 
 // ═══════════════════════════════════════════════════════
 //  STATE
@@ -1108,16 +1074,6 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
-}
-
-function showAuth(mode) {
-  showPage('auth');
-  toggleAuthView(mode);
-}
-
-function toggleAuthView(mode) {
-  document.getElementById('auth-login-form').style.display = mode === 'login' ? 'block' : 'none';
-  document.getElementById('auth-signup-form').style.display = mode === 'signup' ? 'block' : 'none';
 }
 
 function setRole(role, btn) {
@@ -1986,9 +1942,32 @@ function toast(msg, type = '') {
   setTimeout(() => el.className = 'toast', 3000);
 }
 
-function tryDemo() {
-  showAuth('signup');
-  toast('Create a free account to try the full demo!');
+function showForgotPassword() {
+  document.getElementById('forgot-email').value = document.getElementById('login-email').value || '';
+  document.getElementById('forgot-password-modal').style.display = 'flex';
+}
+
+function hideForgotPassword() {
+  document.getElementById('forgot-password-modal').style.display = 'none';
+}
+
+async function sendPasswordReset() {
+  const email = document.getElementById('forgot-email').value;
+  if (!email) { toast('Please enter your email.', 'error'); return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+  if (error) { toast(error.message, 'error'); return; }
+  hideForgotPassword();
+  toast('Check your email for a password reset link.', 'success');
+}
+
+async function submitPasswordReset() {
+  const password = document.getElementById('reset-pw').value;
+  if (!password || password.length < 6) { toast('Password must be at least 6 characters.', 'error'); return; }
+  const { error } = await sb.auth.updateUser({ password });
+  if (error) { toast(error.message, 'error'); return; }
+  document.getElementById('reset-password-modal').style.display = 'none';
+  toast('Password updated. You can now sign in.', 'success');
+  showPage('landing');
 }
 
 function showAboutModal() {

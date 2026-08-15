@@ -14,7 +14,7 @@
 <div class="landing-brand">
   <div class="auth-logo">Equalizer</div>
   <div class="auth-tagline">Level the Playing Field.</div>
-  <div class="visitor-counter" id="visitor-counter" style="display:none">🎓 <strong id="visitor-count">0</strong> students helped so far</div>
+  <div class="student-count-badge" id="student-count-badge" style="display:none">🎓 <strong id="student-count-value">0</strong> students helped so far</div>
 </div>
 <div class="auth-card">
   <div class="form-group">
@@ -1944,16 +1944,14 @@ function toast(msg, type = '') {
   setTimeout(() => el.className = 'toast', 3000);
 }
 
-async function trackVisit() {
+async function loadStudentCount() {
   try {
-    const res = await fetch(`${API_BASE}/api/track-visit`, { method: 'POST' });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (typeof data.count !== 'number') return;
-    document.getElementById('visitor-count').textContent = data.count.toLocaleString();
-    document.getElementById('visitor-counter').style.display = 'block';
+    const { data, error } = await sb.rpc('get_student_count');
+    if (error || typeof data !== 'number') return;
+    document.getElementById('student-count-value').textContent = data.toLocaleString();
+    document.getElementById('student-count-badge').style.display = 'block';
   } catch (err) {
-    // Decorative counter — fail silently if the backend is unreachable.
+    // Decorative stat — fail silently if it can't load.
   }
 }
 
@@ -1995,7 +1993,7 @@ function hideAboutModal() {
 
 // Init
 document.addEventListener('DOMContentLoaded', async () => {
-  trackVisit();
+  loadStudentCount();
   await loadQuestions();
   const hasSession = await loadUserSession();
   if (hasSession) {

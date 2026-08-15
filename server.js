@@ -1,28 +1,13 @@
 import express from 'express';
 import cors from 'cors';
-import crypto from 'crypto';
 import { GoogleGenAI } from '@google/genai';
-import { createClient } from '@supabase/supabase-js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import 'dotenv/config';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-app.set('trust proxy', true);
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-// Service-role client — bypasses RLS, so it must only ever live on the
-// backend. SUPABASE_SERVICE_ROLE_KEY comes from Project Settings → API in
-// the Supabase dashboard and is set as a Render env var, never committed.
-// Optional: falls back to null (visit tracking disabled) rather than
-// crashing the whole server if it isn't configured yet.
-const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
-  ? createClient(process.env.SUPABASE_URL || 'https://xdsrpjsrtwqqppoxwsot.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY)
-  : null;
-// Not a secret in the security sense — just keeps the stored hash from
-// being a plain, rainbow-table-able hash of a raw IP.
-const IP_HASH_SALT = 'equalizer-visit-v1';
 
 const SYSTEM_PROMPT = `You are Equalizer AI, a friendly and encouraging tutor for middle school students (grades 6-9) preparing for competitive academic programs like the Academies of Loudoun and TJHSST. You help with math, science, reading comprehension, logical reasoning, and vocabulary. Keep answers clear, step-by-step, and age-appropriate. Use encouraging language. When explaining math, show the steps. If a student seems frustrated, be extra supportive. Keep responses concise — 2-5 sentences or clear numbered steps. End with a follow-up question or offer to show a practice problem.`;
 
@@ -131,28 +116,6 @@ app.post('/api/grade-sps', async (req, res) => {
     console.error('Gemini grading error:', err);
     res.status(502).json({ error: "Grading failed. Try again in a moment!" });
   }
-});
-
-app.post('/api/track-visit', async (req, res) => {
-  if (!supabaseAdmin) return res.status(503).json({ error: 'Visitor tracking not configured' });
-
-  const forwardedFor = req.headers['x-forwarded-for'];
-  const ip = (typeof forwardedFor === 'string' ? forwardedFor.split(',')[0].trim() : '') || req.socket.remoteAddress || '';
-  const ipHash = crypto.createHash('sha256').update(ip + IP_HASH_SALT).digest('hex');
-
-  const { error: insertError } = await supabaseAdmin
-    .from('site_visits')
-    .upsert({ ip_hash: ipHash }, { onConflict: 'ip_hash', ignoreDuplicates: true });
-  if (insertError) console.error('track-visit insert error:', insertError);
-
-  const { count, error: countError } = await supabaseAdmin
-    .from('site_visits')
-    .select('*', { count: 'exact', head: true });
-  if (countError) {
-    console.error('track-visit count error:', countError);
-    return res.status(502).json({ error: 'Could not load visitor count' });
-  }
-  res.json({ count: count || 0 });
 });
 
 const PORT = process.env.PORT || 8743;

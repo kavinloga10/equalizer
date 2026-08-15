@@ -314,7 +314,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .q-badge.tj { background:#fef3c7; color:#92400e; }
 .q-badge.acl { background:#dbeafe; color:var(--blue); }
 .q-number { font-size:13px; color:var(--gray-400); font-weight:500; }
-.q-text { font-size:18px; font-weight:600; line-height:1.6; margin-bottom:28px; color:var(--gray-900); }
+.q-text { font-size:18px; font-weight:600; line-height:1.6; margin-bottom:28px; color:var(--gray-900); white-space:pre-line; }
 .options { display:flex; flex-direction:column; gap:12px; margin-bottom:28px; }
 .option-btn {
   display:flex; align-items:center; gap:14px; padding:16px 20px;

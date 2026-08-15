@@ -45,51 +45,6 @@ ${SPS_RUBRIC}
 
 Return your grading as the requested JSON structure. The score must be a number from 0 to 5 in increments of 0.5. "summary" is a 2-3 sentence overall assessment. "strengths" is a list of 2-4 specific things the response does well. "improvements" is a list of 2-4 specific, actionable pieces of feedback — when a listed shorthand concern (Needs more you / Tie to prompt / Needs tech. / Tie to other STEM / What's next?) applies, lead that bullet with the exact shorthand phrase in quotes followed by a dash and a specific explanation tied to what the student actually wrote.`;
 
-// Sourced from LCPS-adjacent Academies of Loudoun test-prep materials: the
-// assessment is a 45-minute on-the-spot essay on a math/science/current-issue
-// prompt, graded on Mechanics and Content — the latter built around
-// demonstrating STEM interest through motivation, persistence, creativity,
-// and problem-solving (see Young Scholars Circle's "AOL Writing Assessment"
-// prep deck). We keep our own 0-5 scale for consistency with the rest of the
-// app rather than replicating LCPS's internal scoring.
-const AOS_AET_RUBRIC = `Grading Rubric for the Academies of Loudoun (AOS/AET) Writing Assessment:
-
-Scored 0-5 combining two dimensions. As with essays, partial points are awarded — a 3.5 is halfway between "3" and "4."
-
-CONTENT (the larger share of the score): does the response show genuine STEM interest through motivation, persistence, creativity, and problem-solving? A strong response picks a real math, science, or social/environmental issue, analyzes it rather than just describing it, and builds a structured, evidence-based argument or solution — the "why it matters" and "how I'd approach it" should dominate over the "what the issue is."
-
-MECHANICS: grammar, sentence structure, punctuation, spelling, and overall clarity.
-
-5 – Outstanding. A clear, well-organized argument grounded in specific evidence or reasoning. Goes beyond describing the problem to analyze it. Shows real STEM curiosity, persistence, or creative problem-solving. Nearly free of grammatical errors.
-
-4 – Strong. A solid argument with good organization and mostly specific reasoning, but may lean too much on describing the problem rather than analyzing it, or could use more depth in the why/how.
-
-3 – Developing. Answers the prompt but leans heavily on describing the issue rather than analyzing it. Argument is present but under-supported or generic. Some grammar/mechanics issues.
-
-2 – Weak. Vague or overly general treatment of the issue, minimal analysis, unclear organization, or an argument that doesn't hold together. Noticeable grammar/mechanics issues.
-
-1 – Minimal. Barely engages with the prompt, largely descriptive with no real argument, or very hard to follow due to mechanics.
-
-0 – Does not respond to the prompt asked, regardless of writing quality.
-
-AOS/AET-SPECIFIC GRADING SHORTHAND — use these exact phrases in your improvement feedback when they apply:
-
-"Too much describing" — Spends too long explaining what the problem is instead of analyzing why it matters and how to approach it.
-
-"Show your reasoning" — States a position or solution without walking through the thinking that got there (research, trial and error, weighing options).
-
-"Needs a stake" — Doesn't make clear why this issue is personally important to the writer, not just important in general.
-
-"More STEM lens" — Doesn't connect the response to a STEM-flavored angle (data, methodology, design, research) even though the prompt invites one.
-
-"Acknowledge the team" — Presents a solution as solo work when collaboration would strengthen the answer.`;
-
-const AOS_AET_GRADING_SYSTEM_PROMPT = `You are an expert admissions-essay coach grading a middle schooler's response to the Academies of Loudoun (AOS/AET) Writing Assessment — a 45-minute on-the-spot essay responding to a prompt about a math, science, or current social/environmental issue. Grade strictly according to the rubric and shorthand concerns below. Be honest but encouraging and age-appropriate — the writer is 11-13 years old.
-
-${AOS_AET_RUBRIC}
-
-Return your grading as the requested JSON structure. The score must be a number from 0 to 5 in increments of 0.5. "summary" is a 2-3 sentence overall assessment. "strengths" is a list of 2-4 specific things the response does well. "improvements" is a list of 2-4 specific, actionable pieces of feedback — when a listed shorthand concern (Too much describing / Show your reasoning / Needs a stake / More STEM lens / Acknowledge the team) applies, lead that bullet with the exact shorthand phrase in quotes followed by a dash and a specific explanation tied to what the student actually wrote.`;
-
 const WRITING_RESPONSE_SCHEMA = {
   type: 'object',
   properties: {
@@ -99,6 +54,69 @@ const WRITING_RESPONSE_SCHEMA = {
     improvements: { type: 'array', items: { type: 'string' } },
   },
   required: ['score', 'summary', 'strengths', 'improvements'],
+};
+
+// This is LCPS's own "2023-2024 Released Writing Prompt" rubric for the
+// Academies of Loudoun (AOS/AET) Writing Assessment, transcribed verbatim
+// from the official released document (5 indicators, each scored 0/1/2,
+// total out of 10). Per the official directions given to students, grammar,
+// spelling, and syntax do NOT count against the response — do not penalize
+// for them.
+const AOS_AET_RUBRIC = `2023-2024 LCPS Academies of Loudoun (AOS/AET) Writing Assessment Rubric — official, released.
+
+Directions given to the student: the response is evaluated on the strength of the argument(s) and ideas presented; it may be structured any way (bulleted phrases, an outline, paragraphs) as long as it is thorough and comprehensive; grammar, spelling, and syntax do NOT count against the student; the real assessment is 45 minutes.
+
+Score each of the 5 indicators below from 0 to 2 (whole numbers only):
+0 = No Evidence
+1 = Limited Evidence (response indicates a minority of the criteria listed)
+2 = Full Evidence (response indicates the majority of the criteria listed)
+
+QUESTIONING / PROCESSING
+1 (Limited): questions/processes are basic and lack specificity; poses closed-ended questions; basic exploration of thought.
+2 (Full): questions/processes are probing and specific; poses open-ended questions; highly developed/purposeful exploration of thought which challenges assumptions.
+
+INFORMATION GATHERING / ANALYSIS
+1 (Limited): irrelevant, illogical, and/or confusing thought processes; superficial information gathering including limited and/or unreliable resources; minimal analysis of topic.
+2 (Full): relevant and logical thought processes based on evidence; information gathering includes multiple methods of collection including valid and reliable resources; in-depth analysis and synthesization of topic.
+
+FLUENCY / ORIGINALITY OF IDEAS
+1 (Limited): generates few ideas (1-2) specific to the topic; minimal explanation of ideas; ideas lack originality.
+2 (Full): generates multiple ideas (3 or more) specific to the topic; provides clear and concise explanation of ideas; ideas are original and demonstrate unique viewpoints.
+
+PRESENTATION / REASONING
+1 (Limited): presents ideas in a poorly organized manner which does not directly address the topic and/or has minimal practical application; presents vague evidence of meaningful possibilities; minimal acknowledgement or pursuit of a counter argument.
+2 (Full): presents ideas in a clear and well-organized manner which directly addresses and can be applied to the topic; presentation provides detailed/clear descriptions of meaningful possibilities; clearly presents and/or pursues counter argument(s).
+
+POINT OF VIEW / PERSPECTIVE
+1 (Limited): describes potential impact on limited audiences or audiences that would only be minimally impacted.
+2 (Full): describes impact on a wide range of audiences, or one where the solution would have a major impact.`;
+
+const AOS_AET_GRADING_SYSTEM_PROMPT = `You are grading a middle schooler's response to the Academies of Loudoun (AOS/AET) Writing Assessment using LCPS's real, official rubric below. The writer is 11-13 years old. Do NOT penalize grammar, spelling, or syntax — the official directions explicitly say these do not count against the student. Score each indicator strictly against the rubric's own language, but be fair and age-appropriate in how you weigh a first attempt at this style of writing.
+
+${AOS_AET_RUBRIC}
+
+Return your grading as the requested JSON structure. Score each of the 5 "indicatorScores" fields (questioningProcessing, informationGathering, fluencyOriginality, presentationReasoning, pointOfView) as a whole number from 0 to 2, matching the official rubric exactly. Set "score" to the sum of those 5 values (0-10). "summary" is a 2-3 sentence overall assessment. "strengths" is a list of 2-4 specific things the response does well, each tied to one of the 5 indicators. "improvements" is a list of 2-4 specific, actionable pieces of feedback tied to whichever indicators scored lowest.`;
+
+const AOS_AET_RESPONSE_SCHEMA = {
+  type: 'object',
+  properties: {
+    score: { type: 'number' },
+    indicatorScores: {
+      type: 'object',
+      properties: {
+        questioningProcessing: { type: 'number' },
+        informationGathering: { type: 'number' },
+        fluencyOriginality: { type: 'number' },
+        presentationReasoning: { type: 'number' },
+        pointOfView: { type: 'number' },
+      },
+      required: ['questioningProcessing', 'informationGathering', 'fluencyOriginality', 'presentationReasoning', 'pointOfView'],
+    },
+    summary: { type: 'string' },
+    strengths: { type: 'array', items: { type: 'string' } },
+    improvements: { type: 'array', items: { type: 'string' } },
+  },
+  required: ['score', 'indicatorScores', 'summary', 'strengths', 'improvements'],
 };
 
 const ALLOWED_ORIGINS = [
@@ -179,7 +197,7 @@ app.post('/api/grade-writing-assessment', async (req, res) => {
       config: {
         systemInstruction: AOS_AET_GRADING_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
-        responseSchema: WRITING_RESPONSE_SCHEMA,
+        responseSchema: AOS_AET_RESPONSE_SCHEMA,
         thinkingConfig: { thinkingBudget: 0 },
         maxOutputTokens: 4096,
       },

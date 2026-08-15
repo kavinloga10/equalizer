@@ -226,7 +226,7 @@
         <div class="test-card" onclick="startWritingTest('acl')">
           <div class="test-icon">📝</div>
           <h3>Writing Assessment</h3>
-          <p>Respond to an AOS/AET-style prompt — analyze a math, science, or current issue and build a logical, evidence-based argument — with instant AI feedback graded against the Academies of Loudoun rubric.</p>
+          <p>Respond to a real-style AOS/AET scenario and get instant AI feedback scored against LCPS's actual released 5-indicator rubric — Questioning, Evidence, Fluency, Presentation, and Perspective.</p>
           <div class="test-meta"><span class="test-tag">10 prompts</span><span class="test-tag">AI-graded</span><span class="test-tag">AOS/AET</span></div>
         </div>
       </div>
@@ -257,6 +257,7 @@
           <span class="q-badge" id="writing-type-badge" style="background:#dbeafe">SPS</span>
           <span class="q-number" id="writing-category"></span>
         </div>
+        <div id="writing-directions" style="display:none;font-size:13px;color:var(--gray-500);background:var(--gray-50);border-radius:var(--radius);padding:12px 14px;margin-bottom:18px;line-height:1.6"></div>
         <div class="q-text" id="writing-prompt-text"></div>
         <textarea id="writing-response" rows="12" oninput="updateWritingCharCount()" placeholder="Write your response here…" style="width:100%;padding:16px;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;resize:vertical;outline:none;"></textarea>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
@@ -919,29 +920,34 @@ const SPS_PROMPTS = [
   { category:'communicator', text:"What do you prioritize the most in communicating with others? Provide one example of such communication and reflect on what makes it effective." },
 ];
 
-// The real AOS/AET Writing Assessment is a 45-minute on-the-spot essay on a
-// math/science/current-issue prompt, scored on Mechanics and Content — the
-// latter built around demonstrating STEM interest through motivation,
-// persistence, creativity, and problem-solving (source: LCPS-adjacent
-// Academies of Loudoun test-prep materials). The first prompt below is a
-// real released/retired assessment prompt; the rest are written in the same
-// style and categorized against those same four traits.
+// Sourced from LCPS's own "2023-2024 Released Writing Prompt" and its
+// accompanying rubric document for the Academies of Loudoun (AOS/AET)
+// Writing Assessment. The real format: a real-world scenario followed by
+// three lettered parts — (A) what questions/investigation the student would
+// pursue, (B) what evidence they'd gather and how they'd judge its
+// reliability, (C) how they'd present their argument and address
+// disagreement. The first prompt below is that official released prompt,
+// verbatim; the rest are written to match the same three-part structure and
+// topic range (environmental science, engineering, community policy, data).
 const AOS_AET_PROMPTS = [
-  { category:'problem solving', text:"What elements would you contribute to solving the forest fire destruction happening on the western side of the United States? How would you gather information about this problem? How would you know that the information you've gathered is accurate?" },
-  { category:'motivation', text:"Choose a scientific or mathematical idea you find genuinely exciting. Why does it interest you, and what would you want to investigate about it next?" },
-  { category:'persistence', text:"Describe a math or science problem that took you several tries to solve. What did you change between attempts, and what kept you working at it?" },
-  { category:'creativity', text:"If you could design one new tool, app, or invention to solve a problem in your school or community, what would it be? Explain how it would work and why it's needed." },
-  { category:'problem solving', text:"Local water quality reports show rising pollution levels in a nearby stream. How would you investigate the cause, and what steps would you propose to address it?" },
-  { category:'creativity', text:"Many communities are trying to reduce food waste. Propose one creative, practical solution, and explain how you'd measure whether it's actually working." },
-  { category:'persistence', text:"Scientific research often involves repeated failure before success. Describe a time you failed at something academic or STEM-related, and how you adjusted your approach afterward." },
-  { category:'motivation', text:"STEM fields are increasingly shaped by data. What is one real-world problem you'd want to study using data, and why does it matter to you personally?" },
-  { category:'problem solving', text:"A school wants to reduce its energy use without spending extra money. What information would you gather to identify where energy is being wasted, and how would you evaluate possible solutions?" },
-  { category:'creativity, problem solving', text:"Climate change is affecting how and where crops can be grown. If you were advising a local farmer, what STEM-based approach would you suggest they consider, and why?" },
+  { category:'Environmental Science', text:"The US Fish & Wildlife Service wants to remove 23 animal species from the Endangered Species List. The agency wants to remove these animals from the list because they are believed to be extinct, which means all individuals of that species have died out. Affected animals include the ivory-billed woodpecker (bird) and eight species of mussels (shellfish).\n\nA. Imagine you are a wildlife biologist working to update the Endangered Species List and make recommendations to the US Fish & Wildlife Service. What questions do you need to ask to assess whether these species are, indeed, extinct?\n\nB. What types of information might you use to support your findings? What criteria would you use to judge the accuracy and authenticity of the evidence you gather?\n\nC. How would you present your arguments to the US Fish & Wildlife Service? How would you acknowledge differing points of view?" },
+  { category:'Environmental Science', text:"Recent water quality reports show rising pollution levels in a stream that runs through your community, and local officials are deciding whether to fund a stream restoration project.\n\nA. Imagine you are an environmental scientist advising the local government. What questions would you need to ask to determine the actual cause of the pollution?\n\nB. What types of information would you gather to support your findings, and what criteria would you use to judge whether that information is accurate and reliable?\n\nC. How would you present your recommendation to the local government? How would you acknowledge people who might disagree, such as nearby businesses worried about the cost?" },
+  { category:'Engineering & Infrastructure', text:"A school district is deciding whether to invest in new equipment to reduce a school's energy use, but the budget is limited.\n\nA. Imagine you are a student presenting a proposal to the school board. What questions would you need to ask to identify where energy is actually being wasted?\n\nB. What information would you gather to support your proposal, and how would you judge whether that information is trustworthy?\n\nC. How would you present your case to the school board, and how would you address board members who are skeptical the investment is worth the cost?" },
+  { category:'Community Policy', text:"A city council is considering a new program to reduce food waste from local schools and restaurants.\n\nA. Imagine you are advising the city council. What questions would you need to ask to understand the actual scale and causes of food waste in the community?\n\nB. What kinds of information or data would you use to support a proposed solution, and how would you evaluate its reliability?\n\nC. How would you present your proposal to the council, and how would you respond to business owners concerned it would hurt them financially?" },
+  { category:'Data & Research', text:"Many scientific and engineering teams now rely on large datasets to make decisions about real-world problems, from traffic patterns to disease outbreaks.\n\nA. Choose a real-world problem you would want to study using data. What questions would guide your investigation?\n\nB. What kinds of data or information would you need to collect, and how would you judge whether that data is accurate and reliable?\n\nC. How would you present your findings to people who might be skeptical of your conclusions, and how would you address their concerns?" },
+  { category:'Environmental Science', text:"Changing weather patterns are affecting how and where certain crops can be grown, and a local farmer is deciding whether to change what they plant.\n\nA. Imagine you are advising this farmer. What questions would you need to ask to understand how climate change is affecting their land specifically?\n\nB. What information would you gather to support your recommendation, and how would you judge its accuracy?\n\nC. How would you present your recommendation to the farmer, and how would you acknowledge the financial risk of changing crops?" },
+  { category:'Engineering & Design', text:"Your school is holding a competition for student-designed tools or inventions that solve a real problem in the community.\n\nA. Choose a problem you would want to solve. What questions would you need to ask to fully understand the problem before designing a solution?\n\nB. What information would you gather to make sure your design would actually work, and how would you judge whether your sources are reliable?\n\nC. How would you present your invention to the judges, and how would you respond to judges who doubt it would work?" },
+  { category:'Community Policy', text:"A school board is deciding whether to ban a certain snack or drink from vending machines because of health concerns.\n\nA. Imagine you are a student advising the board. What questions would you need to ask to determine whether the health concerns are justified?\n\nB. What information would you gather to support your position, and how would you judge whether that information is accurate?\n\nC. How would you present your recommendation to the board, and how would you acknowledge students or vendors who disagree with your position?" },
+  { category:'Engineering & Infrastructure', text:"A city engineering department wants to close a historic bridge because they believe it is structurally unsafe, but many residents rely on it daily and believe it is still safe.\n\nA. Imagine you are an engineer asked to make a recommendation. What questions would you need to ask to determine whether the bridge is truly unsafe?\n\nB. What types of information would you use to support your findings, and what criteria would you use to judge the accuracy of that evidence?\n\nC. How would you present your recommendation to the city council, and how would you acknowledge the residents who disagree?" },
+  { category:'Environmental Science', text:"A school is considering switching entirely to solar power, but some staff worry it won't be reliable enough.\n\nA. Imagine you are advising the school on this decision. What questions would you need to ask to determine whether solar power would meet the school's needs?\n\nB. What information would you gather to support your recommendation, and how would you judge whether your sources are trustworthy?\n\nC. How would you present your recommendation to the school, and how would you address staff members who are skeptical?" },
 ];
 
 const WRITING_TEST_CONFIGS = {
-  tj: { label:'SPS Writing Assessment', badge:'SPS', prompts:SPS_PROMPTS, endpoint:'/api/grade-sps', activityLabel:'SPS Writing Assessment' },
-  acl: { label:'Writing Assessment', badge:'AOS/AET', prompts:AOS_AET_PROMPTS, endpoint:'/api/grade-writing-assessment', activityLabel:'Writing Assessment' },
+  tj: { label:'SPS Writing Assessment', badge:'SPS', prompts:SPS_PROMPTS, endpoint:'/api/grade-sps', activityLabel:'SPS Writing Assessment', maxScore:5, pointsMultiplier:20 },
+  acl: {
+    label:'Writing Assessment', badge:'AOS/AET', prompts:AOS_AET_PROMPTS, endpoint:'/api/grade-writing-assessment', activityLabel:'Writing Assessment', maxScore:10, pointsMultiplier:10,
+    directions:"Official LCPS directions: your response is evaluated on the strength of your argument(s) and ideas. Structure it however you like — bullets, an outline, paragraphs. Grammar, spelling, and syntax do not count against you. You'd have 45 minutes on the real assessment.",
+  },
 };
 let currentWritingType = 'tj';
 let currentWritingPrompt = null;
@@ -954,6 +960,9 @@ function startWritingTest(type) {
   const cfg = WRITING_TEST_CONFIGS[type];
   document.getElementById('writing-runner-title').textContent = cfg.label;
   document.getElementById('writing-type-badge').textContent = cfg.badge;
+  const directionsEl = document.getElementById('writing-directions');
+  if (cfg.directions) { directionsEl.textContent = cfg.directions; directionsEl.style.display = 'block'; }
+  else { directionsEl.style.display = 'none'; }
   loadRandomWritingPrompt();
 }
 
@@ -999,9 +1008,18 @@ async function submitWritingResponse() {
   }
 }
 
+const AOS_AET_INDICATOR_LABELS = {
+  questioningProcessing: 'Questioning / Processing',
+  informationGathering: 'Information Gathering / Analysis',
+  fluencyOriginality: 'Fluency / Originality of Ideas',
+  presentationReasoning: 'Presentation / Reasoning',
+  pointOfView: 'Point of View / Perspective',
+};
+
 function renderWritingResult(data) {
-  logActivity('✍️', '#fce7f3', WRITING_TEST_CONFIGS[currentWritingType].activityLabel, `${data.score}/5`);
-  progress.points += Math.round(data.score * 20);
+  const cfg = WRITING_TEST_CONFIGS[currentWritingType];
+  logActivity('✍️', '#fce7f3', cfg.activityLabel, `${data.score}/${cfg.maxScore}`);
+  progress.points += Math.round(data.score * cfg.pointsMultiplier);
   progress.writingPracticesCompleted++;
   logDailyActivity(1);
   if (writingPromptShownAt) logStudyMinutes((Date.now() - writingPromptShownAt) / 60000);
@@ -1012,11 +1030,24 @@ function renderWritingResult(data) {
   document.getElementById('writing-prompt-card').style.display = 'none';
   const card = document.getElementById('writing-result-card');
   card.style.display = 'block';
+
+  const indicatorRows = data.indicatorScores ? `
+    <div style="margin-bottom:20px">
+      <h3 style="margin-bottom:10px">📋 Rubric breakdown</h3>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${Object.entries(AOS_AET_INDICATOR_LABELS).map(([key, label]) => `
+          <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--gray-50);border-radius:8px;font-size:14px">
+            <span>${label}</span><strong>${data.indicatorScores[key] ?? 0}/2</strong>
+          </div>`).join('')}
+      </div>
+    </div>` : '';
+
   card.innerHTML = `
     <div style="text-align:center;margin-bottom:28px">
-      <div style="font-size:52px;font-weight:700;color:var(--blue)">${data.score}<span style="font-size:22px;color:var(--gray-400)">/5</span></div>
+      <div style="font-size:52px;font-weight:700;color:var(--blue)">${data.score}<span style="font-size:22px;color:var(--gray-400)">/${cfg.maxScore}</span></div>
       <p style="color:var(--gray-600);max-width:520px;margin:12px auto 0">${formatChatText(data.summary)}</p>
     </div>
+    ${indicatorRows}
     <div style="margin-bottom:20px">
       <h3 style="margin-bottom:10px">✅ Strengths</h3>
       <ul style="padding-left:20px;line-height:1.8;color:var(--gray-700)">${data.strengths.map(s => `<li>${formatChatText(s)}</li>`).join('')}</ul>

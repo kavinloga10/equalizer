@@ -158,7 +158,8 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   background:var(--white); border-radius:var(--radius-lg); padding:48px 40px;
   width:420px; box-shadow:var(--shadow-lg); border:1px solid var(--gray-200);
 }
-.auth-logo { font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-.02em; font-size:22px; color:var(--blue); margin-bottom:8px; }
+.auth-logo { font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-.02em; font-size:22px; color:var(--blue); }
+.auth-tagline { font-size:13px; color:var(--gray-500); font-weight:500; margin-bottom:20px; }
 .auth-card h2 { font-size:22px; font-weight:700; margin-bottom:6px; }
 .auth-card p { font-size:14px; color:var(--gray-500); margin-bottom:32px; }
 .role-tabs { display:flex; background:var(--gray-100); border-radius:10px; padding:4px; margin-bottom:28px; }

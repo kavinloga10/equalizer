@@ -39,13 +39,58 @@ SPS-SPECIFIC GRADING SHORTHAND — use these exact phrases in your improvement f
 
 "What's next?" — Doesn't reflect on where the accomplishment or experience has led the student, or where it might lead them next.`;
 
-const SPS_GRADING_SYSTEM_PROMPT = `You are an expert, experienced admissions-essay coach grading a middle schooler's SPS (Student Personal Statement) response for competitive STEM magnet programs like TJHSST and Academies of Loudoun. Grade strictly according to the rubric and shorthand concerns provided below. Be honest but encouraging and age-appropriate — the writer is 12-14 years old.
+const SPS_GRADING_SYSTEM_PROMPT = `You are an expert, experienced admissions-essay coach grading a middle schooler's SPS (Student Personal Statement) response for TJHSST admissions. Grade strictly according to the rubric and shorthand concerns provided below. Be honest but encouraging and age-appropriate — the writer is 12-14 years old.
 
 ${SPS_RUBRIC}
 
 Return your grading as the requested JSON structure. The score must be a number from 0 to 5 in increments of 0.5. "summary" is a 2-3 sentence overall assessment. "strengths" is a list of 2-4 specific things the response does well. "improvements" is a list of 2-4 specific, actionable pieces of feedback — when a listed shorthand concern (Needs more you / Tie to prompt / Needs tech. / Tie to other STEM / What's next?) applies, lead that bullet with the exact shorthand phrase in quotes followed by a dash and a specific explanation tied to what the student actually wrote.`;
 
-const SPS_RESPONSE_SCHEMA = {
+// Sourced from LCPS-adjacent Academies of Loudoun test-prep materials: the
+// assessment is a 45-minute on-the-spot essay on a math/science/current-issue
+// prompt, graded on Mechanics and Content — the latter built around
+// demonstrating STEM interest through motivation, persistence, creativity,
+// and problem-solving (see Young Scholars Circle's "AOL Writing Assessment"
+// prep deck). We keep our own 0-5 scale for consistency with the rest of the
+// app rather than replicating LCPS's internal scoring.
+const AOS_AET_RUBRIC = `Grading Rubric for the Academies of Loudoun (AOS/AET) Writing Assessment:
+
+Scored 0-5 combining two dimensions. As with essays, partial points are awarded — a 3.5 is halfway between "3" and "4."
+
+CONTENT (the larger share of the score): does the response show genuine STEM interest through motivation, persistence, creativity, and problem-solving? A strong response picks a real math, science, or social/environmental issue, analyzes it rather than just describing it, and builds a structured, evidence-based argument or solution — the "why it matters" and "how I'd approach it" should dominate over the "what the issue is."
+
+MECHANICS: grammar, sentence structure, punctuation, spelling, and overall clarity.
+
+5 – Outstanding. A clear, well-organized argument grounded in specific evidence or reasoning. Goes beyond describing the problem to analyze it. Shows real STEM curiosity, persistence, or creative problem-solving. Nearly free of grammatical errors.
+
+4 – Strong. A solid argument with good organization and mostly specific reasoning, but may lean too much on describing the problem rather than analyzing it, or could use more depth in the why/how.
+
+3 – Developing. Answers the prompt but leans heavily on describing the issue rather than analyzing it. Argument is present but under-supported or generic. Some grammar/mechanics issues.
+
+2 – Weak. Vague or overly general treatment of the issue, minimal analysis, unclear organization, or an argument that doesn't hold together. Noticeable grammar/mechanics issues.
+
+1 – Minimal. Barely engages with the prompt, largely descriptive with no real argument, or very hard to follow due to mechanics.
+
+0 – Does not respond to the prompt asked, regardless of writing quality.
+
+AOS/AET-SPECIFIC GRADING SHORTHAND — use these exact phrases in your improvement feedback when they apply:
+
+"Too much describing" — Spends too long explaining what the problem is instead of analyzing why it matters and how to approach it.
+
+"Show your reasoning" — States a position or solution without walking through the thinking that got there (research, trial and error, weighing options).
+
+"Needs a stake" — Doesn't make clear why this issue is personally important to the writer, not just important in general.
+
+"More STEM lens" — Doesn't connect the response to a STEM-flavored angle (data, methodology, design, research) even though the prompt invites one.
+
+"Acknowledge the team" — Presents a solution as solo work when collaboration would strengthen the answer.`;
+
+const AOS_AET_GRADING_SYSTEM_PROMPT = `You are an expert admissions-essay coach grading a middle schooler's response to the Academies of Loudoun (AOS/AET) Writing Assessment — a 45-minute on-the-spot essay responding to a prompt about a math, science, or current social/environmental issue. Grade strictly according to the rubric and shorthand concerns below. Be honest but encouraging and age-appropriate — the writer is 11-13 years old.
+
+${AOS_AET_RUBRIC}
+
+Return your grading as the requested JSON structure. The score must be a number from 0 to 5 in increments of 0.5. "summary" is a 2-3 sentence overall assessment. "strengths" is a list of 2-4 specific things the response does well. "improvements" is a list of 2-4 specific, actionable pieces of feedback — when a listed shorthand concern (Too much describing / Show your reasoning / Needs a stake / More STEM lens / Acknowledge the team) applies, lead that bullet with the exact shorthand phrase in quotes followed by a dash and a specific explanation tied to what the student actually wrote.`;
+
+const WRITING_RESPONSE_SCHEMA = {
   type: 'object',
   properties: {
     score: { type: 'number' },
@@ -105,7 +150,36 @@ app.post('/api/grade-sps', async (req, res) => {
       config: {
         systemInstruction: SPS_GRADING_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
-        responseSchema: SPS_RESPONSE_SCHEMA,
+        responseSchema: WRITING_RESPONSE_SCHEMA,
+        thinkingConfig: { thinkingBudget: 0 },
+        maxOutputTokens: 4096,
+      },
+    });
+    const graded = JSON.parse(result.text);
+    res.json(graded);
+  } catch (err) {
+    console.error('Gemini grading error:', err);
+    res.status(502).json({ error: "Grading failed. Try again in a moment!" });
+  }
+});
+
+app.post('/api/grade-writing-assessment', async (req, res) => {
+  const { prompt, response: studentResponse } = req.body;
+  if (!prompt || !studentResponse || !studentResponse.trim()) {
+    return res.status(400).json({ error: 'prompt and response are required' });
+  }
+
+  try {
+    const result = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{
+        role: 'user',
+        parts: [{ text: `WRITING ASSESSMENT PROMPT:\n${prompt}\n\nSTUDENT RESPONSE:\n${studentResponse}` }],
+      }],
+      config: {
+        systemInstruction: AOS_AET_GRADING_SYSTEM_PROMPT,
+        responseMimeType: 'application/json',
+        responseSchema: WRITING_RESPONSE_SCHEMA,
         thinkingConfig: { thinkingBudget: 0 },
         maxOutputTokens: 4096,
       },

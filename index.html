@@ -217,11 +217,17 @@
           <p>STEM critical-thinking questions in the style of the Academies of Loudoun admissions test — math reasoning, logic, spatial visualization, circuits, and data interpretation.</p>
           <div class="test-meta"><span class="test-tag">32 questions</span><span class="test-tag">45 min</span><span class="test-tag">ACL (AOS/AET) Prep</span></div>
         </div>
-        <div class="test-card" onclick="startWritingTest()">
+        <div class="test-card" onclick="startWritingTest('tj')">
           <div class="test-icon">✍️</div>
-          <h3>SPS Writing Practice</h3>
-          <p>Write a real SPS prompt and get instant AI feedback, graded against the actual 0–5 TJ/ACL (AOS/AET) rubric with specific, actionable comments.</p>
-          <div class="test-meta"><span class="test-tag">13 prompts</span><span class="test-tag">AI-graded</span><span class="test-tag">Writing</span></div>
+          <h3>SPS Writing Assessment</h3>
+          <p>Write a real SPS prompt and get instant AI feedback, graded against the actual 0–5 TJHSST rubric with specific, actionable comments.</p>
+          <div class="test-meta"><span class="test-tag">13 prompts</span><span class="test-tag">AI-graded</span><span class="test-tag">TJ</span></div>
+        </div>
+        <div class="test-card" onclick="startWritingTest('acl')">
+          <div class="test-icon">📝</div>
+          <h3>Writing Assessment</h3>
+          <p>Respond to an AOS/AET-style prompt — analyze a math, science, or current issue and build a logical, evidence-based argument — with instant AI feedback graded against the Academies of Loudoun rubric.</p>
+          <div class="test-meta"><span class="test-tag">10 prompts</span><span class="test-tag">AI-graded</span><span class="test-tag">AOS/AET</span></div>
         </div>
       </div>
     </div>
@@ -243,12 +249,12 @@
     </div>
     <div id="writing-runner" style="display:none;max-width:760px;">
       <div class="quiz-header">
-        <h2 style="font-size:20px;font-weight:700">SPS Writing Practice</h2>
+        <h2 id="writing-runner-title" style="font-size:20px;font-weight:700">SPS Writing Assessment</h2>
         <button class="btn btn-outline" onclick="backToTests()" style="margin-left:auto">End practice</button>
       </div>
       <div class="question-card" id="writing-prompt-card">
         <div class="q-meta">
-          <span class="q-badge" style="background:#dbeafe">SPS</span>
+          <span class="q-badge" id="writing-type-badge" style="background:#dbeafe">SPS</span>
           <span class="q-number" id="writing-category"></span>
         </div>
         <div class="q-text" id="writing-prompt-text"></div>
@@ -913,18 +919,48 @@ const SPS_PROMPTS = [
   { category:'communicator', text:"What do you prioritize the most in communicating with others? Provide one example of such communication and reflect on what makes it effective." },
 ];
 
+// The real AOS/AET Writing Assessment is a 45-minute on-the-spot essay on a
+// math/science/current-issue prompt, scored on Mechanics and Content — the
+// latter built around demonstrating STEM interest through motivation,
+// persistence, creativity, and problem-solving (source: LCPS-adjacent
+// Academies of Loudoun test-prep materials). The first prompt below is a
+// real released/retired assessment prompt; the rest are written in the same
+// style and categorized against those same four traits.
+const AOS_AET_PROMPTS = [
+  { category:'problem solving', text:"What elements would you contribute to solving the forest fire destruction happening on the western side of the United States? How would you gather information about this problem? How would you know that the information you've gathered is accurate?" },
+  { category:'motivation', text:"Choose a scientific or mathematical idea you find genuinely exciting. Why does it interest you, and what would you want to investigate about it next?" },
+  { category:'persistence', text:"Describe a math or science problem that took you several tries to solve. What did you change between attempts, and what kept you working at it?" },
+  { category:'creativity', text:"If you could design one new tool, app, or invention to solve a problem in your school or community, what would it be? Explain how it would work and why it's needed." },
+  { category:'problem solving', text:"Local water quality reports show rising pollution levels in a nearby stream. How would you investigate the cause, and what steps would you propose to address it?" },
+  { category:'creativity', text:"Many communities are trying to reduce food waste. Propose one creative, practical solution, and explain how you'd measure whether it's actually working." },
+  { category:'persistence', text:"Scientific research often involves repeated failure before success. Describe a time you failed at something academic or STEM-related, and how you adjusted your approach afterward." },
+  { category:'motivation', text:"STEM fields are increasingly shaped by data. What is one real-world problem you'd want to study using data, and why does it matter to you personally?" },
+  { category:'problem solving', text:"A school wants to reduce its energy use without spending extra money. What information would you gather to identify where energy is being wasted, and how would you evaluate possible solutions?" },
+  { category:'creativity, problem solving', text:"Climate change is affecting how and where crops can be grown. If you were advising a local farmer, what STEM-based approach would you suggest they consider, and why?" },
+];
+
+const WRITING_TEST_CONFIGS = {
+  tj: { label:'SPS Writing Assessment', badge:'SPS', prompts:SPS_PROMPTS, endpoint:'/api/grade-sps', activityLabel:'SPS Writing Assessment' },
+  acl: { label:'Writing Assessment', badge:'AOS/AET', prompts:AOS_AET_PROMPTS, endpoint:'/api/grade-writing-assessment', activityLabel:'Writing Assessment' },
+};
+let currentWritingType = 'tj';
 let currentWritingPrompt = null;
 
-function startWritingTest() {
+function startWritingTest(type) {
+  currentWritingType = type;
   document.getElementById('tests-list').style.display = 'none';
   document.getElementById('test-runner').style.display = 'none';
   document.getElementById('writing-runner').style.display = 'block';
+  const cfg = WRITING_TEST_CONFIGS[type];
+  document.getElementById('writing-runner-title').textContent = cfg.label;
+  document.getElementById('writing-type-badge').textContent = cfg.badge;
   loadRandomWritingPrompt();
 }
 
 function loadRandomWritingPrompt() {
   writingPromptShownAt = Date.now();
-  currentWritingPrompt = SPS_PROMPTS[Math.floor(Math.random() * SPS_PROMPTS.length)];
+  const cfg = WRITING_TEST_CONFIGS[currentWritingType];
+  currentWritingPrompt = cfg.prompts[Math.floor(Math.random() * cfg.prompts.length)];
   document.getElementById('writing-category').textContent = currentWritingPrompt.category;
   document.getElementById('writing-prompt-text').textContent = currentWritingPrompt.text;
   document.getElementById('writing-response').value = '';
@@ -948,7 +984,7 @@ async function submitWritingResponse() {
   btn.innerHTML = '<span class="spinner"></span> Grading...';
 
   try {
-    const res = await fetch(`${API_BASE}/api/grade-sps`, {
+    const res = await fetch(`${API_BASE}${WRITING_TEST_CONFIGS[currentWritingType].endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: currentWritingPrompt.text, response: text }),
@@ -964,7 +1000,7 @@ async function submitWritingResponse() {
 }
 
 function renderWritingResult(data) {
-  logActivity('✍️', '#fce7f3', 'SPS Writing Practice', `${data.score}/5`);
+  logActivity('✍️', '#fce7f3', WRITING_TEST_CONFIGS[currentWritingType].activityLabel, `${data.score}/5`);
   progress.points += Math.round(data.score * 20);
   progress.writingPracticesCompleted++;
   logDailyActivity(1);
@@ -1009,7 +1045,7 @@ const BADGES = [
   { id:'perfect-score', icon:'⭐', label:'Perfect Score', description:'Score 100% on a mock test', check: p => p.bestMockScore >= 100 },
   { id:'tj-scholar', icon:'🎓', label:'TJ Scholar', description:'80%+ accuracy across 20+ TJ questions', check: p => p.subjectStats.tj.total >= 20 && (p.subjectStats.tj.correct / p.subjectStats.tj.total) >= 0.8 },
   { id:'acl-scholar', icon:'🏫', label:'ACL (AOS/AET) Scholar', description:'80%+ accuracy across 20+ ACL (AOS/AET) questions', check: p => p.subjectStats.acl.total >= 20 && (p.subjectStats.acl.correct / p.subjectStats.acl.total) >= 0.8 },
-  { id:'first-essay', icon:'✍️', label:'First Essay', description:'Submit your first SPS writing practice', check: p => p.writingPracticesCompleted >= 1 },
+  { id:'first-essay', icon:'✍️', label:'First Essay', description:'Submit your first writing assessment', check: p => p.writingPracticesCompleted >= 1 },
   { id:'point-milestone', icon:'🏆', label:'500 Points', description:'Earn 500 total points', check: p => p.points >= 500 },
 ];
 

@@ -151,7 +151,7 @@
   <div class="dash-panel" id="panel-practice">
     <div class="subject-picker">
       <button class="subj-btn active" onclick="setSubject('tj',this)">🎓 TJ</button>
-      <button class="subj-btn" onclick="setSubject('acl',this)">🏫 ACL</button>
+      <button class="subj-btn" onclick="setSubject('acl',this)">🏫 ACL (AOS/AET)</button>
       <button class="subj-btn" onclick="setReviewMode(this)">🔁 Review</button>
     </div>
     <div id="question-area">
@@ -213,14 +213,14 @@
         </div>
         <div class="test-card" onclick="startTest('acl')">
           <div class="test-icon">🏫</div>
-          <h3>ACL Critical Thinking Prep</h3>
+          <h3>ACL (AOS/AET) Critical Thinking Prep</h3>
           <p>STEM critical-thinking questions in the style of the Academies of Loudoun admissions test — math reasoning, logic, spatial visualization, circuits, and data interpretation.</p>
-          <div class="test-meta"><span class="test-tag">32 questions</span><span class="test-tag">45 min</span><span class="test-tag">ACL Prep</span></div>
+          <div class="test-meta"><span class="test-tag">32 questions</span><span class="test-tag">45 min</span><span class="test-tag">ACL (AOS/AET) Prep</span></div>
         </div>
         <div class="test-card" onclick="startWritingTest()">
           <div class="test-icon">✍️</div>
           <h3>SPS Writing Practice</h3>
-          <p>Write a real SPS prompt and get instant AI feedback, graded against the actual 0–5 TJ/ACL rubric with specific, actionable comments.</p>
+          <p>Write a real SPS prompt and get instant AI feedback, graded against the actual 0–5 TJ/ACL (AOS/AET) rubric with specific, actionable comments.</p>
           <div class="test-meta"><span class="test-tag">13 prompts</span><span class="test-tag">AI-graded</span><span class="test-tag">Writing</span></div>
         </div>
       </div>
@@ -329,7 +329,7 @@
         <label>Subject</label>
         <select id="admin-subject">
           <option value="tj">TJ</option>
-          <option value="acl">ACL</option>
+          <option value="acl">ACL (AOS/AET)</option>
         </select>
       </div>
       <div class="form-group">
@@ -365,7 +365,7 @@
         <select id="admin-filter-subject" onchange="renderAdminList()" style="padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:13px">
           <option value="">All subjects</option>
           <option value="tj">TJ</option>
-          <option value="acl">ACL</option>
+          <option value="acl">ACL (AOS/AET)</option>
         </select>
       </div>
       <div id="admin-question-list"></div>
@@ -1008,7 +1008,7 @@ const BADGES = [
   { id:'first-mock', icon:'🏁', label:'First Mock Test', description:'Complete your first mock test', check: p => p.mockTestsCompleted >= 1 },
   { id:'perfect-score', icon:'⭐', label:'Perfect Score', description:'Score 100% on a mock test', check: p => p.bestMockScore >= 100 },
   { id:'tj-scholar', icon:'🎓', label:'TJ Scholar', description:'80%+ accuracy across 20+ TJ questions', check: p => p.subjectStats.tj.total >= 20 && (p.subjectStats.tj.correct / p.subjectStats.tj.total) >= 0.8 },
-  { id:'acl-scholar', icon:'🏫', label:'ACL Scholar', description:'80%+ accuracy across 20+ ACL questions', check: p => p.subjectStats.acl.total >= 20 && (p.subjectStats.acl.correct / p.subjectStats.acl.total) >= 0.8 },
+  { id:'acl-scholar', icon:'🏫', label:'ACL (AOS/AET) Scholar', description:'80%+ accuracy across 20+ ACL (AOS/AET) questions', check: p => p.subjectStats.acl.total >= 20 && (p.subjectStats.acl.correct / p.subjectStats.acl.total) >= 0.8 },
   { id:'first-essay', icon:'✍️', label:'First Essay', description:'Submit your first SPS writing practice', check: p => p.writingPracticesCompleted >= 1 },
   { id:'point-milestone', icon:'🏆', label:'500 Points', description:'Earn 500 total points', check: p => p.points >= 500 },
 ];
@@ -1289,7 +1289,7 @@ function renderQuestion() {
   const q = currentQuestion;
   const letters = ['A','B','C','D','E','F'];
   const badgeClass = currentQuestionSubject;
-  const badgeLabels = { math:'📐 Math', science:'🔬 Science', logic:'🧩 Logic', reading:'📖 Reading', vocab:'🔤 Vocab', tj:'🎓 TJ', acl:'🏫 ACL' };
+  const badgeLabels = { math:'📐 Math', science:'🔬 Science', logic:'🧩 Logic', reading:'📖 Reading', vocab:'🔤 Vocab', tj:'🎓 TJ', acl:'🏫 ACL (AOS/AET)' };
   const totalCount = reviewMode ? reviewQueue.length : QUESTIONS[currentSubject].length;
 
   document.getElementById('question-area').innerHTML = `
@@ -1361,7 +1361,7 @@ function selectOption(chosen) {
   if (practiceSessionTotal >= 10) {
     const icon = reviewMode ? '🔁' : (currentSubject === 'tj' ? '🎓' : '🏫');
     const bg = reviewMode ? 'var(--purple-light)' : (currentSubject === 'tj' ? 'var(--blue-light)' : 'var(--green-light)');
-    const label = reviewMode ? 'Review' : (currentSubject === 'tj' ? 'TJ' : 'ACL') + ' Practice';
+    const label = reviewMode ? 'Review' : (currentSubject === 'tj' ? 'TJ' : 'ACL (AOS/AET)') + ' Practice';
     logActivity(icon, bg, label, `${practiceSessionCorrect}/${practiceSessionTotal}`);
     practiceSessionCorrect = 0;
     practiceSessionTotal = 0;
@@ -1535,7 +1535,7 @@ async function sendDrawerMessage() {
 // ═══════════════════════════════════════════════════════
 const TEST_CONFIGS = {
   tj:  { label:'TJ Critical Thinking Prep', subjects:['tj'], count:31, time:2700 },
-  acl: { label:'ACL Critical Thinking Prep', subjects:['acl'], count:32, time:2700 },
+  acl: { label:'ACL (AOS/AET) Critical Thinking Prep', subjects:['acl'], count:32, time:2700 },
 };
 
 function startTest(type) {
@@ -1792,7 +1792,7 @@ function renderHomeStats() {
   if (masteryHome) {
     masteryHome.innerHTML = `
       <div class="progress-bar-wrap"><div class="progress-label"><span>🎓 TJ</span><span>${subjectAccuracy('tj')}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${subjectAccuracy('tj')}%;background:var(--blue)"></div></div></div>
-      <div class="progress-bar-wrap"><div class="progress-label"><span>🏫 ACL</span><span>${subjectAccuracy('acl')}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${subjectAccuracy('acl')}%;background:var(--green)"></div></div></div>`;
+      <div class="progress-bar-wrap"><div class="progress-label"><span>🏫 ACL (AOS/AET)</span><span>${subjectAccuracy('acl')}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${subjectAccuracy('acl')}%;background:var(--green)"></div></div></div>`;
   }
 
   renderHomeBanners();
@@ -1817,7 +1817,7 @@ function renderHomeBanners() {
 
   if (currentUser && currentUser.targetDate) {
     const days = daysUntil(currentUser.targetDate);
-    const testLabel = { tj: 'TJ', acl: 'ACL', both: 'TJ/ACL' }[currentUser.targetTest] || 'your';
+    const testLabel = { tj: 'TJ', acl: 'ACL (AOS/AET)', both: 'TJ/ACL (AOS/AET)' }[currentUser.targetTest] || 'your';
     if (days > 0) html += `<div class="home-banner countdown" onclick="showTargetDatePrompt()">🎯 <strong>${days}</strong> day${days === 1 ? '' : 's'} until your ${testLabel} exam</div>`;
     else if (days === 0) html += `<div class="home-banner countdown" onclick="showTargetDatePrompt()">🎯 Your ${testLabel} exam is today — good luck!</div>`;
   } else if (currentUser) {
@@ -1877,7 +1877,7 @@ function renderProgressStats() {
   const focusEl = el('focus-areas');
   if (focusEl) {
     if (!categories.length) {
-      focusEl.innerHTML = `<div style="background:var(--gray-100);color:var(--gray-600);padding:14px 18px;border-radius:var(--radius);font-size:14px;flex:1;min-width:160px">Answer some TJ or ACL practice questions to see personalized focus areas here.</div>`;
+      focusEl.innerHTML = `<div style="background:var(--gray-100);color:var(--gray-600);padding:14px 18px;border-radius:var(--radius);font-size:14px;flex:1;min-width:160px">Answer some TJ or ACL (AOS/AET) practice questions to see personalized focus areas here.</div>`;
     } else {
       const sorted = [...categories].sort((a, b) => categoryAccuracy(a) - categoryAccuracy(b));
       const weakest = sorted[0];

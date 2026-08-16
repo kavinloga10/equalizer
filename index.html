@@ -213,7 +213,7 @@
         </div>
         <div class="test-card" onclick="startWritingTest('tj')">
           <div class="test-icon">✍️</div>
-          <h3>SPS Writing Assessment</h3>
+          <h3>SPS Writing Assessment (TJ)</h3>
           <p>Write a real SPS prompt and get instant AI feedback, graded against the actual 0–5 TJHSST rubric with specific, actionable comments.</p>
           <div class="test-meta"><span class="test-tag">13 prompts</span><span class="test-tag">AI-graded</span><span class="test-tag">TJ</span></div>
         </div>
@@ -249,7 +249,7 @@
     </div>
     <div id="writing-runner" style="display:none;max-width:760px;">
       <div class="quiz-header">
-        <h2 id="writing-runner-title" style="font-size:20px;font-weight:700">SPS Writing Assessment</h2>
+        <h2 id="writing-runner-title" style="font-size:20px;font-weight:700">SPS Writing Assessment (TJ)</h2>
         <button class="btn btn-outline" onclick="backToTests()" style="margin-left:auto">End practice</button>
       </div>
       <div class="question-card" id="writing-prompt-card">
@@ -965,7 +965,7 @@ const PSE_PROMPTS = [
 ];
 
 const WRITING_TEST_CONFIGS = {
-  tj: { label:'SPS Writing Assessment', badge:'SPS', prompts:SPS_PROMPTS, endpoint:'/api/grade-sps', activityLabel:'SPS Writing Assessment', maxScore:5, pointsMultiplier:20 },
+  tj: { label:'SPS Writing Assessment (TJ)', badge:'SPS', prompts:SPS_PROMPTS, endpoint:'/api/grade-sps', activityLabel:'SPS Writing Assessment (TJ)', maxScore:5, pointsMultiplier:20 },
   acl: {
     label:'Writing Assessment (AOS/AET)', badge:'AOS/AET', prompts:AOS_AET_PROMPTS, endpoint:'/api/grade-writing-assessment', activityLabel:'Writing Assessment (AOS/AET)', maxScore:10, pointsMultiplier:10,
     directions:"Official LCPS directions: your response is evaluated on the strength of your argument(s) and ideas. Structure it however you like — bullets, an outline, paragraphs. Grammar, spelling, and syntax do not count against you. You'd have 45 minutes on the real assessment.",

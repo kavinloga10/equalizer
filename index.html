@@ -219,7 +219,7 @@
         </div>
         <div class="test-card" onclick="startWritingTest('acl')">
           <div class="test-icon">📝</div>
-          <h3>Writing Assessment</h3>
+          <h3>Writing Assessment (AOS/AET)</h3>
           <p>Respond to a real-style AOS/AET scenario and get instant AI feedback scored against LCPS's actual released 5-indicator rubric — Questioning, Evidence, Fluency, Presentation, and Perspective.</p>
           <div class="test-meta"><span class="test-tag">10 prompts</span><span class="test-tag">AI-graded</span><span class="test-tag">AOS/AET</span></div>
         </div>
@@ -967,7 +967,7 @@ const PSE_PROMPTS = [
 const WRITING_TEST_CONFIGS = {
   tj: { label:'SPS Writing Assessment', badge:'SPS', prompts:SPS_PROMPTS, endpoint:'/api/grade-sps', activityLabel:'SPS Writing Assessment', maxScore:5, pointsMultiplier:20 },
   acl: {
-    label:'Writing Assessment', badge:'AOS/AET', prompts:AOS_AET_PROMPTS, endpoint:'/api/grade-writing-assessment', activityLabel:'Writing Assessment', maxScore:10, pointsMultiplier:10,
+    label:'Writing Assessment (AOS/AET)', badge:'AOS/AET', prompts:AOS_AET_PROMPTS, endpoint:'/api/grade-writing-assessment', activityLabel:'Writing Assessment (AOS/AET)', maxScore:10, pointsMultiplier:10,
     directions:"Official LCPS directions: your response is evaluated on the strength of your argument(s) and ideas. Structure it however you like — bullets, an outline, paragraphs. Grammar, spelling, and syntax do not count against you. You'd have 45 minutes on the real assessment.",
   },
   pse: {

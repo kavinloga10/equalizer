@@ -56,6 +56,40 @@ const WRITING_RESPONSE_SCHEMA = {
   required: ['score', 'summary', 'strengths', 'improvements'],
 };
 
+// Unlike the SPS and AOS/AET rubrics, FCPS does NOT publish an official
+// rubric, timing, or length limit for the TJHSST Problem-Solving Essay (PSE)
+// — only four format facts are confirmed public: content may be math and/or
+// science, the topic includes multiple variables/steps, the response must
+// include a solution AND an explanation of the process, and it's written in
+// essay format. This rubric is our own interpretation built from that public
+// format description plus commonly-cited general grading guidance (show
+// your work, explain reasoning, state assumptions) — it is explicitly NOT
+// presented as an official FCPS scoring rubric.
+const PSE_RUBRIC = `Practice rubric for the TJHSST Problem-Solving Essay (PSE) — not an official FCPS rubric (FCPS does not publish one). Built from FCPS's four confirmed public format facts: math/science content, a topic with multiple variables or steps, a response with both a solution and an explanation of the process, written in essay format.
+
+Scored 0-5 in increments of 0.5, weighing these factors:
+
+PROBLEM-SOLVING PROCESS (heaviest weight): does the response break the problem into clear, logical steps rather than jumping to an answer? Are assumptions stated explicitly where the problem is ambiguous or underspecified?
+
+REASONING & EXPLANATION: is the "why" and "how" explained in full sentences, not just shown as bare math? Does the explanation walk a reader through the thinking, not just the arithmetic?
+
+USE OF MATH/SCIENCE CONCEPTS: are the concepts applied correctly and appropriately for a middle schooler's level?
+
+SOLUTION QUALITY (lighter weight than process): is the final answer reasonable and consistent with the shown work? A well-reasoned, clearly-explained response with a computational slip should still score well — the process matters more than a perfect final number.
+
+5 – Outstanding. Clear step-by-step process, explicit assumptions, correct concepts, well-explained reasoning in full sentences, and a reasonable final answer.
+4 – Strong. Good process and reasoning with correct concepts, but may be missing an explicit assumption or have minor gaps in the explanation.
+3 – Developing. Attempts the problem with some correct steps, but the explanation leans on bare calculation over reasoning, or skips stating assumptions.
+2 – Weak. Significant gaps in the process, confused or incorrect use of concepts, or an explanation too thin to follow the student's thinking.
+1 – Minimal. Barely engages with the problem's multiple parts, or provides an answer with essentially no shown work or explanation.
+0 – Does not respond to the prompt asked.`;
+
+const PSE_GRADING_SYSTEM_PROMPT = `You are grading a middle schooler's response to a TJHSST Problem-Solving Essay (PSE) practice prompt using the practice rubric below. The writer is 12-14 years old. This rubric is our own interpretation, not an official FCPS rubric — apply it fairly and consistently, valuing clear step-by-step reasoning and explicit assumptions over a merely correct final number.
+
+${PSE_RUBRIC}
+
+Return your grading as the requested JSON structure. The score must be a number from 0 to 5 in increments of 0.5. "summary" is a 2-3 sentence overall assessment. "strengths" is a list of 2-4 specific things the response does well. "improvements" is a list of 2-4 specific, actionable pieces of feedback tied to the rubric factors (process, reasoning/explanation, correct use of concepts, solution quality).`;
+
 // This is LCPS's own "2023-2024 Released Writing Prompt" rubric for the
 // Academies of Loudoun (AOS/AET) Writing Assessment, transcribed verbatim
 // from the official released document (5 indicators, each scored 0/1/2,
@@ -167,6 +201,35 @@ app.post('/api/grade-sps', async (req, res) => {
       }],
       config: {
         systemInstruction: SPS_GRADING_SYSTEM_PROMPT,
+        responseMimeType: 'application/json',
+        responseSchema: WRITING_RESPONSE_SCHEMA,
+        thinkingConfig: { thinkingBudget: 0 },
+        maxOutputTokens: 4096,
+      },
+    });
+    const graded = JSON.parse(result.text);
+    res.json(graded);
+  } catch (err) {
+    console.error('Gemini grading error:', err);
+    res.status(502).json({ error: "Grading failed. Try again in a moment!" });
+  }
+});
+
+app.post('/api/grade-pse', async (req, res) => {
+  const { prompt, response: studentResponse } = req.body;
+  if (!prompt || !studentResponse || !studentResponse.trim()) {
+    return res.status(400).json({ error: 'prompt and response are required' });
+  }
+
+  try {
+    const result = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{
+        role: 'user',
+        parts: [{ text: `PROBLEM-SOLVING ESSAY PROMPT:\n${prompt}\n\nSTUDENT RESPONSE:\n${studentResponse}` }],
+      }],
+      config: {
+        systemInstruction: PSE_GRADING_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
         responseSchema: WRITING_RESPONSE_SCHEMA,
         thinkingConfig: { thinkingBudget: 0 },

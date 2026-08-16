@@ -205,12 +205,6 @@
   <div class="dash-panel" id="panel-tests">
     <div id="tests-list">
       <div class="tests-grid">
-        <div class="test-card" onclick="startTest('tj')">
-          <div class="test-icon">🎓</div>
-          <h3>TJ Critical Thinking Prep</h3>
-          <p>STEM critical-thinking questions in the style of the TJHSST admissions test — math reasoning, logic, spatial visualization, circuits, and data interpretation.</p>
-          <div class="test-meta"><span class="test-tag">31 questions</span><span class="test-tag">45 min</span><span class="test-tag">TJ Prep</span></div>
-        </div>
         <div class="test-card" onclick="startTest('acl')">
           <div class="test-icon">🏫</div>
           <h3>ACL (AOS/AET) Critical Thinking Prep</h3>
@@ -228,6 +222,12 @@
           <h3>Writing Assessment</h3>
           <p>Respond to a real-style AOS/AET scenario and get instant AI feedback scored against LCPS's actual released 5-indicator rubric — Questioning, Evidence, Fluency, Presentation, and Perspective.</p>
           <div class="test-meta"><span class="test-tag">10 prompts</span><span class="test-tag">AI-graded</span><span class="test-tag">AOS/AET</span></div>
+        </div>
+        <div class="test-card" onclick="startWritingTest('pse')">
+          <div class="test-icon">🧮</div>
+          <h3>Problem-Solving Essay</h3>
+          <p>Work through a multi-step math/science scenario and explain your reasoning — the two things FCPS confirms the real PSE actually requires — with instant AI feedback on your process, not just your final answer.</p>
+          <div class="test-meta"><span class="test-tag">10 prompts</span><span class="test-tag">AI-graded</span><span class="test-tag">PSE</span></div>
         </div>
       </div>
     </div>
@@ -942,11 +942,37 @@ const AOS_AET_PROMPTS = [
   { category:'Environmental Science', text:"A school is considering switching entirely to solar power, but some staff worry it won't be reliable enough.\n\nA. Imagine you are advising the school on this decision. What questions would you need to ask to determine whether solar power would meet the school's needs?\n\nB. What information would you gather to support your recommendation, and how would you judge whether your sources are trustworthy?\n\nC. How would you present your recommendation to the school, and how would you address staff members who are skeptical?" },
 ];
 
+// TJHSST admissions has four parts: GPA, the Student Portrait Sheet (SPS,
+// above), the Problem-Solving Essay (PSE), and Experience Factors — but this
+// app only ever built a mock test for SPS. Unlike AOS/AET, FCPS does NOT
+// publish an official PSE prompt, rubric, or timing — only four format facts
+// are public: math/science content, a topic with multiple variables/steps,
+// a response with both a solution and an explanation of the process, and
+// essay format. These prompts are original, written to match that public
+// format description (system-of-linear-equations word problems with
+// explicit multi-part questions), not claimed as official/leaked content.
+const PSE_PROMPTS = [
+  { category:'Environmental Science', text:"In 2022, environmental scientists began tracking two woodlands experiencing different rates of tree loss. Forest A (Oregon) begins with a total area of 20 square kilometers and decreases by 0.2 square kilometers annually, while Forest B (Scotland) begins with a total area of 50 square kilometers and decreases by 0.8 square kilometers annually. Assuming no reforestation takes place in either location: (1) determine the exact calendar year in which both forests will reach an equal size, (2) calculate what that equal area will be in square kilometers, and (3) identify which forest will be completely wiped out first, along with the specific calendar year of its disappearance." },
+  { category:'Urban Planning', text:"A city's public transit ridership is changing in two directions. Bus Route A currently has 4,200 daily riders and is losing 60 riders per month as more people switch to rideshare apps. Bus Route B currently has 1,800 daily riders and is gaining 45 riders per month due to a new station opening nearby. Assuming these trends continue at a constant rate: (1) determine in how many months the two routes will have equal ridership, (2) calculate what that equal ridership number will be, and (3) identify which route will reach zero riders first, along with how many months that will take." },
+  { category:'Chemistry', text:"Two chemistry beakers are cooling in a lab after being heated. Beaker X starts at 92°C and cools by 3°C every minute. Beaker Y starts at 65°C and cools by 1°C every minute. Room temperature is a constant 20°C, and neither beaker can cool below room temperature. Assuming both beakers cool at these constant rates until they reach room temperature: (1) determine after how many minutes the two beakers will have equal temperatures (if this happens before either reaches room temperature), (2) calculate that shared temperature, and (3) identify which beaker reaches room temperature first, along with how many minutes that takes." },
+  { category:'Personal Finance', text:"Two students are managing their allowance money differently. Mia currently has $180 saved and is spending $12 per week on hobbies with no new income. Noah currently has $60 saved and is earning $18 per week from a part-time job with no spending. Assuming both trends continue at these constant weekly rates: (1) determine after how many weeks Mia and Noah will have equal amounts of money, (2) calculate what that equal amount will be, and (3) identify which student will run out of money first, along with how many weeks that takes." },
+  { category:'Agricultural Science', text:"Two water tanks at a farm are being used at different rates. Tank 1 currently holds 800 gallons and is being drained at 25 gallons per hour for irrigation with no refill. Tank 2 currently holds 300 gallons and is being filled by a well pump at 15 gallons per hour with no usage. Assuming both rates stay constant: (1) determine after how many hours the two tanks will hold equal amounts of water, (2) calculate that equal amount, and (3) identify which tank will run empty first, along with how many hours that takes." },
+  { category:'Electronics', text:"Two phones are being used differently at a study session. Phone A starts at 85% battery and loses 4% every 15 minutes due to heavy app use. Phone B starts at 40% battery and gains 6% every 15 minutes because it's plugged into a charger. Assuming both rates stay constant and battery percentage cannot go below 0% or above 100%: (1) determine after how many 15-minute intervals the two phones will have equal battery percentage, (2) calculate that equal percentage, and (3) identify which phone will hit its limit (0% or 100%) first, along with how many intervals that takes." },
+  { category:'Ecology', text:"A wildlife biologist is tracking two fish populations in a lake system. Population P starts at 1,200 fish and is declining by 40 fish per year due to a disease outbreak. Population Q starts at 300 fish and is growing by 25 fish per year after a conservation program began. Assuming these trends continue at constant rates: (1) determine in how many years the two populations will be equal, (2) calculate what that equal population size will be, and (3) identify which population will reach zero first, along with how many years that takes." },
+  { category:'Physics', text:"Two hikers start a trail from opposite ends, 24 miles apart, and walk toward each other. Hiker A walks at a constant 3 miles per hour. Hiker B starts 1 hour later than Hiker A but walks at a constant 4.5 miles per hour. Assuming both continue walking toward each other at these constant speeds without stopping: (1) determine how many hours after Hiker A starts the two hikers will meet, (2) calculate how far from Hiker A's starting point they meet, and (3) identify which hiker walked farther by the time they meet, along with the difference in distance." },
+  { category:'Engineering', text:"Two 3D printers at a robotics lab are producing parts for a competition. Printer 1 has already produced 15 parts and produces 1 new part every 20 minutes. Printer 2 has already produced 4 parts and produces 1 new part every 8 minutes. Assuming both printers run continuously at these constant rates: (1) determine after how many minutes the two printers will have produced an equal number of parts, (2) calculate that equal number of parts, and (3) if the competition needs a total of 100 parts combined from both printers, determine how many more minutes after reaching equal production it will take to reach that total." },
+  { category:'Renewable Energy', text:"A homeowner is comparing solar panel energy production to household energy usage. The solar panels currently generate 18 kWh per day and, due to a home upgrade adding more panels next month, are expected to increase output by 0.5 kWh per day. Household energy usage currently is 30 kWh per day and, due to new energy-efficient appliances being installed, is expected to decrease by 0.4 kWh per day. Assuming both trends continue at these constant daily rates starting today: (1) determine after how many days the household's solar generation will equal its energy usage, (2) calculate that equal daily amount in kWh, and (3) determine on which day generation first exceeds usage." },
+];
+
 const WRITING_TEST_CONFIGS = {
   tj: { label:'SPS Writing Assessment', badge:'SPS', prompts:SPS_PROMPTS, endpoint:'/api/grade-sps', activityLabel:'SPS Writing Assessment', maxScore:5, pointsMultiplier:20 },
   acl: {
     label:'Writing Assessment', badge:'AOS/AET', prompts:AOS_AET_PROMPTS, endpoint:'/api/grade-writing-assessment', activityLabel:'Writing Assessment', maxScore:10, pointsMultiplier:10,
     directions:"Official LCPS directions: your response is evaluated on the strength of your argument(s) and ideas. Structure it however you like — bullets, an outline, paragraphs. Grammar, spelling, and syntax do not count against you. You'd have 45 minutes on the real assessment.",
+  },
+  pse: {
+    label:'Problem-Solving Essay', badge:'PSE', prompts:PSE_PROMPTS, endpoint:'/api/grade-pse', activityLabel:'Problem-Solving Essay', maxScore:5, pointsMultiplier:20,
+    directions:"FCPS does not publish an official prompt, rubric, or timing for the real PSE — only that it's math/science content with multiple steps, requiring both a solution and an explanation, in essay format. Answer every part of the prompt, show your work, and explain your reasoning in complete sentences.",
   },
 };
 let currentWritingType = 'tj';

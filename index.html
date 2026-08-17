@@ -1185,7 +1185,14 @@ function showPanel(id, el) {
   const titles = { home:'Dashboard', practice:'Practice Questions', tutor:'AI Tutor', tests:'Mock Tests', progress:'My Progress', leaderboard:'Leaderboard', admin:'Admin' };
   document.getElementById('panel-title').textContent = titles[id] || id;
   if (id === 'home') renderHomeStats();
-  if (id === 'practice') renderQuestion();
+  if (id === 'practice') {
+    if (!reviewMode) {
+      practiceOrder = newPracticeOrder(currentSubject);
+      practiceOrderSubject = currentSubject;
+      currentQuestionIndex = 0;
+    }
+    renderQuestion();
+  }
   if (id === 'progress') { renderProgressStats(); animateRing(); }
   if (id === 'leaderboard') renderLeaderboard();
   if (id === 'admin') renderAdminList();
@@ -1298,6 +1305,7 @@ function getGreeting() {
 // ═══════════════════════════════════════════════════════
 let practiceOrder = [];
 let practiceOrderSubject = null;
+const PRACTICE_SESSION_SIZE = 25;
 
 function shuffleOrder(n) {
   const arr = Array.from({ length: n }, (_, i) => i);
@@ -1308,11 +1316,19 @@ function shuffleOrder(n) {
   return arr;
 }
 
+// Each practice session is a fresh random sample of PRACTICE_SESSION_SIZE
+// questions from the subject's full pool, not the whole pool shuffled —
+// re-rolled every time a subject is (re)selected or the panel is entered.
+function newPracticeOrder(subj) {
+  const n = QUESTIONS[subj].length;
+  return shuffleOrder(n).slice(0, Math.min(PRACTICE_SESSION_SIZE, n));
+}
+
 function setSubject(subj, btn) {
   currentSubject = subj;
   reviewMode = false;
   currentQuestionIndex = 0;
-  practiceOrder = shuffleOrder(QUESTIONS[subj].length);
+  practiceOrder = newPracticeOrder(subj);
   practiceOrderSubject = subj;
   practiceSessionCorrect = 0;
   practiceSessionTotal = 0;
@@ -1366,12 +1382,12 @@ function renderQuestion() {
     currentQuestion = QUESTIONS[entry.subject].find(q => q.id === entry.id);
   } else {
     const qs = QUESTIONS[currentSubject];
-    if (practiceOrderSubject !== currentSubject || practiceOrder.length !== qs.length) {
-      practiceOrder = shuffleOrder(qs.length);
+    if (practiceOrderSubject !== currentSubject || practiceOrder.length === 0) {
+      practiceOrder = newPracticeOrder(currentSubject);
       practiceOrderSubject = currentSubject;
     }
     if (currentQuestionIndex >= practiceOrder.length) {
-      practiceOrder = shuffleOrder(qs.length);
+      practiceOrder = newPracticeOrder(currentSubject);
       currentQuestionIndex = 0;
     }
     currentQuestionSubject = currentSubject;
@@ -1383,7 +1399,7 @@ function renderQuestion() {
   const letters = ['A','B','C','D','E','F'];
   const badgeClass = currentQuestionSubject;
   const badgeLabels = { math:'📐 Math', science:'🔬 Science', logic:'🧩 Logic', reading:'📖 Reading', vocab:'🔤 Vocab', tj:'🎓 TJ', acl:'🏫 ACL (AOS/AET)' };
-  const totalCount = reviewMode ? reviewQueue.length : QUESTIONS[currentSubject].length;
+  const totalCount = reviewMode ? reviewQueue.length : practiceOrder.length;
 
   document.getElementById('question-area').innerHTML = `
     <div class="question-card">

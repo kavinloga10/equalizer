@@ -1416,6 +1416,7 @@ function renderQuestion() {
         `).join('')}
       </div>
       <div class="q-actions">
+        <button class="btn btn-outline" onclick="prevQuestion()" ${currentQuestionIndex === 0 ? 'disabled' : ''}>← Back</button>
         <button class="btn btn-outline" onclick="nextQuestion()">Skip →</button>
       </div>
       <div class="feedback-box" id="feedback"></div>
@@ -1485,6 +1486,13 @@ function selectOption(chosen) {
 function nextQuestion() {
   closeTutorDrawer();
   currentQuestionIndex++;
+  renderQuestion();
+}
+
+function prevQuestion() {
+  if (currentQuestionIndex === 0) return;
+  closeTutorDrawer();
+  currentQuestionIndex--;
   renderQuestion();
 }
 

@@ -82,6 +82,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 }
 .land-nav-links a:hover { color:var(--blue); }
 .btn { display:inline-flex; align-items:center; gap:8px; padding:10px 22px; border-radius:var(--radius); font-family:'DM Sans',sans-serif; font-weight:600; font-size:14px; cursor:pointer; border:none; transition:.2s; }
+.btn:disabled { opacity:.4; cursor:not-allowed; pointer-events:none; }
 .btn-primary { background:var(--blue); color:var(--white); }
 .btn-primary:hover { background:var(--blue-dark); transform:translateY(-1px); }
 .btn-outline { background:transparent; color:var(--blue); border:2px solid var(--blue); }

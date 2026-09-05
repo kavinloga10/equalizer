@@ -99,6 +99,7 @@
     <a class="sidebar-item" onclick="showPanel('practice',this)"><span class="icon">📝</span> Practice</a>
     <a class="sidebar-item" onclick="showPanel('tutor',this)"><span class="icon">🤖</span> AI Tutor</a>
     <a class="sidebar-item" onclick="showPanel('tests',this)"><span class="icon">⏱️</span> Mock Tests</a>
+    <a class="sidebar-item" onclick="showPanel('formulas',this)"><span class="icon">📐</span> Formula Bank</a>
     <a class="sidebar-item" onclick="showPanel('progress',this)"><span class="icon">📊</span> Progress</a>
     <a class="sidebar-item" onclick="showPanel('leaderboard',this)"><span class="icon">🏆</span> Leaderboard</a>
     <a class="sidebar-item" id="admin-nav-item" style="display:none" onclick="showPanel('admin',this)"><span class="icon">⚙️</span> Admin</a>
@@ -126,6 +127,7 @@
     <div class="greeting">
       <h2 id="greeting-text">Good morning, Alex! 👋</h2>
       <p>You're on a <strong id="streak-count">0-day</strong> streak. Keep it going!</p>
+      <p id="bank-freshness-note" style="font-size:12px;color:var(--gray-400);margin-top:6px"></p>
     </div>
     <div id="home-banners"></div>
     <div class="panel-card" id="daily-goal-card" style="margin-bottom:24px"></div>
@@ -150,9 +152,23 @@
   <!-- PRACTICE -->
   <div class="dash-panel" id="panel-practice">
     <div class="subject-picker">
-      <button class="subj-btn active" onclick="setSubject('tj',this)">🎓 TJ</button>
-      <button class="subj-btn" onclick="setSubject('acl',this)">🏫 ACL (AOS/AET)</button>
+      <button class="subj-btn active" id="subj-btn-tj" onclick="setSubject('tj',this)">🎓 TJ</button>
+      <button class="subj-btn" id="subj-btn-acl" onclick="setSubject('acl',this)">🏫 ACL (AOS/AET)</button>
       <button class="subj-btn" onclick="setReviewMode(this)">🔁 Review</button>
+    </div>
+    <div class="subject-picker" id="practice-filters" style="margin-top:-16px">
+      <select id="practice-category-select" onchange="setPracticeCategory(this.value)" style="padding:8px 14px;border-radius:99px;border:2px solid var(--gray-200);background:var(--white);color:var(--gray-700);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600">
+        <option value="">All categories</option>
+        <option value="Math/Quant">📐 Math/Quant</option>
+        <option value="Logic/Reasoning">🧩 Logic/Reasoning</option>
+        <option value="Spatial/Geometric">📏 Spatial/Geometric</option>
+      </select>
+      <select id="practice-size-select" onchange="setPracticeSize(this.value)" style="padding:8px 14px;border-radius:99px;border:2px solid var(--gray-200);background:var(--white);color:var(--gray-700);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600">
+        <option value="10">10 questions</option>
+        <option value="15">15 questions</option>
+        <option value="25" selected>25 questions</option>
+      </select>
+      <button class="btn btn-outline" onclick="regeneratePractice()">🔀 New Set</button>
     </div>
     <div id="question-area">
       <!-- JS renders here -->
@@ -266,6 +282,74 @@
         </div>
       </div>
       <div class="question-card" id="writing-result-card" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- FORMULA BANK -->
+  <div class="dash-panel" id="panel-formulas">
+    <div class="two-col" style="margin-bottom:24px">
+      <div class="panel-card">
+        <h3>📐 Math/Quant</h3>
+        <ul style="font-size:14px;color:var(--gray-700);line-height:2;padding-left:18px">
+          <li>Percent change = (new − old) ÷ old × 100</li>
+          <li>Average speed = total distance ÷ total time</li>
+          <li>Probability = favorable outcomes ÷ total outcomes</li>
+          <li>Ratio problems: cross-multiply — a/b = c/d → a·d = b·c</li>
+          <li>Simple interest = principal × rate × time</li>
+          <li>Combinations (order doesn't matter) vs. permutations (order matters) — ask "does swapping two items make a new outcome?"</li>
+        </ul>
+      </div>
+      <div class="panel-card">
+        <h3>📏 Spatial/Geometric</h3>
+        <ul style="font-size:14px;color:var(--gray-700);line-height:2;padding-left:18px">
+          <li>Rectangle: area = length × width; perimeter = 2(l + w)</li>
+          <li>Triangle: area = ½ × base × height</li>
+          <li>Circle: area = πr²; circumference = 2πr</li>
+          <li>Pythagorean theorem: a² + b² = c² (right triangles only)</li>
+          <li>Rectangular prism volume = length × width × height</li>
+          <li>Cylinder volume = πr² × height</li>
+        </ul>
+      </div>
+    </div>
+    <div class="panel-card" style="margin-bottom:24px">
+      <h3>🧩 Logic/Reasoning strategies</h3>
+      <ul style="font-size:14px;color:var(--gray-700);line-height:2;padding-left:18px;columns:2;column-gap:32px">
+        <li>Eliminate answers you know are wrong before picking one you think is right.</li>
+        <li>For ordering/scheduling puzzles, sketch the sequence out — don't try to hold it in your head.</li>
+        <li>Separate the claim from the reasoning: what's being concluded vs. why.</li>
+        <li>Watch conditional statements ("if X, then Y") — the reverse ("if Y, then X") isn't automatically true.</li>
+        <li>A pattern holding for 2–3 examples isn't proof it holds for all — check whether the question is asking for "must be true" or "could be true."</li>
+        <li>Re-read the question stem after solving — it's easy to answer a question the passage didn't actually ask.</li>
+      </ul>
+    </div>
+    <div class="two-col">
+      <div class="panel-card">
+        <h3>✍️ SPS tips (TJ)</h3>
+        <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px">The exact shorthand our AI grader uses in feedback:</p>
+        <ul style="font-size:14px;color:var(--gray-700);line-height:1.9;padding-left:18px">
+          <li><strong>"Needs more you"</strong> — center yourself in the story, not just the event.</li>
+          <li><strong>"Tie to prompt"</strong> — echo the prompt's own key words.</li>
+          <li><strong>"Needs tech."</strong> — name real components, concepts, or terms, not vague summaries.</li>
+          <li><strong>"Tie to other STEM"</strong> — connect this experience to other activities or academics.</li>
+          <li><strong>"What's next?"</strong> — reflect on where this leads you going forward.</li>
+        </ul>
+      </div>
+      <div class="panel-card">
+        <h3>✍️ Writing Assessment tips (AOS/AET)</h3>
+        <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px">LCPS's real 5-indicator rubric:</p>
+        <ul style="font-size:14px;color:var(--gray-700);line-height:1.9;padding-left:18px">
+          <li>Questioning/Processing — ask probing, open-ended questions, not closed yes/no ones.</li>
+          <li>Information Gathering/Analysis — cite specific, relevant sources or methods.</li>
+          <li>Fluency/Originality — generate 3+ distinct, original ideas, not one idea restated.</li>
+          <li>Presentation/Reasoning — organize clearly and genuinely engage a counter-argument.</li>
+          <li>Point of View — describe impact on a wide audience, not just yourself.</li>
+        </ul>
+        <p style="font-size:12px;color:var(--gray-400);margin-top:10px">Grammar, spelling, and syntax do NOT count against you here — official LCPS rule.</p>
+      </div>
+    </div>
+    <div class="panel-card" style="margin-top:24px">
+      <h3>✍️ Problem-Solving Essay tips (TJ)</h3>
+      <p style="font-size:14px;color:var(--gray-700);line-height:1.8">FCPS doesn't publish an official PSE rubric — but the process matters more than a perfect final number. State your assumptions explicitly when the problem is ambiguous, explain your reasoning in full sentences (not just bare math), and walk through each step before giving your final answer.</p>
     </div>
   </div>
 
@@ -435,6 +519,12 @@
       <input type="password" id="reset-pw" placeholder="Create a new password">
     </div>
     <button class="auth-submit" onclick="submitPasswordReset()">Update password</button>
+  </div>
+</div>
+
+<div id="login-review-gate" style="display:none;position:fixed;inset:0;background:rgba(17,24,39,.7);z-index:2000;align-items:center;justify-content:center;padding:20px">
+  <div class="panel-card" style="max-width:560px;background:var(--white)" id="login-gate-body">
+    <!-- JS renders here -->
   </div>
 </div>
 
@@ -776,6 +866,21 @@ async function loadQuestions() {
   });
   QUESTIONS.tj = grouped.tj;
   QUESTIONS.acl = grouped.acl;
+  renderBankFreshness(data);
+}
+
+// "updated_at" comes from supabase/migrations_v10.sql — shows students how
+// recently the question bank was reworked, so it doesn't quietly look stale.
+// No-ops gracefully if that migration hasn't been run yet.
+function renderBankFreshness(rows) {
+  const el = document.getElementById('bank-freshness-note');
+  if (!el) return;
+  const timestamps = rows.map(r => r.updated_at).filter(Boolean);
+  if (!timestamps.length) return;
+  const latest = new Date(Math.max(...timestamps.map(t => new Date(t).getTime())));
+  const days = Math.floor((Date.now() - latest) / 86400000);
+  const when = days <= 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`;
+  el.textContent = `🔄 Question bank last refreshed ${when}`;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1213,6 +1318,67 @@ function closeMobileSidebar() {
 // ═══════════════════════════════════════════════════════
 //  AUTH
 // ═══════════════════════════════════════════════════════
+// Shown right after a successful login/signup, before the dashboard appears:
+// one question pulled from the student's own review queue (missed or due
+// questions), as a nudge to actually use Review mode. Skips straight to the
+// dashboard if there's nothing to review yet.
+let loginGateQuestion = null;
+
+function maybeShowLoginReviewGate() {
+  const queue = buildReviewQueue();
+  if (queue.length === 0) { enterDashboard(true); return; }
+  const pick = queue[Math.floor(Math.random() * queue.length)];
+  loginGateQuestion = QUESTIONS[pick.subject].find(q => q.id === pick.id);
+  loginGateQuestion.subject = pick.subject;
+  renderLoginGateQuestion();
+  document.getElementById('login-review-gate').style.display = 'flex';
+}
+
+function renderLoginGateQuestion() {
+  const q = loginGateQuestion;
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  document.getElementById('login-gate-body').innerHTML = `
+    <p style="font-size:13px;color:var(--gray-500);margin-bottom:14px">🔁 Quick review — from your missed &amp; due questions</p>
+    <div class="q-text" style="margin-bottom:20px">${q.q}</div>
+    <div class="options" id="login-gate-options">
+      ${q.opts.map((o, i) => `
+        <button class="option-btn" onclick="answerLoginGateQuestion(${i})">
+          <span class="option-letter">${letters[i]}</span> ${o}
+        </button>`).join('')}
+    </div>
+    <div class="feedback-box" id="login-gate-feedback"></div>
+    <div id="login-gate-continue-row" style="margin-top:18px;text-align:right">
+      <button class="btn btn-outline" onclick="closeLoginGate()">Skip for now</button>
+    </div>`;
+}
+
+function answerLoginGateQuestion(chosen) {
+  const q = loginGateQuestion;
+  const wasCorrect = chosen === q.ans;
+  document.querySelectorAll('#login-gate-options .option-btn').forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.ans) b.classList.add('correct');
+    else if (i === chosen) b.classList.add('wrong');
+  });
+  bumpCategoryStat(q.cat, wasCorrect);
+  trackMissedQuestion(q.subject, q.id, wasCorrect);
+  updateQuestionSchedule(q.id, wasCorrect);
+  progress.questionsAnswered++;
+  if (wasCorrect) { progress.correctAnswers++; progress.points += 10; }
+  saveProgress();
+
+  const fb = document.getElementById('login-gate-feedback');
+  fb.className = 'feedback-box ' + (wasCorrect ? 'correct' : 'wrong') + ' active';
+  fb.innerHTML = (wasCorrect ? '✅ ' : '❌ ') + q.exp;
+  document.getElementById('login-gate-continue-row').innerHTML =
+    `<button class="btn btn-primary" onclick="closeLoginGate()">Continue to Dashboard →</button>`;
+}
+
+function closeLoginGate() {
+  document.getElementById('login-review-gate').style.display = 'none';
+  enterDashboard(true);
+}
+
 async function doLogin() {
   const email = document.getElementById('login-email').value;
   const password = document.getElementById('login-pw').value;
@@ -1221,7 +1387,7 @@ async function doLogin() {
   if (error) { toast(error.message, 'error'); return; }
   const loaded = await loadUserSession();
   if (!loaded) { toast('Signed in, but something went wrong loading your dashboard.', 'error'); return; }
-  enterDashboard(true);
+  maybeShowLoginReviewGate();
 }
 
 async function doSignup() {
@@ -1243,7 +1409,7 @@ async function doSignup() {
   if (progressError) { toast(progressError.message, 'error'); return; }
   const loaded = await loadUserSession();
   if (!loaded) { toast('Account created, but something went wrong loading your dashboard. Try signing in.', 'error'); return; }
-  enterDashboard(true);
+  maybeShowLoginReviewGate();
 }
 
 function enterDashboard(showToast) {
@@ -1307,22 +1473,52 @@ function getGreeting() {
 let practiceOrder = [];
 let practiceOrderSubject = null;
 const PRACTICE_SESSION_SIZE = 25;
+let practiceCategory = null; // null = all categories in the current subject
+let practiceSize = PRACTICE_SESSION_SIZE;
 
-function shuffleOrder(n) {
-  const arr = Array.from({ length: n }, (_, i) => i);
-  for (let i = arr.length - 1; i > 0; i--) {
+// Each practice session is a fresh random sample of practiceSize questions
+// from the subject's pool (optionally filtered to one category), not the
+// whole pool shuffled — re-rolled every time a subject/category/size changes
+// or the panel is entered.
+function newPracticeOrder(subj) {
+  const qs = QUESTIONS[subj];
+  let indices = qs.map((_, i) => i);
+  if (practiceCategory) indices = indices.filter(i => qs[i].cat === practiceCategory);
+  for (let i = indices.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+    [indices[i], indices[j]] = [indices[j], indices[i]];
   }
-  return arr;
+  return indices.slice(0, Math.min(practiceSize, indices.length));
 }
 
-// Each practice session is a fresh random sample of PRACTICE_SESSION_SIZE
-// questions from the subject's full pool, not the whole pool shuffled —
-// re-rolled every time a subject is (re)selected or the panel is entered.
-function newPracticeOrder(subj) {
-  const n = QUESTIONS[subj].length;
-  return shuffleOrder(n).slice(0, Math.min(PRACTICE_SESSION_SIZE, n));
+function setPracticeCategory(cat) {
+  practiceCategory = cat || null;
+  regeneratePractice();
+}
+
+function setPracticeSize(size) {
+  practiceSize = parseInt(size, 10) || PRACTICE_SESSION_SIZE;
+  regeneratePractice();
+}
+
+function regeneratePractice() {
+  if (reviewMode) return;
+  practiceOrder = newPracticeOrder(currentSubject);
+  practiceOrderSubject = currentSubject;
+  currentQuestionIndex = 0;
+  practiceSessionCorrect = 0;
+  practiceSessionTotal = 0;
+  renderQuestion();
+}
+
+// Jumps to Practice pre-filtered to one category — used by the "Practice this
+// weak area" button on the Progress tab's Recommended Focus Areas card.
+function focusPractice(cat) {
+  practiceCategory = cat;
+  const select = document.getElementById('practice-category-select');
+  if (select) select.value = cat;
+  showPanel('practice', document.querySelector('.sidebar-item[onclick*="practice"]'));
+  setSubject(currentSubject, document.getElementById('subj-btn-' + currentSubject));
 }
 
 function setSubject(subj, btn) {
@@ -1347,16 +1543,23 @@ function questionSubject(id) {
   return QUESTIONS.tj.some(q => q.id === id) ? 'tj' : 'acl';
 }
 
-function setReviewMode(btn) {
-  reviewMode = true;
-  currentQuestionIndex = 0;
+// Shared by Review mode and the post-login review prompt: questions the
+// student has missed, plus anything due again per the spaced-repetition
+// schedule in progress.questionSchedule.
+function buildReviewQueue() {
   const now = new Date().toISOString();
   const missedIds = ['tj', 'acl'].flatMap(subj => progress.missedQuestions[subj]);
   const dueIds = Object.entries(progress.questionSchedule)
     .filter(([, s]) => s.dueAt <= now)
     .map(([id]) => Number(id));
   const allIds = [...new Set([...missedIds, ...dueIds])];
-  reviewQueue = allIds.map(id => ({ subject: questionSubject(id), id }));
+  return allIds.map(id => ({ subject: questionSubject(id), id }));
+}
+
+function setReviewMode(btn) {
+  reviewMode = true;
+  currentQuestionIndex = 0;
+  reviewQueue = buildReviewQueue();
   document.querySelectorAll('.subj-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderQuestion();
@@ -2004,6 +2207,7 @@ function renderProgressStats() {
         <div style="background:var(--orange-light);color:#92400e;padding:14px 18px;border-radius:var(--radius);font-size:14px;flex:1;min-width:160px">
           <strong style="display:block;margin-bottom:4px">${weakest}</strong>
           Your weakest topic at ${categoryAccuracy(weakest)}%. Keep practicing here to build it up.
+          <button class="btn btn-outline" style="margin-top:10px;padding:6px 14px;font-size:12px" onclick="focusPractice('${weakest}')">Practice this →</button>
         </div>
         <div style="background:var(--green-light);color:#065f46;padding:14px 18px;border-radius:var(--radius);font-size:14px;flex:1;min-width:160px">
           <strong style="display:block;margin-bottom:4px">${strongest}</strong>

@@ -479,7 +479,8 @@ function toggleTheme() {
 // On GitHub Pages there's no backend to serve /api/chat, so point at the
 // deployed Render backend instead. Locally (node server.js), the relative
 // path works since the same server serves both the page and the API.
-const API_BASE = location.hostname === 'kavinloga10.github.io'
+const STATIC_HOSTS = ['kavinloga10.github.io', 'equalizer-app.com', 'www.equalizer-app.com'];
+const API_BASE = STATIC_HOSTS.includes(location.hostname)
   ? 'https://equalizer-imi3.onrender.com'
   : '';
 

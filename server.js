@@ -178,6 +178,8 @@ const AOS_AET_RESPONSE_SCHEMA = {
 
 const ALLOWED_ORIGINS = [
   'https://kavinloga10.github.io',
+  'https://equalizer-app.com',
+  'https://www.equalizer-app.com',
   'http://localhost:8743',
 ];
 

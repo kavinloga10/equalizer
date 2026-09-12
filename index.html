@@ -201,6 +201,7 @@
         </div>
         <div class="chat-input-bar">
           <textarea class="chat-input" id="chat-input" placeholder="Ask a question…" rows="1" onkeydown="handleChatKey(event)"></textarea>
+          <button class="mic-btn" id="chat-input-mic" onclick="toggleVoiceInput('chat-input','chat-input-mic')" title="Speak instead of typing">🎤</button>
           <button class="send-btn" onclick="sendMessage()" title="Send">➤</button>
         </div>
       </div>
@@ -437,21 +438,17 @@
         </div>
         <div class="chat-input-bar">
           <textarea class="chat-input" id="debate-chat-input" placeholder="Start a round first, then type your argument…" rows="1" onkeydown="handleDebateChatKey(event)"></textarea>
+          <button class="mic-btn" id="debate-chat-input-mic" onclick="toggleVoiceInput('debate-chat-input','debate-chat-input-mic')" title="Speak instead of typing">🎤</button>
           <button class="send-btn" onclick="sendDebateMessage()" title="Send">➤</button>
         </div>
       </div>
       <div class="tutor-sidebar">
         <div class="panel-card">
           <h3>Start a round</h3>
-          <select id="debate-resolution-select" onchange="handleResolutionChange(this)" style="width:100%;padding:10px;border-radius:var(--radius);border:1.5px solid var(--gray-200);background:var(--white);color:var(--gray-800);font-family:'DM Sans',sans-serif;font-size:13px;margin-bottom:10px">
-            <option value="">Pick a resolution…</option>
-            <option>Resolved: Homework does more harm than good for middle school students.</option>
-            <option>Resolved: Schools should replace all standardized testing with project-based assessment.</option>
-            <option>Resolved: Social media platforms should require age verification for all users under 16.</option>
-            <option>Resolved: Artificial intelligence should be allowed as a tool on school assignments.</option>
-            <option>Resolved: Youth sports leagues should stop keeping score for players under 12.</option>
-            <option value="__custom__">✏️ My own topic…</option>
-          </select>
+          <div id="debate-resolution-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;max-height:180px;overflow-y:auto">
+            <!-- JS renders saved resolutions here -->
+          </div>
+          <button class="btn btn-outline" style="width:100%;margin-bottom:10px" onclick="addDebateResolution()">+ Add resolution</button>
           <div style="display:flex;gap:8px;margin-bottom:10px">
             <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px" id="debate-side-pro" onclick="setDebateSide('Pro')">Pro</button>
             <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px" id="debate-side-con" onclick="setDebateSide('Con')">Con</button>
@@ -597,6 +594,7 @@
   <div class="chat-messages" id="drawer-chat-messages"></div>
   <div class="chat-input-bar">
     <textarea class="chat-input" id="drawer-chat-input" placeholder="Ask about this problem…" rows="1" onkeydown="handleDrawerChatKey(event)"></textarea>
+    <button class="mic-btn" id="drawer-chat-input-mic" onclick="toggleVoiceInput('drawer-chat-input','drawer-chat-input-mic')" title="Speak instead of typing">🎤</button>
     <button class="send-btn" onclick="sendDrawerMessage()" title="Send">➤</button>
   </div>
 </div>
@@ -1866,12 +1864,68 @@ function removeTyping(id) {
 }
 
 // ═══════════════════════════════════════════════════════
+//  VOICE INPUT (Web Speech API — talk instead of typing, shared by every
+//  chat surface: AI Tutor, the Ask Tutor drawer, and Debate Coach)
+// ═══════════════════════════════════════════════════════
+const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+let voiceRecognition = null;
+let voiceActiveInputId = null;
+
+function toggleVoiceInput(inputId, micBtnId) {
+  if (!SpeechRecognitionCtor) {
+    toast("Voice input isn't supported in this browser — try Chrome or Edge.", 'error');
+    return;
+  }
+  const btn = document.getElementById(micBtnId);
+
+  // Clicking the mic that's already listening stops it early.
+  if (voiceRecognition && voiceActiveInputId === inputId) {
+    voiceRecognition.stop();
+    return;
+  }
+  if (voiceRecognition) voiceRecognition.stop(); // only one mic active at a time
+
+  const recognition = new SpeechRecognitionCtor();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  voiceRecognition = recognition;
+  voiceActiveInputId = inputId;
+  btn.classList.add('listening');
+  btn.textContent = '🔴';
+
+  recognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    const input = document.getElementById(inputId);
+    input.value = (input.value.trim() ? input.value.trim() + ' ' : '') + transcript;
+    input.focus();
+  };
+  recognition.onerror = () => {
+    toast("Couldn't hear that clearly — try again.", 'error');
+  };
+  recognition.onend = () => {
+    btn.classList.remove('listening');
+    btn.textContent = '🎤';
+    voiceRecognition = null;
+    voiceActiveInputId = null;
+  };
+  recognition.start();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (SpeechRecognitionCtor) return;
+  document.querySelectorAll('.mic-btn').forEach(btn => { btn.style.display = 'none'; });
+});
+
+// ═══════════════════════════════════════════════════════
 //  DEBATE COACH (Public Forum practice, separate top-level area from Test Prep)
 // ═══════════════════════════════════════════════════════
 let debateHistory = [];
 let debateResolution = null;
 let debateSide = null;
+let debateResolutions = [];
 const DEBATE_KEY = 'equalizer_debate_chat';
+const DEBATE_RESOLUTIONS_KEY = 'equalizer_debate_resolutions';
 
 function saveDebateHistory() {
   try { localStorage.setItem(DEBATE_KEY, JSON.stringify({ history: debateHistory, resolution: debateResolution, side: debateSide })); } catch (e) {}
@@ -1888,18 +1942,54 @@ function loadDebateHistory() {
   } catch (e) {}
 }
 
-function handleResolutionChange(select) {
-  if (select.value !== '__custom__') return;
-  const topic = prompt('Type your own debate resolution:', 'Resolved: ');
-  if (topic && topic.trim()) {
-    const opt = document.createElement('option');
-    opt.value = topic.trim();
-    opt.textContent = topic.trim();
-    opt.selected = true;
-    select.insertBefore(opt, select.lastElementChild);
-  } else {
-    select.value = '';
+function loadDebateResolutions() {
+  try {
+    const raw = localStorage.getItem(DEBATE_RESOLUTIONS_KEY);
+    debateResolutions = raw ? JSON.parse(raw) : [];
+  } catch (e) { debateResolutions = []; }
+}
+
+function saveDebateResolutions() {
+  try { localStorage.setItem(DEBATE_RESOLUTIONS_KEY, JSON.stringify(debateResolutions)); } catch (e) {}
+}
+
+function renderDebateResolutions() {
+  const el = document.getElementById('debate-resolution-list');
+  if (!el) return;
+  if (!debateResolutions.length) {
+    el.innerHTML = `<p style="font-size:12px;color:var(--gray-400)">No resolutions yet — add one below.</p>`;
+    return;
   }
+  el.innerHTML = debateResolutions.map((r, i) => `
+    <div class="resolution-row ${r === debateResolution ? 'selected' : ''}">
+      <span class="res-text" onclick="selectDebateResolution(${i})">${r}</span>
+      <button class="res-delete" title="Delete" onclick="deleteDebateResolution(${i})">🗑️</button>
+    </div>`).join('');
+}
+
+function selectDebateResolution(i) {
+  debateResolution = debateResolutions[i];
+  renderDebateResolutions();
+}
+
+function deleteDebateResolution(i) {
+  const wasSelected = debateResolutions[i] === debateResolution;
+  debateResolutions.splice(i, 1);
+  saveDebateResolutions();
+  if (wasSelected) debateResolution = null;
+  renderDebateResolutions();
+}
+
+function addDebateResolution() {
+  const topic = prompt('Type a debate resolution:', 'Resolved: ');
+  if (!topic || !topic.trim()) return;
+  const trimmed = topic.trim();
+  if (!debateResolutions.includes(trimmed)) {
+    debateResolutions.push(trimmed);
+    saveDebateResolutions();
+  }
+  debateResolution = trimmed;
+  renderDebateResolutions();
 }
 
 function setDebateSide(side) {
@@ -1909,15 +1999,12 @@ function setDebateSide(side) {
 }
 
 function startDebateRound() {
-  const select = document.getElementById('debate-resolution-select');
-  const resolution = select.value;
-  if (!resolution || resolution === '__custom__') { toast('Pick a resolution first.', 'error'); return; }
+  if (!debateResolution) { toast('Add or pick a resolution first.', 'error'); return; }
   if (!debateSide) { toast('Pick Pro or Con first.', 'error'); return; }
-  debateResolution = resolution;
   debateHistory = [];
   saveDebateHistory();
   document.getElementById('debate-chat-messages').innerHTML = '';
-  appendMsg('ai', `Round started! Resolution: "${resolution}" — you're arguing ${debateSide}. Give me your Constructive: lay out your case in a few sentences, then I'll respond as the other side.`, 'debate-chat-messages');
+  appendMsg('ai', `Round started! Resolution: "${debateResolution}" — you're arguing ${debateSide}. Give me your Constructive: lay out your case in a few sentences, then I'll respond as the other side.`, 'debate-chat-messages');
 }
 
 function handleDebateChatKey(e) {
@@ -2498,7 +2585,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="msg-body"><div class="msg-bubble">${formatChatText(m.content)}</div></div>
         </div>`).join('');
     }
+    loadDebateResolutions();
     loadDebateHistory();
+    if (debateResolution && !debateResolutions.includes(debateResolution)) {
+      debateResolutions.push(debateResolution);
+      saveDebateResolutions();
+    }
+    renderDebateResolutions();
     if (debateHistory.length) {
       const container = document.getElementById('debate-chat-messages');
       container.innerHTML = debateHistory.map(m => `
@@ -2507,16 +2600,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="msg-body"><div class="msg-bubble">${formatChatText(m.content)}</div></div>
         </div>`).join('');
       if (debateSide) setDebateSide(debateSide);
-      if (debateResolution) {
-        const select = document.getElementById('debate-resolution-select');
-        if (![...select.options].some(o => o.value === debateResolution)) {
-          const opt = document.createElement('option');
-          opt.value = debateResolution;
-          opt.textContent = debateResolution;
-          select.insertBefore(opt, select.lastElementChild);
-        }
-        select.value = debateResolution;
-      }
     }
     enterDashboard(false);
   } else {

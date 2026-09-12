@@ -1885,8 +1885,12 @@ function toggleVoiceInput(inputId, micBtnId) {
   }
   if (voiceRecognition) voiceRecognition.stop(); // only one mic active at a time
 
+  const input = document.getElementById(inputId);
+  const baseValue = input.value.trim();
+
   const recognition = new SpeechRecognitionCtor();
   recognition.lang = 'en-US';
+  recognition.continuous = false;
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
   voiceRecognition = recognition;
@@ -1894,10 +1898,14 @@ function toggleVoiceInput(inputId, micBtnId) {
   btn.classList.add('listening');
   btn.textContent = '🔴';
 
+  // onresult can fire more than once per session as speech is finalized in
+  // segments — e.results is cumulative, so rebuild the full transcript from
+  // it each time and overwrite rather than append, or repeated segments
+  // duplicate on top of each other.
   recognition.onresult = (e) => {
-    const transcript = e.results[0][0].transcript;
-    const input = document.getElementById(inputId);
-    input.value = (input.value.trim() ? input.value.trim() + ' ' : '') + transcript;
+    let transcript = '';
+    for (let i = 0; i < e.results.length; i++) transcript += e.results[i][0].transcript;
+    input.value = (baseValue ? baseValue + ' ' : '') + transcript.trim();
     input.focus();
   };
   recognition.onerror = () => {

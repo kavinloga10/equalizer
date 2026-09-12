@@ -426,6 +426,7 @@
         <div class="chat-header">
           <div class="avatar" style="font-size:20px">🎙️</div>
           <div><strong>Debate Coach</strong><br><span>Public Forum practice <span class="status"></span></span></div>
+          <button onclick="openDebateSettings()" title="Settings" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:19px;color:var(--gray-500);padding:6px;border-radius:8px;transition:.2s" onmouseover="this.style.background='var(--gray-100)'" onmouseout="this.style.background='none'">⚙️</button>
         </div>
         <div id="debate-phase-bar" style="display:none;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px;border-bottom:1px solid var(--gray-200);background:var(--gray-50)">
           <div style="font-size:13px;font-weight:600" id="debate-phase-label">Constructive</div>
@@ -602,6 +603,39 @@
 <div id="login-review-gate" style="display:none;position:fixed;inset:0;background:rgba(17,24,39,.7);z-index:2000;align-items:center;justify-content:center;padding:20px">
   <div class="panel-card" style="max-width:560px;background:var(--white)" id="login-gate-body">
     <!-- JS renders here -->
+  </div>
+</div>
+
+<div id="debate-settings-modal" style="display:none;position:fixed;inset:0;background:rgba(17,24,39,.7);z-index:2000;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this) closeDebateSettings()">
+  <div class="panel-card" style="max-width:440px;width:100%;background:var(--white);position:relative;max-height:85vh;overflow-y:auto">
+    <button onclick="closeDebateSettings()" title="Close" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:18px;color:var(--gray-500);cursor:pointer;width:32px;height:32px;border-radius:99px" onmouseover="this.style.background='var(--gray-100)'" onmouseout="this.style.background='none'">✕</button>
+    <h2 style="margin-bottom:22px">⚙️ Debate Coach Settings</h2>
+
+    <div style="margin-bottom:22px">
+      <label style="display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:10px">Default difficulty</label>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px" id="settings-difficulty-novice" onclick="setDefaultDebateDifficulty('Novice')">🌱 Novice</button>
+        <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px" id="settings-difficulty-varsity" onclick="setDefaultDebateDifficulty('Varsity')">🔥 Varsity</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:22px">
+      <label style="display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:10px">Phase lengths (minutes)</label>
+      <div id="settings-phase-rows" style="display:flex;flex-direction:column;gap:8px">
+        <!-- JS renders here -->
+      </div>
+      <button class="btn btn-outline" style="width:100%;margin-top:10px;font-size:12px;padding:6px" onclick="resetDebatePhaseLengths()">Reset to default</button>
+    </div>
+
+    <div style="margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:14px">
+      <div>
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--gray-700)">Read opponent's arguments aloud</label>
+        <p style="font-size:12px;color:var(--gray-500);margin-top:2px">Uses your browser's built-in text-to-speech.</p>
+      </div>
+      <input type="checkbox" id="settings-speak-toggle" onchange="setDebateSpeakReplies(this.checked)" style="width:20px;height:20px;flex-shrink:0">
+    </div>
+
+    <button class="btn btn-outline" style="width:100%;color:var(--red);border-color:var(--red)" onclick="clearDebateRoundHistory()">🗑️ Clear round history</button>
   </div>
 </div>
 
@@ -1552,6 +1586,7 @@ async function doLogout() {
   debateResolution = null;
   debateSide = null;
   if (debatePhaseTimerHandle) clearInterval(debatePhaseTimerHandle);
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
   document.getElementById('debate-phase-bar').style.display = 'none';
   document.getElementById('debate-scorecard').style.display = 'none';
   try { localStorage.removeItem(DEBATE_KEY); } catch (e) {}
@@ -1959,11 +1994,12 @@ let debateRoundHistory = [];
 const DEBATE_KEY = 'equalizer_debate_chat';
 const DEBATE_RESOLUTIONS_KEY = 'equalizer_debate_resolutions';
 const DEBATE_ROUND_HISTORY_KEY = 'equalizer_debate_round_history';
+const DEBATE_SETTINGS_KEY = 'equalizer_debate_settings';
 
 // One practice round walks through these Public Forum phases in order, each
-// with its own real-format time limit. The student advances phases manually
-// (like a real debater choosing when their speech is done) rather than being
-// force-cut off when time runs out.
+// with its own real-format time limit (customizable in Settings). The
+// student advances phases manually (like a real debater choosing when their
+// speech is done) rather than being force-cut off when time runs out.
 const DEBATE_PHASES = [
   { name: 'Constructive', seconds: 240 },
   { name: 'Crossfire', seconds: 180 },
@@ -1973,6 +2009,97 @@ const DEBATE_PHASES = [
 ];
 let debatePhaseIndex = 0;
 let debatePhaseSecondsLeft = 0;
+
+let debateSettings = {
+  phaseSeconds: Object.fromEntries(DEBATE_PHASES.map(p => [p.name, p.seconds])),
+  defaultDifficulty: 'Novice',
+  speakReplies: false,
+};
+
+function loadDebateSettings() {
+  const defaults = {
+    phaseSeconds: Object.fromEntries(DEBATE_PHASES.map(p => [p.name, p.seconds])),
+    defaultDifficulty: 'Novice',
+    speakReplies: false,
+  };
+  try {
+    const raw = localStorage.getItem(DEBATE_SETTINGS_KEY);
+    const saved = raw ? JSON.parse(raw) : {};
+    debateSettings = {
+      phaseSeconds: { ...defaults.phaseSeconds, ...(saved.phaseSeconds || {}) },
+      defaultDifficulty: saved.defaultDifficulty || defaults.defaultDifficulty,
+      speakReplies: !!saved.speakReplies,
+    };
+  } catch (e) {
+    debateSettings = defaults;
+  }
+}
+
+function saveDebateSettings() {
+  try { localStorage.setItem(DEBATE_SETTINGS_KEY, JSON.stringify(debateSettings)); } catch (e) {}
+}
+
+function renderDebateSettingsModal() {
+  document.getElementById('settings-difficulty-novice').className = 'btn ' + (debateSettings.defaultDifficulty === 'Novice' ? 'btn-primary' : 'btn-outline');
+  document.getElementById('settings-difficulty-varsity').className = 'btn ' + (debateSettings.defaultDifficulty === 'Varsity' ? 'btn-primary' : 'btn-outline');
+  document.getElementById('settings-speak-toggle').checked = debateSettings.speakReplies;
+  document.getElementById('settings-phase-rows').innerHTML = DEBATE_PHASES.map(p => `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <span style="font-size:13px;color:var(--gray-700)">${p.name}</span>
+      <input type="number" min="0.5" max="15" step="0.5" value="${(debateSettings.phaseSeconds[p.name] / 60)}" onchange="setDebatePhaseLength('${p.name}', this.value)" style="width:70px;padding:6px 8px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif">
+    </div>`).join('');
+}
+
+function openDebateSettings() {
+  renderDebateSettingsModal();
+  document.getElementById('debate-settings-modal').style.display = 'flex';
+}
+
+function closeDebateSettings() {
+  document.getElementById('debate-settings-modal').style.display = 'none';
+}
+
+function setDefaultDebateDifficulty(level) {
+  debateSettings.defaultDifficulty = level;
+  saveDebateSettings();
+  setDebateDifficulty(level);
+  renderDebateSettingsModal();
+}
+
+function setDebatePhaseLength(name, minutes) {
+  const m = parseFloat(minutes);
+  if (!m || m <= 0) return;
+  debateSettings.phaseSeconds[name] = Math.round(m * 60);
+  saveDebateSettings();
+}
+
+function resetDebatePhaseLengths() {
+  debateSettings.phaseSeconds = Object.fromEntries(DEBATE_PHASES.map(p => [p.name, p.seconds]));
+  saveDebateSettings();
+  renderDebateSettingsModal();
+}
+
+function setDebateSpeakReplies(checked) {
+  debateSettings.speakReplies = checked;
+  saveDebateSettings();
+  if (!checked && window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+function speakDebateReply(text) {
+  if (!debateSettings.speakReplies || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-US';
+  window.speechSynthesis.speak(utterance);
+}
+
+function clearDebateRoundHistory() {
+  if (!confirm('Clear all past debate rounds? This cannot be undone.')) return;
+  debateRoundHistory = [];
+  try { localStorage.removeItem(DEBATE_ROUND_HISTORY_KEY); } catch (e) {}
+  renderDebateRoundHistory();
+  toast('Round history cleared.');
+}
 let debatePhaseTimerHandle = null;
 
 function appendSystemNote(text, containerId) {
@@ -2076,7 +2203,7 @@ function startDebateRound() {
 function startDebatePhase() {
   const phase = DEBATE_PHASES[debatePhaseIndex];
   const isLastPhase = debatePhaseIndex === DEBATE_PHASES.length - 1;
-  debatePhaseSecondsLeft = phase.seconds;
+  debatePhaseSecondsLeft = debateSettings.phaseSeconds[phase.name] ?? phase.seconds;
   document.getElementById('debate-phase-bar').style.display = 'flex';
   document.getElementById('debate-phase-label').textContent = phase.name;
   document.getElementById('debate-next-phase-btn').style.display = isLastPhase ? 'none' : 'inline-flex';
@@ -2135,6 +2262,7 @@ async function sendDebateMessage() {
     appendMsg('ai', reply, 'debate-chat-messages');
     debateHistory.push({ role: 'assistant', content: reply });
     saveDebateHistory();
+    speakDebateReply(reply);
   } catch (err) {
     removeTyping(typingId);
     appendMsg('ai', "I'm having trouble connecting right now. Try again in a moment!", 'debate-chat-messages');
@@ -2786,7 +2914,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     loadDebateRoundHistory();
     renderDebateRoundHistory();
-    setDebateDifficulty(debateDifficulty);
+    loadDebateSettings();
+    setDebateDifficulty(debateSettings.defaultDifficulty);
     enterDashboard(false);
   } else {
     renderQuestion();

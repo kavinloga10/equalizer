@@ -19,14 +19,26 @@ const SYSTEM_PROMPT = `You are Equalizer AI, a friendly and encouraging tutor fo
 // itself and shouldn't present hallucinated "evidence" as real to a minor.
 const DEBATE_SYSTEM_PROMPT_BASE = `You are Equalizer's Debate Coach, an AI sparring partner helping a middle schooler (grades 6-9) practice Public Forum debate.
 
-Take the OPPOSITE side of whatever the student is arguing, and argue it seriously and persuasively in 2-4 sentences per turn — this is practice for facing a real opponent, not a pushover. You may use illustrative reasoning and hypothetical examples, but explicitly label them as illustrative (e.g. "for example, imagine...") rather than presenting invented statistics or sources as verified facts, since you cannot look up real citations. Ask sharp, specific follow-up questions that test whether the student's argument actually holds up, the way a real Crossfire exchange would. Stay respectful and age-appropriate at all times — this is a coaching exercise, not a real hostile debate.
+Take the OPPOSITE side of whatever the student is arguing, and argue it seriously in 2-4 sentences per turn. You may use illustrative reasoning and hypothetical examples, but explicitly label them as illustrative (e.g. "for example, imagine...") rather than presenting invented statistics or sources as verified facts, since you cannot look up real citations. Ask sharp, specific follow-up questions that test whether the student's argument actually holds up, the way a real Crossfire exchange would. Stay respectful and age-appropriate at all times — this is a coaching exercise, not a real hostile debate.
 
 If the student's message reads like a Summary or Final Focus (they're wrapping up their case rather than making a new point), give a short, honest critique instead of just rebutting further: was their reasoning clear, did they actually engage your counter-arguments, and what would strengthen their case next round.`;
 
-function debateSystemPrompt(resolution, side) {
+const DEBATE_DIFFICULTY_NOTES = {
+  Novice: `DIFFICULTY: Novice. Argue genuinely, but keep your points straightforward and your Crossfire questions gentle and clearly signposted — this is a student's first few rounds. Be encouraging in tone even while disagreeing.`,
+  Varsity: `DIFFICULTY: Varsity. Argue as a skilled, well-prepared opponent would — layered reasoning, tighter logic, and Crossfire questions that go straight for the weakest link in their case. Do not soften your arguments to make things easy.`,
+};
+
+function debateSystemPrompt(resolution, side, difficulty) {
   const oppositeSide = side === 'Pro' ? 'Con' : 'Pro';
-  return `${DEBATE_SYSTEM_PROMPT_BASE}\n\nRESOLUTION: "${resolution}"\nThe student is arguing ${side}. You are arguing ${oppositeSide}.`;
+  const difficultyNote = DEBATE_DIFFICULTY_NOTES[difficulty] || DEBATE_DIFFICULTY_NOTES.Novice;
+  return `${DEBATE_SYSTEM_PROMPT_BASE}\n\nRESOLUTION: "${resolution}"\nThe student is arguing ${side}. You are arguing ${oppositeSide}.\n\n${difficultyNote}`;
 }
+
+const DEBATE_GRADING_SYSTEM_PROMPT = `You are scoring a middle schooler's completed Public Forum debate round against an AI opponent. The writer is 12-14 years old. You are given the resolution, which side the student argued, and the full transcript of their turns (the opponent's turns are shown for context only — do not grade the opponent).
+
+Score the student's overall performance across the round, weighing: clarity and organization of their case, use of evidence or reasoning (illustrative examples count, but reward specificity), how directly they engaged and rebutted the opponent's arguments rather than repeating their own points, and whether their closing (Summary/Final Focus, if present) crystallized clear voter issues. Do not give easy points — a high score requires genuinely strong argumentation across the round, not just participation.
+
+Return your grading as the requested JSON structure. The score must be a number from 0 to 10 in increments of 0.5. "summary" is a 2-3 sentence overall assessment of the round. "strengths" is a list of 2-4 specific things the student did well, quoting or referencing their actual turns. "improvements" is a list of 2-4 specific, actionable pieces of feedback for their next round.`;
 
 const SPS_RUBRIC = `Grading Rubric for SPS (Student Personal Statement):
 
@@ -229,7 +241,7 @@ app.post('/api/chat', async (req, res) => {
 });
 
 app.post('/api/debate-coach', async (req, res) => {
-  const { messages, resolution, side } = req.body;
+  const { messages, resolution, side, difficulty } = req.body;
   if (!Array.isArray(messages) || messages.length === 0 || !resolution || !side) {
     return res.status(400).json({ error: 'messages, resolution, and side are required' });
   }
@@ -243,12 +255,45 @@ app.post('/api/debate-coach', async (req, res) => {
     const response = await ai.models.generateContent({
       model: 'gemini-3.6-flash',
       contents,
-      config: { systemInstruction: debateSystemPrompt(resolution, side), maxOutputTokens: 1024 },
+      config: { systemInstruction: debateSystemPrompt(resolution, side, difficulty), maxOutputTokens: 1024 },
     });
     res.json({ reply: response.text });
   } catch (err) {
     console.error('Gemini API error:', err);
     res.status(502).json({ error: "I'm having trouble connecting right now. Try again in a moment!" });
+  }
+});
+
+app.post('/api/grade-debate', async (req, res) => {
+  const { messages, resolution, side } = req.body;
+  if (!Array.isArray(messages) || messages.length === 0 || !resolution || !side) {
+    return res.status(400).json({ error: 'messages, resolution, and side are required' });
+  }
+
+  const transcript = messages
+    .map((m) => `${m.role === 'assistant' ? 'OPPONENT' : 'STUDENT'}: ${m.content}`)
+    .join('\n\n');
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.6-flash',
+      contents: [{
+        role: 'user',
+        parts: [{ text: `RESOLUTION: "${resolution}"\nThe student argued: ${side}\n\nTRANSCRIPT:\n${transcript}` }],
+      }],
+      config: {
+        systemInstruction: DEBATE_GRADING_SYSTEM_PROMPT,
+        responseMimeType: 'application/json',
+        responseSchema: WRITING_RESPONSE_SCHEMA,
+        thinkingConfig: { thinkingLevel: 'minimal' },
+        maxOutputTokens: 4096,
+      },
+    });
+    const graded = JSON.parse(response.text);
+    res.json(graded);
+  } catch (err) {
+    console.error('Gemini grading error:', err);
+    res.status(502).json({ error: 'Grading failed. Try again in a moment!' });
   }
 });
 
@@ -269,7 +314,7 @@ app.post('/api/grade-sps', async (req, res) => {
         systemInstruction: SPS_GRADING_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
         responseSchema: WRITING_RESPONSE_SCHEMA,
-        thinkingConfig: { thinkingBudget: 0 },
+        thinkingConfig: { thinkingLevel: 'minimal' },
         maxOutputTokens: 4096,
       },
     });
@@ -298,7 +343,7 @@ app.post('/api/grade-pse', async (req, res) => {
         systemInstruction: PSE_GRADING_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
         responseSchema: WRITING_RESPONSE_SCHEMA,
-        thinkingConfig: { thinkingBudget: 0 },
+        thinkingConfig: { thinkingLevel: 'minimal' },
         maxOutputTokens: 4096,
       },
     });
@@ -327,7 +372,7 @@ app.post('/api/grade-writing-assessment', async (req, res) => {
         systemInstruction: AOS_AET_GRADING_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
         responseSchema: AOS_AET_RESPONSE_SCHEMA,
-        thinkingConfig: { thinkingBudget: 0 },
+        thinkingConfig: { thinkingLevel: 'minimal' },
         maxOutputTokens: 4096,
       },
     });

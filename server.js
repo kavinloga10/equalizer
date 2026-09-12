@@ -11,6 +11,23 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const SYSTEM_PROMPT = `You are Equalizer AI, a friendly and encouraging tutor for middle school students (grades 6-9) preparing for competitive academic programs like the Academies of Loudoun and TJHSST. You help with math, science, reading comprehension, logical reasoning, and vocabulary. Keep answers clear, step-by-step, and age-appropriate. Use encouraging language. When explaining math, show the steps. If a student seems frustrated, be extra supportive. Keep responses concise — 2-5 sentences or clear numbered steps. End with a follow-up question or offer to show a practice problem.`;
 
+// Debate Coach: an AI sparring partner for Public Forum debate, the
+// competitive speech & debate format built around Constructive, Crossfire,
+// Rebuttal, Summary, and Final Focus. Deliberately argues the opposite side
+// for real (not a pushover), while flagging any example/statistic as
+// illustrative rather than a verified source, since the model can't fact-check
+// itself and shouldn't present hallucinated "evidence" as real to a minor.
+const DEBATE_SYSTEM_PROMPT_BASE = `You are Equalizer's Debate Coach, an AI sparring partner helping a middle schooler (grades 6-9) practice Public Forum debate.
+
+Take the OPPOSITE side of whatever the student is arguing, and argue it seriously and persuasively in 2-4 sentences per turn — this is practice for facing a real opponent, not a pushover. You may use illustrative reasoning and hypothetical examples, but explicitly label them as illustrative (e.g. "for example, imagine...") rather than presenting invented statistics or sources as verified facts, since you cannot look up real citations. Ask sharp, specific follow-up questions that test whether the student's argument actually holds up, the way a real Crossfire exchange would. Stay respectful and age-appropriate at all times — this is a coaching exercise, not a real hostile debate.
+
+If the student's message reads like a Summary or Final Focus (they're wrapping up their case rather than making a new point), give a short, honest critique instead of just rebutting further: was their reasoning clear, did they actually engage your counter-arguments, and what would strengthen their case next round.`;
+
+function debateSystemPrompt(resolution, side) {
+  const oppositeSide = side === 'Pro' ? 'Con' : 'Pro';
+  return `${DEBATE_SYSTEM_PROMPT_BASE}\n\nRESOLUTION: "${resolution}"\nThe student is arguing ${side}. You are arguing ${oppositeSide}.`;
+}
+
 const SPS_RUBRIC = `Grading Rubric for SPS (Student Personal Statement):
 
 As with essays, partial points are awarded accordingly. A 3.5, for instance, indicates the SPS is halfway between a "3" and a "4."
@@ -200,9 +217,33 @@ app.post('/api/chat', async (req, res) => {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents,
       config: { systemInstruction: SYSTEM_PROMPT, maxOutputTokens: 1024 },
+    });
+    res.json({ reply: response.text });
+  } catch (err) {
+    console.error('Gemini API error:', err);
+    res.status(502).json({ error: "I'm having trouble connecting right now. Try again in a moment!" });
+  }
+});
+
+app.post('/api/debate-coach', async (req, res) => {
+  const { messages, resolution, side } = req.body;
+  if (!Array.isArray(messages) || messages.length === 0 || !resolution || !side) {
+    return res.status(400).json({ error: 'messages, resolution, and side are required' });
+  }
+
+  const contents = messages.map((m) => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }],
+  }));
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.6-flash',
+      contents,
+      config: { systemInstruction: debateSystemPrompt(resolution, side), maxOutputTokens: 1024 },
     });
     res.json({ reply: response.text });
   } catch (err) {
@@ -219,7 +260,7 @@ app.post('/api/grade-sps', async (req, res) => {
 
   try {
     const result = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: [{
         role: 'user',
         parts: [{ text: `SPS PROMPT:\n${prompt}\n\nSTUDENT RESPONSE:\n${studentResponse}` }],
@@ -248,7 +289,7 @@ app.post('/api/grade-pse', async (req, res) => {
 
   try {
     const result = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: [{
         role: 'user',
         parts: [{ text: `PROBLEM-SOLVING ESSAY PROMPT:\n${prompt}\n\nSTUDENT RESPONSE:\n${studentResponse}` }],
@@ -277,7 +318,7 @@ app.post('/api/grade-writing-assessment', async (req, res) => {
 
   try {
     const result = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: [{
         role: 'user',
         parts: [{ text: `WRITING ASSESSMENT PROMPT:\n${prompt}\n\nSTUDENT RESPONSE:\n${studentResponse}` }],

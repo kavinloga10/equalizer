@@ -94,7 +94,11 @@
 <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
 <div class="sidebar" id="dashboard-sidebar">
   <div class="sidebar-logo">Equalizer</div>
-  <nav class="sidebar-nav">
+  <div class="mode-switcher">
+    <button class="mode-btn active" id="mode-btn-testprep" onclick="setAppMode('testprep')">🎯 Test Prep</button>
+    <button class="mode-btn" id="mode-btn-debate" onclick="setAppMode('debate')">🎙️ Debate</button>
+  </div>
+  <nav class="sidebar-nav" id="testprep-nav">
     <a class="sidebar-item active" onclick="showPanel('home',this)"><span class="icon">🏠</span> Home</a>
     <a class="sidebar-item" onclick="showPanel('practice',this)"><span class="icon">📝</span> Practice</a>
     <a class="sidebar-item" onclick="showPanel('tutor',this)"><span class="icon">🤖</span> AI Tutor</a>
@@ -103,6 +107,9 @@
     <a class="sidebar-item" onclick="showPanel('progress',this)"><span class="icon">📊</span> Progress</a>
     <a class="sidebar-item" onclick="showPanel('leaderboard',this)"><span class="icon">🏆</span> Leaderboard</a>
     <a class="sidebar-item" id="admin-nav-item" style="display:none" onclick="showPanel('admin',this)"><span class="icon">⚙️</span> Admin</a>
+  </nav>
+  <nav class="sidebar-nav" id="debate-nav" style="display:none">
+    <a class="sidebar-item" onclick="showPanel('debate',this)"><span class="icon">🎙️</span> Debate Coach</a>
   </nav>
   <div class="sidebar-bottom">
     <a class="sidebar-item" onclick="doLogout()"><span class="icon">🚪</span> Sign out</a>
@@ -408,6 +415,60 @@
     <div class="panel-card">
       <h3 style="margin-bottom:20px">Top Students — This Month</h3>
       <div id="leaderboard-list"></div>
+    </div>
+  </div>
+
+  <!-- DEBATE COACH -->
+  <div class="dash-panel" id="panel-debate">
+    <div class="tutor-wrap">
+      <div class="chat-area">
+        <div class="chat-header">
+          <div class="avatar" style="font-size:20px">🎙️</div>
+          <div><strong>Debate Coach</strong><br><span>Public Forum practice <span class="status"></span></span></div>
+        </div>
+        <div class="chat-messages" id="debate-chat-messages">
+          <div class="msg ai">
+            <div class="msg-avatar">🎙️</div>
+            <div class="msg-body">
+              <div class="msg-bubble">Welcome to Public Forum practice! Pick a resolution and a side on the right, hit <strong>Start Round</strong>, and I'll argue the other side with you — Constructive, Crossfire, Rebuttal, Summary, and Final Focus, just like a real round.</div>
+              <div class="msg-time">Just now</div>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-bar">
+          <textarea class="chat-input" id="debate-chat-input" placeholder="Start a round first, then type your argument…" rows="1" onkeydown="handleDebateChatKey(event)"></textarea>
+          <button class="send-btn" onclick="sendDebateMessage()" title="Send">➤</button>
+        </div>
+      </div>
+      <div class="tutor-sidebar">
+        <div class="panel-card">
+          <h3>Start a round</h3>
+          <select id="debate-resolution-select" onchange="handleResolutionChange(this)" style="width:100%;padding:10px;border-radius:var(--radius);border:1.5px solid var(--gray-200);background:var(--white);color:var(--gray-800);font-family:'DM Sans',sans-serif;font-size:13px;margin-bottom:10px">
+            <option value="">Pick a resolution…</option>
+            <option>Resolved: Homework does more harm than good for middle school students.</option>
+            <option>Resolved: Schools should replace all standardized testing with project-based assessment.</option>
+            <option>Resolved: Social media platforms should require age verification for all users under 16.</option>
+            <option>Resolved: Artificial intelligence should be allowed as a tool on school assignments.</option>
+            <option>Resolved: Youth sports leagues should stop keeping score for players under 12.</option>
+            <option value="__custom__">✏️ My own topic…</option>
+          </select>
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px" id="debate-side-pro" onclick="setDebateSide('Pro')">Pro</button>
+            <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px" id="debate-side-con" onclick="setDebateSide('Con')">Con</button>
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="startDebateRound()">Start Round</button>
+        </div>
+        <div class="panel-card">
+          <h3>Public Forum format</h3>
+          <p style="font-size:12px;color:var(--gray-500);line-height:1.9">
+            1. Constructive — state your case<br>
+            2. Crossfire — direct Q&amp;A<br>
+            3. Rebuttal — attack their case<br>
+            4. Summary — extend your best points<br>
+            5. Final Focus — your closing voter issues
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1283,12 +1344,26 @@ function setRole(role, btn) {
   btn.classList.add('active');
 }
 
+// Test Prep = the existing exam-prep dashboard (Home/Practice/AI Tutor/etc.),
+// Debate Coach = a separate top-level area with its own AI sparring chat.
+function setAppMode(mode) {
+  document.getElementById('mode-btn-testprep').classList.toggle('active', mode === 'testprep');
+  document.getElementById('mode-btn-debate').classList.toggle('active', mode === 'debate');
+  document.getElementById('testprep-nav').style.display = mode === 'testprep' ? 'flex' : 'none';
+  document.getElementById('debate-nav').style.display = mode === 'debate' ? 'flex' : 'none';
+  if (mode === 'testprep') {
+    showPanel('home', document.querySelector('#testprep-nav .sidebar-item'));
+  } else {
+    showPanel('debate', document.querySelector('#debate-nav .sidebar-item'));
+  }
+}
+
 function showPanel(id, el) {
   document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
   document.getElementById('panel-' + id).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { home:'Dashboard', practice:'Practice Questions', tutor:'AI Tutor', tests:'Mock Tests', progress:'My Progress', leaderboard:'Leaderboard', admin:'Admin' };
+  const titles = { home:'Dashboard', practice:'Practice Questions', tutor:'AI Tutor', tests:'Mock Tests', formulas:'Formula Bank', progress:'My Progress', leaderboard:'Leaderboard', admin:'Admin', debate:'Debate Coach' };
   document.getElementById('panel-title').textContent = titles[id] || id;
   if (id === 'home') renderHomeStats();
   if (id === 'practice') {
@@ -1456,6 +1531,12 @@ async function doLogout() {
   chatHistory = [];
   try { localStorage.removeItem(CHAT_KEY); } catch (e) {}
   document.getElementById('chat-messages').innerHTML = `<div class="msg ai"><div class="msg-avatar">🤖</div><div class="msg-body"><div class="msg-bubble">Hi! I'm your Equalizer tutor. Ask me anything — algebra, chemistry, reading strategies, logic puzzles, vocabulary, you name it. What would you like help with today?</div><div class="msg-time">Just now</div></div></div>`;
+  debateHistory = [];
+  debateResolution = null;
+  debateSide = null;
+  try { localStorage.removeItem(DEBATE_KEY); } catch (e) {}
+  document.getElementById('debate-chat-messages').innerHTML = `<div class="msg ai"><div class="msg-avatar">🎙️</div><div class="msg-body"><div class="msg-bubble">Welcome to Public Forum practice! Pick a resolution and a side on the right, hit <strong>Start Round</strong>, and I'll argue the other side with you — Constructive, Crossfire, Rebuttal, Summary, and Final Focus, just like a real round.</div><div class="msg-time">Just now</div></div></div>`;
+  setAppMode('testprep');
   showPage('landing');
   toast('Signed out. See you next time!');
 }
@@ -1782,6 +1863,95 @@ function appendTyping(containerId = 'chat-messages') {
 function removeTyping(id) {
   const el = document.getElementById(id);
   if (el) el.remove();
+}
+
+// ═══════════════════════════════════════════════════════
+//  DEBATE COACH (Public Forum practice, separate top-level area from Test Prep)
+// ═══════════════════════════════════════════════════════
+let debateHistory = [];
+let debateResolution = null;
+let debateSide = null;
+const DEBATE_KEY = 'equalizer_debate_chat';
+
+function saveDebateHistory() {
+  try { localStorage.setItem(DEBATE_KEY, JSON.stringify({ history: debateHistory, resolution: debateResolution, side: debateSide })); } catch (e) {}
+}
+
+function loadDebateHistory() {
+  try {
+    const raw = localStorage.getItem(DEBATE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    debateHistory = parsed.history || [];
+    debateResolution = parsed.resolution || null;
+    debateSide = parsed.side || null;
+  } catch (e) {}
+}
+
+function handleResolutionChange(select) {
+  if (select.value !== '__custom__') return;
+  const topic = prompt('Type your own debate resolution:', 'Resolved: ');
+  if (topic && topic.trim()) {
+    const opt = document.createElement('option');
+    opt.value = topic.trim();
+    opt.textContent = topic.trim();
+    opt.selected = true;
+    select.insertBefore(opt, select.lastElementChild);
+  } else {
+    select.value = '';
+  }
+}
+
+function setDebateSide(side) {
+  debateSide = side;
+  document.getElementById('debate-side-pro').className = 'btn ' + (side === 'Pro' ? 'btn-primary' : 'btn-outline');
+  document.getElementById('debate-side-con').className = 'btn ' + (side === 'Con' ? 'btn-primary' : 'btn-outline');
+}
+
+function startDebateRound() {
+  const select = document.getElementById('debate-resolution-select');
+  const resolution = select.value;
+  if (!resolution || resolution === '__custom__') { toast('Pick a resolution first.', 'error'); return; }
+  if (!debateSide) { toast('Pick Pro or Con first.', 'error'); return; }
+  debateResolution = resolution;
+  debateHistory = [];
+  saveDebateHistory();
+  document.getElementById('debate-chat-messages').innerHTML = '';
+  appendMsg('ai', `Round started! Resolution: "${resolution}" — you're arguing ${debateSide}. Give me your Constructive: lay out your case in a few sentences, then I'll respond as the other side.`, 'debate-chat-messages');
+}
+
+function handleDebateChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendDebateMessage(); }
+}
+
+async function sendDebateMessage() {
+  const input = document.getElementById('debate-chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  if (!debateResolution || !debateSide) { toast('Pick a resolution and a side, then hit Start Round first.', 'error'); return; }
+  input.value = '';
+  appendMsg('user', text, 'debate-chat-messages');
+  debateHistory.push({ role: 'user', content: text });
+  saveDebateHistory();
+
+  const typingId = appendTyping('debate-chat-messages');
+  try {
+    const messages = debateHistory.slice(-12);
+    const res = await fetch(`${API_BASE}/api/debate-coach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages, resolution: debateResolution, side: debateSide }),
+    });
+    const data = await res.json();
+    const reply = data.reply || "Let's keep going — could you say that a different way?";
+    removeTyping(typingId);
+    appendMsg('ai', reply, 'debate-chat-messages');
+    debateHistory.push({ role: 'assistant', content: reply });
+    saveDebateHistory();
+  } catch (err) {
+    removeTyping(typingId);
+    appendMsg('ai', "I'm having trouble connecting right now. Try again in a moment!", 'debate-chat-messages');
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2327,6 +2497,26 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="msg-avatar">${m.role === 'assistant' ? '🤖' : '👤'}</div>
           <div class="msg-body"><div class="msg-bubble">${formatChatText(m.content)}</div></div>
         </div>`).join('');
+    }
+    loadDebateHistory();
+    if (debateHistory.length) {
+      const container = document.getElementById('debate-chat-messages');
+      container.innerHTML = debateHistory.map(m => `
+        <div class="msg ${m.role === 'assistant' ? 'ai' : 'user'}">
+          <div class="msg-avatar">${m.role === 'assistant' ? '🎙️' : '👤'}</div>
+          <div class="msg-body"><div class="msg-bubble">${formatChatText(m.content)}</div></div>
+        </div>`).join('');
+      if (debateSide) setDebateSide(debateSide);
+      if (debateResolution) {
+        const select = document.getElementById('debate-resolution-select');
+        if (![...select.options].some(o => o.value === debateResolution)) {
+          const opt = document.createElement('option');
+          opt.value = debateResolution;
+          opt.textContent = debateResolution;
+          select.insertBefore(opt, select.lastElementChild);
+        }
+        select.value = debateResolution;
+      }
     }
     enterDashboard(false);
   } else {

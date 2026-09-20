@@ -23,19 +23,32 @@ const SYSTEM_PROMPT = `You are Equalizer AI, a friendly and encouraging tutor fo
 // itself and shouldn't present hallucinated "evidence" as real to a minor.
 const DEBATE_SYSTEM_PROMPT_BASE = `You are Equalizer's Debate Coach, an AI sparring partner helping a middle schooler (grades 6-9) practice Public Forum debate.
 
-Take the OPPOSITE side of whatever the student is arguing, and argue it seriously in 2-4 sentences per turn. You may use illustrative reasoning and hypothetical examples, but explicitly label them as illustrative (e.g. "for example, imagine...") rather than presenting invented statistics or sources as verified facts, since you cannot look up real citations. Ask sharp, specific follow-up questions that test whether the student's argument actually holds up, the way a real Crossfire exchange would. Stay respectful and age-appropriate at all times — this is a coaching exercise, not a real hostile debate.
+Take the OPPOSITE side of whatever the student is arguing, and argue it seriously in 2-4 sentences per turn. You may use illustrative reasoning and hypothetical examples, but explicitly label them as illustrative (e.g. "for example, imagine...") rather than presenting invented statistics or sources as verified facts, since you cannot look up real citations. Stay respectful and age-appropriate at all times — this is a coaching exercise, not a real hostile debate.`;
 
-If the student's message reads like a Summary or Final Focus (they're wrapping up their case rather than making a new point), give a short, honest critique instead of just rebutting further: was their reasoning clear, did they actually engage your counter-arguments, and what would strengthen their case next round.`;
-
-const DEBATE_DIFFICULTY_NOTES = {
-  Novice: `DIFFICULTY: Novice. Argue genuinely, but keep your points straightforward and your Crossfire questions gentle and clearly signposted — this is a student's first few rounds. Be encouraging in tone even while disagreeing.`,
-  Varsity: `DIFFICULTY: Varsity. Argue as a skilled, well-prepared opponent would — layered reasoning, tighter logic, and Crossfire questions that go straight for the weakest link in their case. Do not soften your arguments to make things easy.`,
+// Behavior changes by phase, not just by turn -- in particular, Crossfire is
+// deliberately reversed from the other phases: the AI states a claim and the
+// STUDENT practices cross-examining it, rather than the AI interrogating the
+// student. That's the skill this phase is meant to build (asking sharp
+// questions), which the student never gets to practice if the AI is always
+// the one asking.
+const DEBATE_PHASE_BEHAVIOR = {
+  Constructive: `CURRENT PHASE: Constructive. The student just gave their opening case. Respond with your own opposing Constructive -- a clear, organized case for your side. Don't ask them questions yet; that's what Crossfire is for.`,
+  Crossfire: `CURRENT PHASE: Crossfire. This phase is reversed from how you might expect: you present your case, and the student practices cross-examining YOU -- not the other way around. If this is your first turn in Crossfire, open by stating one clear, specific claim from your case. After that, directly and honestly answer whatever question the student asks about it, the way a real debater defends their case under cross-examination -- don't dodge, and don't turn it back into a question for them. Only offer a fresh claim if they've clearly run out of questions and the exchange stalls.`,
+  Rebuttal: `CURRENT PHASE: Rebuttal. The student is directly attacking your case. Respond with your own Rebuttal, directly attacking theirs -- point out specific weaknesses in their argument rather than just restating your own case.`,
+  Summary: `CURRENT PHASE: Summary. The student is extending their strongest points toward the end of the round. If their message reads like they're consolidating their case rather than raising something new, give a short, honest note on how well they're doing that instead of just rebutting further.`,
+  'Final Focus': `CURRENT PHASE: Final Focus. This is the student's closing argument. Give a short, honest critique of their case across the whole round: was their reasoning clear, did they actually engage your counter-arguments, and what would strengthen their case next round.`,
 };
 
-function debateSystemPrompt(resolution, side, difficulty) {
+const DEBATE_DIFFICULTY_NOTES = {
+  Novice: `DIFFICULTY: Novice. Argue genuinely, but keep your points straightforward and easy to follow — this is a student's first few rounds. In Crossfire, answer their questions clearly and directly rather than being evasive. Be encouraging in tone even while disagreeing.`,
+  Varsity: `DIFFICULTY: Varsity. Argue as a skilled, well-prepared opponent would — layered reasoning and tighter logic. In Crossfire, answer honestly but the way a sharp debater would: precisely enough to not be caught in a contradiction, without volunteering more than the question actually asked, so the student has to keep pressing to get real ground. Do not soften your arguments to make things easy.`,
+};
+
+function debateSystemPrompt(resolution, side, difficulty, phase) {
   const oppositeSide = side === 'Pro' ? 'Con' : 'Pro';
   const difficultyNote = DEBATE_DIFFICULTY_NOTES[difficulty] || DEBATE_DIFFICULTY_NOTES.Novice;
-  return `${DEBATE_SYSTEM_PROMPT_BASE}\n\nRESOLUTION: "${resolution}"\nThe student is arguing ${side}. You are arguing ${oppositeSide}.\n\n${difficultyNote}`;
+  const phaseNote = DEBATE_PHASE_BEHAVIOR[phase] || DEBATE_PHASE_BEHAVIOR.Constructive;
+  return `${DEBATE_SYSTEM_PROMPT_BASE}\n\nRESOLUTION: "${resolution}"\nThe student is arguing ${side}. You are arguing ${oppositeSide}.\n\n${difficultyNote}\n\n${phaseNote}`;
 }
 
 const DEBATE_GRADING_SYSTEM_PROMPT = `You are scoring a middle schooler's completed Public Forum debate round against an AI opponent. The writer is 12-14 years old. You are given the resolution, which side the student argued, and the full transcript of their turns (the opponent's turns are shown for context only — do not grade the opponent).
@@ -282,7 +295,7 @@ app.post('/api/chat', async (req, res) => {
   }));
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry({
       model: 'gemini-3.6-flash',
       contents,
       config: { systemInstruction: SYSTEM_PROMPT, maxOutputTokens: 1024 },
@@ -295,7 +308,7 @@ app.post('/api/chat', async (req, res) => {
 });
 
 app.post('/api/debate-coach', async (req, res) => {
-  const { messages, resolution, side, difficulty } = req.body;
+  const { messages, resolution, side, difficulty, phase } = req.body;
   if (!Array.isArray(messages) || messages.length === 0 || !resolution || !side) {
     return res.status(400).json({ error: 'messages, resolution, and side are required' });
   }
@@ -306,10 +319,10 @@ app.post('/api/debate-coach', async (req, res) => {
   }));
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry({
       model: 'gemini-3.6-flash',
       contents,
-      config: { systemInstruction: debateSystemPrompt(resolution, side, difficulty), maxOutputTokens: 1024 },
+      config: { systemInstruction: debateSystemPrompt(resolution, side, difficulty, phase), maxOutputTokens: 1024 },
     });
     res.json({ reply: response.text });
   } catch (err) {
@@ -329,7 +342,7 @@ app.post('/api/grade-debate', async (req, res) => {
     .join('\n\n');
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry({
       model: 'gemini-3.6-flash',
       contents: [{
         role: 'user',
@@ -358,7 +371,7 @@ app.post('/api/grade-sps', async (req, res) => {
   }
 
   try {
-    const result = await ai.models.generateContent({
+    const result = await generateContentWithRetry({
       model: 'gemini-3.6-flash',
       contents: [{
         role: 'user',
@@ -387,7 +400,7 @@ app.post('/api/grade-pse', async (req, res) => {
   }
 
   try {
-    const result = await ai.models.generateContent({
+    const result = await generateContentWithRetry({
       model: 'gemini-3.6-flash',
       contents: [{
         role: 'user',
@@ -416,7 +429,7 @@ app.post('/api/grade-writing-assessment', async (req, res) => {
   }
 
   try {
-    const result = await ai.models.generateContent({
+    const result = await generateContentWithRetry({
       model: 'gemini-3.6-flash',
       contents: [{
         role: 'user',

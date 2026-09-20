@@ -2270,6 +2270,7 @@ async function sendDebateMessage() {
   const text = input.value.trim();
   if (!text) return;
   if (!debateResolution || !debateSide) { toast('Pick a resolution and a side, then hit Start Round first.', 'error'); return; }
+  const phaseAtSendTime = debatePhaseIndex;
   input.value = '';
   appendMsg('user', text, 'debate-chat-messages');
   debateHistory.push({ role: 'user', content: text });
@@ -2281,7 +2282,10 @@ async function sendDebateMessage() {
     const res = await fetch(`${API_BASE}/api/debate-coach`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages, resolution: debateResolution, side: debateSide, difficulty: debateDifficulty }),
+      body: JSON.stringify({
+        messages, resolution: debateResolution, side: debateSide, difficulty: debateDifficulty,
+        phase: DEBATE_PHASES[phaseAtSendTime].name,
+      }),
     });
     const data = await res.json();
     const reply = data.reply || "Let's keep going — could you say that a different way?";
@@ -2290,6 +2294,11 @@ async function sendDebateMessage() {
     debateHistory.push({ role: 'assistant', content: reply });
     saveDebateHistory();
     speakDebateReply(reply);
+
+    // Constructive is always exactly one exchange (state your case, hear the
+    // opposing case), so move straight into Crossfire instead of making the
+    // student click through a transition that's the same every round.
+    if (phaseAtSendTime === 0 && debatePhaseIndex === 0) advanceDebatePhase();
   } catch (err) {
     removeTyping(typingId);
     appendMsg('ai', "I'm having trouble connecting right now. Try again in a moment!", 'debate-chat-messages');

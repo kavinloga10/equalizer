@@ -497,7 +497,7 @@
   <div class="dash-panel" id="panel-sports">
     <div class="panel-card" style="max-width:640px;margin:0 auto 24px">
       <h3 style="margin-bottom:6px">🏅 Upload a training clip</h3>
-      <p style="font-size:13px;color:var(--gray-500);margin-bottom:20px">Get AI feedback on your technique. Keep clips short (under ~30 seconds) and under 40MB for the fastest turnaround.</p>
+      <p style="font-size:13px;color:var(--gray-500);margin-bottom:20px">Get AI feedback on your technique. Clips up to a few minutes and 200MB work — shorter clips just analyze faster.</p>
 
       <div class="form-group">
         <label>What skill or sport is this?</label>
@@ -2404,7 +2404,7 @@ async function analyzeSportsVideo() {
 
   const btn = document.getElementById('sports-analyze-btn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Analyzing your video — this can take up to a minute...';
+  btn.innerHTML = '<span class="spinner"></span> Analyzing your video — this can take a couple minutes for longer clips...';
 
   try {
     const formData = new FormData();

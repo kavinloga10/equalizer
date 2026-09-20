@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
+import fs from 'fs/promises';
+import os from 'os';
 import { GoogleGenAI, createUserContent, createPartFromUri } from '@google/genai';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -230,12 +232,15 @@ app.use(cors({ origin: ALLOWED_ORIGINS }));
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// Sports Coach video uploads: kept in memory (never written to disk) and
-// capped at 40MB -- short clips analyze faster and stay well under Render's
-// free-tier memory limits.
+// Sports Coach video uploads: written to a temp file on disk rather than
+// held in memory -- a couple minutes of real phone-camera video easily runs
+// 80-150MB (video bitrate, not duration, drives file size), and buffering
+// that in RAM risks OOM on Render's free tier. 200MB comfortably covers a
+// few minutes of footage; the temp file is deleted after analysis either way.
+const VIDEO_SIZE_LIMIT_MB = 200;
 const videoUpload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 40 * 1024 * 1024 },
+  storage: multer.diskStorage({ destination: os.tmpdir() }),
+  limits: { fileSize: VIDEO_SIZE_LIMIT_MB * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('video/')) return cb(new Error('Only video files are supported.'));
     cb(null, true);
@@ -246,7 +251,7 @@ function handleVideoUpload(req, res, next) {
   videoUpload.single('video')(req, res, (err) => {
     if (!err) return next();
     const message = err.code === 'LIMIT_FILE_SIZE'
-      ? 'That video is too large — keep clips under 40MB.'
+      ? `That video is too large — keep clips under ${VIDEO_SIZE_LIMIT_MB}MB (a shorter clip is also faster to analyze).`
       : (err.message || 'Upload failed.');
     res.status(400).json({ error: message });
   });
@@ -427,18 +432,18 @@ app.post('/api/analyze-sports-video', handleVideoUpload, async (req, res) => {
 
   let uploadedFile;
   try {
-    const videoBlob = new Blob([req.file.buffer], { type: req.file.mimetype });
     uploadedFile = await ai.files.upload({
-      file: videoBlob,
+      file: req.file.path,
       config: { mimeType: req.file.mimetype, displayName: 'sports-coach-clip' },
     });
 
     // Video files process asynchronously on Google's side before they're
-    // analyzable -- poll until ACTIVE, or give up after 60s so a stuck
-    // upload doesn't hang the request forever.
+    // analyzable -- poll until ACTIVE, or give up after 3 minutes so a stuck
+    // upload doesn't hang the request forever. Longer/larger clips take
+    // longer to process, not just to upload.
     let fileInfo = uploadedFile;
     const pollStart = Date.now();
-    while (fileInfo.state === 'PROCESSING' && Date.now() - pollStart < 60000) {
+    while (fileInfo.state === 'PROCESSING' && Date.now() - pollStart < 180000) {
       await new Promise((r) => setTimeout(r, 2000));
       fileInfo = await ai.files.get({ name: uploadedFile.name });
     }
@@ -466,6 +471,7 @@ app.post('/api/analyze-sports-video', handleVideoUpload, async (req, res) => {
     console.error('Sports video analysis error:', err);
     res.status(502).json({ error: "Couldn't analyze that video. Try a shorter clip or try again in a moment!" });
   } finally {
+    fs.unlink(req.file.path).catch(() => {});
     if (uploadedFile && uploadedFile.name) {
       ai.files.delete({ name: uploadedFile.name }).catch(() => {});
     }

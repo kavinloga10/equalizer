@@ -437,7 +437,8 @@
           <div class="quiz-timer" id="debate-phase-timer" style="font-size:15px">⏱️ 4:00</div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-outline" style="padding:6px 12px;font-size:12px" onclick="advanceDebatePhase()" id="debate-next-phase-btn">Next Phase →</button>
-            <button class="btn btn-primary" style="padding:6px 12px;font-size:12px;display:none" onclick="endDebateRound()" id="debate-end-round-btn">End Round &amp; Get Score</button>
+            <button class="btn btn-outline" style="padding:6px 12px;font-size:12px" onclick="restartDebateRound()" title="Start this round over from scratch">🔄 Restart</button>
+            <button class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="endDebateRound()" id="debate-end-round-btn">End Round &amp; Get Score</button>
           </div>
         </div>
         <div class="chat-messages" id="debate-chat-messages">
@@ -2234,7 +2235,10 @@ function startDebatePhase() {
   document.getElementById('debate-phase-bar').style.display = 'flex';
   document.getElementById('debate-phase-label').textContent = phase.name;
   document.getElementById('debate-next-phase-btn').style.display = isLastPhase ? 'none' : 'inline-flex';
-  document.getElementById('debate-end-round-btn').style.display = isLastPhase ? 'inline-flex' : 'none';
+  // End Round is available at every phase, not just the last one, so a
+  // student can end (and get scored on) a round early instead of being
+  // forced through every remaining phase.
+  document.getElementById('debate-end-round-btn').style.display = 'inline-flex';
   const timerEl = document.getElementById('debate-phase-timer');
   timerEl.classList.remove('warning');
   updateDebatePhaseTimerDisplay();
@@ -2324,12 +2328,25 @@ async function endDebateRound() {
     if (!res.ok) throw new Error(data.error || 'Grading failed');
     renderDebateScorecard(data);
     saveDebateRoundToHistory(data);
+    // The scorecard already summarizes what happened -- clear the transcript
+    // so the round reads as closed rather than leaving a stale conversation
+    // sitting above the score.
+    debateHistory = [];
+    saveDebateHistory();
+    document.getElementById('debate-chat-messages').innerHTML = '';
   } catch (err) {
     toast('Grading failed. Try again in a moment!', 'error');
   } finally {
     btn.disabled = false;
     btn.textContent = 'End Round & Get Score';
   }
+}
+
+// Starting over mid-round discards the current transcript and phase
+// progress, so confirm first if there's actually something to lose.
+function restartDebateRound() {
+  if (debateHistory.length && !confirm('Restart this round from the beginning? Your current progress will be lost.')) return;
+  startDebateRound();
 }
 
 function renderDebateScorecard(data) {

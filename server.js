@@ -55,9 +55,14 @@ Watch the video carefully and give specific, actionable feedback tied to what yo
 
 SAFETY: if the skill involves real injury risk when done with poor form (e.g., weightlifting, gymnastics, sprinting mechanics, contact sports, throwing motions), explicitly recommend in your summary that the student have a real coach, trainer, or parent confirm your feedback in person before changing anything that affects safety. You are a supplementary practice tool, not a substitute for in-person coaching.
 
-Stay encouraging and age-appropriate, but do not give easy points — reserve a high score for genuinely strong technique, not just participation. Return your feedback as the requested JSON structure. "score" is a number from 0 to 10 in increments of 0.5 rating the technique shown. "summary" is a 2-3 sentence overview of what you observed (including any safety note or visibility caveat). "strengths" is a list of 2-4 specific things done well. "improvements" is a list of 2-4 specific, actionable things to work on next.
+Stay encouraging and age-appropriate, but do not give easy points — reserve a high score for genuinely strong technique, not just participation. Return your feedback as the requested JSON structure. "score" is a number from 0 to 10 in increments of 0.5 rating the technique shown. "summary" is a 2-3 sentence overview of what you observed (including any safety note or visibility caveat). "strengths" is a list of 2-4 specific things done well. "improvements" is a list of 2-4 specific, actionable things to work on next.`;
 
-You have a Google Search tool available. For each specific gap you identify in "improvements," run a real search to find an actual public tutorial or drill video that addresses that exact gap (phrase your query like "[specific technique] tutorial video" or "how to fix [specific issue] [sport]" — favor searches likely to surface real instructional video content, e.g. from YouTube). Do not invent or guess at video titles, channels, or URLs yourself — only real search results should ever be referenced. If a search doesn't turn up anything genuinely relevant, it's fine to skip it rather than force an unrelated result.`;
+// Run as a separate, second call (text-only, no video attached) after the
+// main analysis succeeds -- combining video input + the Google Search tool
+// + a JSON response schema in one call turned out to be unreliable, so this
+// keeps the actual coaching feedback (the part that matters most) isolated
+// from anything that could go wrong with the search step.
+const SPORTS_SEARCH_SYSTEM_PROMPT = `You are helping a middle school student find real, publicly available video tutorials that address specific gaps in their sports technique. You'll be given a list of specific things they need to work on. You have a Google Search tool available -- for each gap, run a real search to find an actual tutorial or drill video that addresses it (phrase queries like "[specific technique] tutorial video" or "how to fix [specific issue] [sport]", favoring searches likely to surface real instructional video content such as YouTube). Do not invent or guess at video titles, channels, or URLs yourself -- only real search results should ever be referenced. If a search doesn't turn up anything genuinely relevant, skip it rather than force an unrelated result. Respond with a brief one-sentence acknowledgment; the actual sources you find matter more than what you write here.`;
 
 const SPS_RUBRIC = `Grading Rubric for SPS (Student Personal Statement):
 
@@ -438,6 +443,62 @@ app.post('/api/grade-writing-assessment', async (req, res) => {
 const sportsJobs = new Map(); // jobId -> { status: 'processing'|'done'|'error', result?, error? }
 const SPORTS_JOB_TTL_MS = 10 * 60 * 1000;
 
+// Real-world testing turned up transient Gemini errors -- 503 "model is
+// experiencing high demand" and 429 rate-limit -- that Google's own error
+// message says to just retry. Both are common enough in practice that
+// failing outright on the first hit produces exactly the "works sometimes,
+// not others" behavior this was built to fix.
+function isTransientGeminiError(err) {
+  const status = err?.status;
+  return status === 503 || status === 429;
+}
+
+async function generateContentWithRetry(params, retries = 2) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await ai.models.generateContent(params);
+    } catch (err) {
+      if (attempt >= retries || !isTransientGeminiError(err)) throw err;
+      const delay = 2000 * Math.pow(2, attempt); // 2s, 4s, ...
+      console.warn(`Transient Gemini error (${err.status}), retrying in ${delay}ms...`);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+}
+
+// Separate, best-effort call: text-only (no video, no response schema) with
+// the Google Search tool enabled, run after the main analysis succeeds. Any
+// failure here is swallowed -- missing video suggestions is a fine outcome,
+// failing the whole analysis over them is not. Real links are pulled from
+// groundingMetadata, never from text the model itself writes, so nothing
+// here can hand the student a hallucinated URL.
+async function findRecommendedVideos(improvements) {
+  if (!improvements || !improvements.length) return [];
+  try {
+    const response = await generateContentWithRetry({
+      model: 'gemini-3.6-flash',
+      contents: `Areas the student needs to work on:\n${improvements.map((s) => `- ${s}`).join('\n')}`,
+      config: {
+        systemInstruction: SPORTS_SEARCH_SYSTEM_PROMPT,
+        thinkingConfig: { thinkingLevel: 'low' },
+        maxOutputTokens: 1024,
+        tools: [{ googleSearch: {} }],
+      },
+    });
+    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    const seenUrls = new Set();
+    return chunks
+      .map((c) => c.web)
+      .filter((w) => w && w.uri && w.title)
+      .filter((w) => (seenUrls.has(w.uri) ? false : (seenUrls.add(w.uri), true)))
+      .slice(0, 4)
+      .map((w) => ({ title: w.title, url: w.uri }));
+  } catch (err) {
+    console.error('Video recommendation search failed (non-fatal):', err);
+    return [];
+  }
+}
+
 async function runSportsVideoAnalysis(jobId, filePath, mimeType, sport) {
   let uploadedFile;
   try {
@@ -459,7 +520,10 @@ async function runSportsVideoAnalysis(jobId, filePath, mimeType, sport) {
       throw new Error(`Video did not finish processing (state: ${fileInfo.state}).`);
     }
 
-    const response = await ai.models.generateContent({
+    // Main analysis: video input + structured JSON output, no search tool.
+    // This is the part that has to be reliable -- keep it as simple as
+    // possible.
+    const response = await generateContentWithRetry({
       model: 'gemini-3.6-flash',
       contents: createUserContent([
         createPartFromUri(fileInfo.uri, fileInfo.mimeType),
@@ -469,27 +533,12 @@ async function runSportsVideoAnalysis(jobId, filePath, mimeType, sport) {
         systemInstruction: SPORTS_COACH_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
         responseSchema: WRITING_RESPONSE_SCHEMA,
-        // Not 'minimal' here -- deciding what to search for takes real
-        // reasoning, unlike the plain text-in/JSON-out graders.
-        thinkingConfig: { thinkingLevel: 'low' },
+        thinkingConfig: { thinkingLevel: 'minimal' },
         maxOutputTokens: 4096,
-        tools: [{ googleSearch: {} }],
       },
     });
     const graded = JSON.parse(response.text);
-
-    // Pull real video/resource links straight from Google's grounding
-    // metadata rather than trusting the model to transcribe URLs itself --
-    // groundingChunks come directly from the search backend, so they can't
-    // be hallucinated the way a model-written URL in the JSON body could be.
-    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-    const seenUrls = new Set();
-    graded.recommendedVideos = chunks
-      .map((c) => c.web)
-      .filter((w) => w && w.uri && w.title)
-      .filter((w) => (seenUrls.has(w.uri) ? false : (seenUrls.add(w.uri), true)))
-      .slice(0, 4)
-      .map((w) => ({ title: w.title, url: w.uri }));
+    graded.recommendedVideos = await findRecommendedVideos(graded.improvements);
 
     sportsJobs.set(jobId, { status: 'done', result: graded });
   } catch (err) {

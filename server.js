@@ -54,7 +54,9 @@ Watch the video carefully and give specific, actionable feedback tied to what yo
 
 SAFETY: if the skill involves real injury risk when done with poor form (e.g., weightlifting, gymnastics, sprinting mechanics, contact sports, throwing motions), explicitly recommend in your summary that the student have a real coach, trainer, or parent confirm your feedback in person before changing anything that affects safety. You are a supplementary practice tool, not a substitute for in-person coaching.
 
-Stay encouraging and age-appropriate, but do not give easy points — reserve a high score for genuinely strong technique, not just participation. Return your feedback as the requested JSON structure. "score" is a number from 0 to 10 in increments of 0.5 rating the technique shown. "summary" is a 2-3 sentence overview of what you observed (including any safety note or visibility caveat). "strengths" is a list of 2-4 specific things done well. "improvements" is a list of 2-4 specific, actionable things to work on next.`;
+Stay encouraging and age-appropriate, but do not give easy points — reserve a high score for genuinely strong technique, not just participation. Return your feedback as the requested JSON structure. "score" is a number from 0 to 10 in increments of 0.5 rating the technique shown. "summary" is a 2-3 sentence overview of what you observed (including any safety note or visibility caveat). "strengths" is a list of 2-4 specific things done well. "improvements" is a list of 2-4 specific, actionable things to work on next.
+
+You have a Google Search tool available. For each specific gap you identify in "improvements," run a real search to find an actual public tutorial or drill video that addresses that exact gap (phrase your query like "[specific technique] tutorial video" or "how to fix [specific issue] [sport]" — favor searches likely to surface real instructional video content, e.g. from YouTube). Do not invent or guess at video titles, channels, or URLs yourself — only real search results should ever be referenced. If a search doesn't turn up anything genuinely relevant, it's fine to skip it rather than force an unrelated result.`;
 
 const SPS_RUBRIC = `Grading Rubric for SPS (Student Personal Statement):
 
@@ -461,11 +463,28 @@ app.post('/api/analyze-sports-video', handleVideoUpload, async (req, res) => {
         systemInstruction: SPORTS_COACH_SYSTEM_PROMPT,
         responseMimeType: 'application/json',
         responseSchema: WRITING_RESPONSE_SCHEMA,
-        thinkingConfig: { thinkingLevel: 'minimal' },
+        // Not 'minimal' here -- deciding what to search for takes real
+        // reasoning, unlike the plain text-in/JSON-out graders.
+        thinkingConfig: { thinkingLevel: 'low' },
         maxOutputTokens: 4096,
+        tools: [{ googleSearch: {} }],
       },
     });
     const graded = JSON.parse(response.text);
+
+    // Pull real video/resource links straight from Google's grounding
+    // metadata rather than trusting the model to transcribe URLs itself --
+    // groundingChunks come directly from the search backend, so they can't
+    // be hallucinated the way a model-written URL in the JSON body could be.
+    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    const seenUrls = new Set();
+    graded.recommendedVideos = chunks
+      .map((c) => c.web)
+      .filter((w) => w && w.uri && w.title)
+      .filter((w) => (seenUrls.has(w.uri) ? false : (seenUrls.add(w.uri), true)))
+      .slice(0, 4)
+      .map((w) => ({ title: w.title, url: w.uri }));
+
     res.json(graded);
   } catch (err) {
     console.error('Sports video analysis error:', err);

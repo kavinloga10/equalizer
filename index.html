@@ -2428,6 +2428,25 @@ async function analyzeSportsVideo() {
   }
 }
 
+function renderRecommendedVideos(videos) {
+  if (!videos || !videos.length) return '';
+  return `
+    <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--gray-200)">
+      <h3 style="margin-bottom:10px">📺 Helpful videos &amp; resources</h3>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${videos.map(v => {
+          let host = '';
+          try { host = new URL(v.url).hostname.replace(/^www\./, ''); } catch (e) {}
+          return `
+            <a href="${v.url}" target="_blank" rel="noopener noreferrer" style="display:block;padding:10px 14px;border:1.5px solid var(--gray-200);border-radius:8px;text-decoration:none;transition:.15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--gray-200)'">
+              <div style="font-size:13px;font-weight:600;color:var(--gray-900)">${formatChatText(v.title)}</div>
+              ${host ? `<div style="font-size:11px;color:var(--gray-400);margin-top:2px">${host}</div>` : ''}
+            </a>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
 function renderSportsResult(data) {
   const card = document.getElementById('sports-result-card');
   card.style.display = 'block';
@@ -2443,7 +2462,8 @@ function renderSportsResult(data) {
     <div>
       <h3 style="margin-bottom:10px">📝 Areas to improve</h3>
       <ul style="padding-left:20px;line-height:1.8;color:var(--gray-700)">${data.improvements.map(s => `<li>${formatChatText(s)}</li>`).join('')}</ul>
-    </div>`;
+    </div>
+    ${renderRecommendedVideos(data.recommendedVideos)}`;
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 

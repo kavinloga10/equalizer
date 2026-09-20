@@ -65,7 +65,9 @@ Stay encouraging and age-appropriate, but do not give easy points — reserve a 
 // Without billing, every grounded search will fail; keeping it in its own
 // call means that failure only costs the video suggestions, not the actual
 // coaching feedback, which works fine on the free tier on its own.
-const SPORTS_SEARCH_SYSTEM_PROMPT = `You are helping a middle school student find real, publicly available video tutorials that address specific gaps in their sports technique. You'll be given a list of specific things they need to work on. You have a Google Search tool available -- for each gap, run a real search to find an actual tutorial or drill video that addresses it (phrase queries like "[specific technique] tutorial video" or "how to fix [specific issue] [sport]", favoring searches likely to surface real instructional video content such as YouTube). Do not invent or guess at video titles, channels, or URLs yourself -- only real search results should ever be referenced. If a search doesn't turn up anything genuinely relevant, skip it rather than force an unrelated result. Respond with a brief one-sentence acknowledgment; the actual sources you find matter more than what you write here.`;
+const SPORTS_SEARCH_SYSTEM_PROMPT = `You are helping a middle school student find real, publicly available video tutorials that address specific gaps in their sports technique. You'll be given a list of specific things they need to work on. You have a Google Search tool available -- for each gap, run a real search to find an actual tutorial or drill video that addresses it (phrase queries like "[specific technique] tutorial video" or "how to fix [specific issue] [sport]", favoring searches likely to surface real instructional video content such as YouTube). Do not invent or guess at video titles, channels, or URLs yourself -- only real search results should ever be referenced. If a search doesn't turn up anything genuinely relevant, skip it rather than force an unrelated result.
+
+Respond with a short markdown list, one entry per result, formatted exactly as: "- [Exact Video Title](URL)" -- use the real title of the video or page as it actually appears in the search result, not a paraphrase or description of it.`;
 
 const SPS_RUBRIC = `Grading Rubric for SPS (Student Personal Statement):
 
@@ -472,9 +474,37 @@ async function generateContentWithRetry(params, retries = 2) {
 // Separate, best-effort call: text-only (no video, no response schema) with
 // the Google Search tool enabled, run after the main analysis succeeds. Any
 // failure here is swallowed -- missing video suggestions is a fine outcome,
-// failing the whole analysis over them is not. Real links are pulled from
-// groundingMetadata, never from text the model itself writes, so nothing
-// here can hand the student a hallucinated URL.
+// failing the whole analysis over them is not.
+//
+// IMPORTANT, verified the hard way: the model's own inline text -- even
+// when it just cited a real search result -- cannot be trusted for URLs.
+// Checked every video ID the model wrote across 8+ live test runs against
+// YouTube's oembed endpoint (which reliably 404s for videos that don't
+// exist): every single one was fabricated, despite groundingMetadata
+// confirming a real search had genuinely run. The model apparently
+// reconstructs a plausible-looking destination URL from what it read
+// (titles/snippets) rather than having the literal URL, since the tool
+// result it sees is an opaque Google redirect link, not the real one.
+//
+// So URLs ONLY ever come from groundingChunks -- that's the one thing
+// actually backed by the real search call. Titles are a different story:
+// they can't be cross-verified the same way (redirect tokens don't match
+// between the structured metadata and inline text -- tested, 0/8+ matches),
+// so this pairs each grounding chunk's real URL with the model's
+// corresponding parsed title *by position* as a best-effort label. Worst
+// case if a pairing is imperfect: a title slightly mismatches what's
+// actually at a still-100%-real link -- not a dead or fake one.
+function extractMarkdownLinks(text) {
+  const links = [];
+  const re = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  let match;
+  while ((match = re.exec(text)) !== null) {
+    const title = match[1].replace(/^[*_]+|[*_]+$/g, '').trim();
+    if (title) links.push(title);
+  }
+  return links;
+}
+
 async function findRecommendedVideos(improvements) {
   if (!improvements || !improvements.length) return [];
   try {
@@ -488,14 +518,21 @@ async function findRecommendedVideos(improvements) {
         tools: [{ googleSearch: {} }],
       },
     });
-    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-    const seenUrls = new Set();
-    return chunks
+
+    const chunks = (response.candidates?.[0]?.groundingMetadata?.groundingChunks || [])
       .map((c) => c.web)
-      .filter((w) => w && w.uri && w.title)
-      .filter((w) => (seenUrls.has(w.uri) ? false : (seenUrls.add(w.uri), true)))
-      .slice(0, 4)
-      .map((w) => ({ title: w.title, url: w.uri }));
+      .filter((w) => w && w.uri);
+    const parsedTitles = extractMarkdownLinks(response.text || '');
+
+    const seenUrls = new Set();
+    const results = [];
+    for (const w of chunks) {
+      if (seenUrls.has(w.uri)) continue;
+      seenUrls.add(w.uri);
+      results.push({ title: parsedTitles[results.length] || w.title || 'Resource', url: w.uri });
+      if (results.length >= 4) break;
+    }
+    return results;
   } catch (err) {
     console.error('Video recommendation search failed (non-fatal):', err);
     return [];

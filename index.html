@@ -2395,6 +2395,27 @@ function handleSportsVideoSelected(input) {
   document.getElementById('sports-result-card').style.display = 'none';
 }
 
+// Analysis runs as a background job on the server rather than one long
+// synchronous request -- video processing time varies too much per clip to
+// safely hold a single HTTP request open on Render's free tier, so the
+// upload just returns a jobId immediately and this polls for the result.
+const SPORTS_POLL_INTERVAL_MS = 3000;
+const SPORTS_POLL_TIMEOUT_MS = 5 * 60 * 1000;
+
+async function pollSportsVideoJob(jobId) {
+  const start = Date.now();
+  while (Date.now() - start < SPORTS_POLL_TIMEOUT_MS) {
+    await new Promise((r) => setTimeout(r, SPORTS_POLL_INTERVAL_MS));
+    const res = await fetch(`${API_BASE}/api/analyze-sports-video/${jobId}`);
+    const job = await res.json();
+    if (!res.ok) throw new Error(job.error || 'Lost track of that analysis job.');
+    if (job.status === 'done') return job.result;
+    if (job.status === 'error') throw new Error(job.error);
+    // else still 'processing' -- keep polling
+  }
+  throw new Error('Analysis is taking longer than expected. Try again with a shorter clip.');
+}
+
 async function analyzeSportsVideo() {
   const skill = document.getElementById('sports-skill-input').value.trim();
   const fileInput = document.getElementById('sports-video-input');
@@ -2404,15 +2425,19 @@ async function analyzeSportsVideo() {
 
   const btn = document.getElementById('sports-analyze-btn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Analyzing your video — this can take a couple minutes for longer clips...';
+  btn.innerHTML = '<span class="spinner"></span> Uploading your video...';
 
   try {
     const formData = new FormData();
     formData.append('video', file);
     formData.append('sport', skill);
-    const res = await fetch(`${API_BASE}/api/analyze-sports-video`, { method: 'POST', body: formData });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Analysis failed');
+    const startRes = await fetch(`${API_BASE}/api/analyze-sports-video`, { method: 'POST', body: formData });
+    const startData = await startRes.json();
+    if (!startRes.ok) throw new Error(startData.error || 'Upload failed');
+
+    btn.innerHTML = '<span class="spinner"></span> Analyzing your video — this can take a couple minutes...';
+    const data = await pollSportsVideoJob(startData.jobId);
+
     renderSportsResult(data);
     progress.points += Math.round((data.score || 0) * 10);
     logActivity('🏅', '#fef3c7', 'Sports Coach: ' + skill, `${data.score}/10`);
@@ -2421,7 +2446,7 @@ async function analyzeSportsVideo() {
     saveProgress();
     renderHomeStats();
   } catch (err) {
-    toast("Couldn't analyze that video. Try a shorter clip or try again in a moment!", 'error');
+    toast(err.message || "Couldn't analyze that video. Try a shorter clip or try again in a moment!", 'error');
   } finally {
     btn.disabled = false;
     btn.textContent = 'Analyze My Video';

@@ -3,6 +3,7 @@ import cors from 'cors';
 import multer from 'multer';
 import fs from 'fs/promises';
 import os from 'os';
+import crypto from 'crypto';
 import { GoogleGenAI, createUserContent, createPartFromUri } from '@google/genai';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -427,22 +428,27 @@ app.post('/api/grade-writing-assessment', async (req, res) => {
   }
 });
 
-app.post('/api/analyze-sports-video', handleVideoUpload, async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'A video file is required.' });
-  const sport = (req.body.sport || '').trim();
-  if (!sport) return res.status(400).json({ error: 'Tell us what skill or sport this video shows.' });
+// Video analysis (Gemini file processing + a search-grounded generateContent
+// call) can easily run past a minute, and that time varies per video -- held
+// open as a single synchronous HTTP request, it's at the mercy of whatever
+// proxy/platform timeout Render enforces, which is exactly why this was
+// failing inconsistently rather than by video length. Making it a background
+// job the client polls for means no single request needs to stay open longer
+// than a couple seconds, regardless of how long the actual analysis takes.
+const sportsJobs = new Map(); // jobId -> { status: 'processing'|'done'|'error', result?, error? }
+const SPORTS_JOB_TTL_MS = 10 * 60 * 1000;
 
+async function runSportsVideoAnalysis(jobId, filePath, mimeType, sport) {
   let uploadedFile;
   try {
     uploadedFile = await ai.files.upload({
-      file: req.file.path,
-      config: { mimeType: req.file.mimetype, displayName: 'sports-coach-clip' },
+      file: filePath,
+      config: { mimeType, displayName: 'sports-coach-clip' },
     });
 
     // Video files process asynchronously on Google's side before they're
     // analyzable -- poll until ACTIVE, or give up after 3 minutes so a stuck
-    // upload doesn't hang the request forever. Longer/larger clips take
-    // longer to process, not just to upload.
+    // upload doesn't hang the job forever.
     let fileInfo = uploadedFile;
     const pollStart = Date.now();
     while (fileInfo.state === 'PROCESSING' && Date.now() - pollStart < 180000) {
@@ -485,16 +491,35 @@ app.post('/api/analyze-sports-video', handleVideoUpload, async (req, res) => {
       .slice(0, 4)
       .map((w) => ({ title: w.title, url: w.uri }));
 
-    res.json(graded);
+    sportsJobs.set(jobId, { status: 'done', result: graded });
   } catch (err) {
     console.error('Sports video analysis error:', err);
-    res.status(502).json({ error: "Couldn't analyze that video. Try a shorter clip or try again in a moment!" });
+    sportsJobs.set(jobId, { status: 'error', error: "Couldn't analyze that video. Try a shorter clip or try again in a moment!" });
   } finally {
-    fs.unlink(req.file.path).catch(() => {});
+    fs.unlink(filePath).catch(() => {});
     if (uploadedFile && uploadedFile.name) {
       ai.files.delete({ name: uploadedFile.name }).catch(() => {});
     }
+    setTimeout(() => sportsJobs.delete(jobId), SPORTS_JOB_TTL_MS);
   }
+}
+
+app.post('/api/analyze-sports-video', handleVideoUpload, (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'A video file is required.' });
+  const sport = (req.body.sport || '').trim();
+  if (!sport) return res.status(400).json({ error: 'Tell us what skill or sport this video shows.' });
+
+  const jobId = crypto.randomUUID();
+  sportsJobs.set(jobId, { status: 'processing' });
+  res.json({ jobId });
+
+  runSportsVideoAnalysis(jobId, req.file.path, req.file.mimetype, sport);
+});
+
+app.get('/api/analyze-sports-video/:jobId', (req, res) => {
+  const job = sportsJobs.get(req.params.jobId);
+  if (!job) return res.status(404).json({ error: 'Job not found or expired.' });
+  res.json(job);
 });
 
 const PORT = process.env.PORT || 8743;

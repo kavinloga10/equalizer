@@ -2453,19 +2453,50 @@ async function analyzeSportsVideo() {
   }
 }
 
+// Gemini's search-grounding metadata often gives back just a bare source
+// domain as the "title" (e.g. "youtube.com") rather than the actual video
+// title, even though its own generated text has nice descriptive titles.
+// The link itself is a Google redirect URL (vertexaisearch.cloud.google.com/...),
+// so the real source domain only exists in that title field -- can't get it
+// by parsing the URL's own hostname. When the title looks like a bare domain,
+// show a friendly label plus that real domain as the subtitle instead of
+// several links all just saying "youtube.com" with nothing to tell them
+// apart. Still 100% accurate either way -- this never invents a title, just
+// formats the real one better.
+function looksLikeBareDomain(str) {
+  return /^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test((str || '').trim());
+}
+
+function friendlyResourceLabel(domain) {
+  const h = (domain || '').toLowerCase();
+  if (h.includes('youtube.com') || h.includes('youtu.be')) return '▶️ YouTube tutorial';
+  if (h.includes('vimeo.com')) return '▶️ Vimeo video';
+  if (h.includes('reddit.com')) return '💬 Reddit discussion';
+  return `🔗 Resource on ${domain}`;
+}
+
 function renderRecommendedVideos(videos) {
   if (!videos || !videos.length) return '';
+  const seenLabels = {};
   return `
     <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--gray-200)">
       <h3 style="margin-bottom:10px">📺 Helpful videos &amp; resources</h3>
       <div style="display:flex;flex-direction:column;gap:8px">
         ${videos.map(v => {
-          let host = '';
-          try { host = new URL(v.url).hostname.replace(/^www\./, ''); } catch (e) {}
+          let displayTitle = v.title;
+          let subtitle = '';
+          if (looksLikeBareDomain(v.title)) {
+            const base = friendlyResourceLabel(v.title);
+            seenLabels[base] = (seenLabels[base] || 0) + 1;
+            displayTitle = seenLabels[base] > 1 ? `${base} (${seenLabels[base]})` : base;
+            subtitle = v.title.replace(/^www\./, '');
+          } else {
+            try { subtitle = new URL(v.url).hostname.replace(/^www\./, ''); } catch (e) {}
+          }
           return `
             <a href="${v.url}" target="_blank" rel="noopener noreferrer" style="display:block;padding:10px 14px;border:1.5px solid var(--gray-200);border-radius:8px;text-decoration:none;transition:.15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--gray-200)'">
-              <div style="font-size:13px;font-weight:600;color:var(--gray-900)">${formatChatText(v.title)}</div>
-              ${host ? `<div style="font-size:11px;color:var(--gray-400);margin-top:2px">${host}</div>` : ''}
+              <div style="font-size:13px;font-weight:600;color:var(--gray-900)">${formatChatText(displayTitle)}</div>
+              ${subtitle ? `<div style="font-size:11px;color:var(--gray-400);margin-top:2px">${subtitle}</div>` : ''}
             </a>`;
         }).join('')}
       </div>

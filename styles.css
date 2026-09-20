@@ -199,11 +199,12 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:50;
 }
 .sidebar-logo { font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-.02em; font-size:20px; color:var(--paper); padding:0 24px 28px; border-bottom:1px solid rgba(255,255,255,.08); }
-.mode-switcher { display:flex; gap:6px; padding:0 16px 20px; }
+.mode-switcher { display:flex; flex-wrap:wrap; gap:6px; padding:0 16px 20px; }
 .mode-btn {
-  flex:1; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+  flex:1 1 28%; min-width:64px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
   color:var(--paper-muted); padding:9px 4px; border-radius:8px;
-  font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600; cursor:pointer; transition:.2s;
+  font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600; cursor:pointer; transition:.2s;
+  white-space:nowrap;
 }
 .mode-btn:hover { background:rgba(255,255,255,.1); }
 .mode-btn.active { background:var(--blue); color:#fff; border-color:var(--blue); }

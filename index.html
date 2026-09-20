@@ -97,9 +97,10 @@
   <div class="mode-switcher">
     <button class="mode-btn active" id="mode-btn-testprep" onclick="setAppMode('testprep')">🎯 Test Prep</button>
     <button class="mode-btn" id="mode-btn-debate" onclick="setAppMode('debate')">🎙️ Debate</button>
+    <button class="mode-btn" id="mode-btn-sports" onclick="setAppMode('sports')">🏅 Sports</button>
   </div>
   <nav class="sidebar-nav" id="testprep-nav">
-    <a class="sidebar-item active" onclick="showPanel('home',this)"><span class="icon">🏠</span> Home</a>
+    <a class="sidebar-item active" data-panel="home" onclick="showPanel('home',this)"><span class="icon">🏠</span> Home</a>
     <a class="sidebar-item" onclick="showPanel('practice',this)"><span class="icon">📝</span> Practice</a>
     <a class="sidebar-item" onclick="showPanel('tutor',this)"><span class="icon">🤖</span> AI Tutor</a>
     <a class="sidebar-item" onclick="showPanel('tests',this)"><span class="icon">⏱️</span> Mock Tests</a>
@@ -109,7 +110,10 @@
     <a class="sidebar-item" id="admin-nav-item" style="display:none" onclick="showPanel('admin',this)"><span class="icon">⚙️</span> Admin</a>
   </nav>
   <nav class="sidebar-nav" id="debate-nav" style="display:none">
-    <a class="sidebar-item" onclick="showPanel('debate',this)"><span class="icon">🎙️</span> Debate Coach</a>
+    <a class="sidebar-item" data-panel="debate" onclick="showPanel('debate',this)"><span class="icon">🎙️</span> Debate Coach</a>
+  </nav>
+  <nav class="sidebar-nav" id="sports-nav" style="display:none">
+    <a class="sidebar-item" data-panel="sports" onclick="showPanel('sports',this)"><span class="icon">🏅</span> Sports Coach</a>
   </nav>
   <div class="sidebar-bottom">
     <a class="sidebar-item" onclick="doLogout()"><span class="icon">🚪</span> Sign out</a>
@@ -487,6 +491,29 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- SPORTS COACH -->
+  <div class="dash-panel" id="panel-sports">
+    <div class="panel-card" style="max-width:640px;margin:0 auto 24px">
+      <h3 style="margin-bottom:6px">🏅 Upload a training clip</h3>
+      <p style="font-size:13px;color:var(--gray-500);margin-bottom:20px">Get AI feedback on your technique. Keep clips short (under ~30 seconds) and under 40MB for the fastest turnaround.</p>
+
+      <div class="form-group">
+        <label>What skill or sport is this?</label>
+        <input type="text" id="sports-skill-input" placeholder="e.g. basketball free throw, soccer penalty kick, tennis serve">
+      </div>
+      <div class="form-group">
+        <label>Video</label>
+        <input type="file" id="sports-video-input" accept="video/*" onchange="handleSportsVideoSelected(this)" style="width:100%;padding:10px;border:1.5px solid var(--gray-200);border-radius:var(--radius);background:var(--white);font-family:'DM Sans',sans-serif;font-size:13px">
+      </div>
+      <video id="sports-video-preview" controls style="display:none;width:100%;border-radius:var(--radius);margin-bottom:16px;max-height:320px;background:#000"></video>
+
+      <p style="font-size:12px;color:var(--gray-400);line-height:1.6;margin-bottom:16px">⚠️ AI feedback is a practice supplement, not a substitute for an in-person coach — especially for anything where bad form could cause injury (lifting, gymnastics, sprinting, etc.).</p>
+
+      <button class="btn btn-primary" style="width:100%" id="sports-analyze-btn" onclick="analyzeSportsVideo()">Analyze My Video</button>
+    </div>
+    <div class="question-card" id="sports-result-card" style="display:none;max-width:640px;margin:0 auto"></div>
   </div>
 
   <!-- ADMIN -->
@@ -1396,17 +1423,17 @@ function setRole(role, btn) {
 }
 
 // Test Prep = the existing exam-prep dashboard (Home/Practice/AI Tutor/etc.),
-// Debate Coach = a separate top-level area with its own AI sparring chat.
+// Debate Coach and Sports Coach are separate top-level areas each with their
+// own single-purpose panel. The default panel shown when switching into a
+// mode is that mode's first sidebar item.
+const APP_MODES = ['testprep', 'debate', 'sports'];
 function setAppMode(mode) {
-  document.getElementById('mode-btn-testprep').classList.toggle('active', mode === 'testprep');
-  document.getElementById('mode-btn-debate').classList.toggle('active', mode === 'debate');
-  document.getElementById('testprep-nav').style.display = mode === 'testprep' ? 'flex' : 'none';
-  document.getElementById('debate-nav').style.display = mode === 'debate' ? 'flex' : 'none';
-  if (mode === 'testprep') {
-    showPanel('home', document.querySelector('#testprep-nav .sidebar-item'));
-  } else {
-    showPanel('debate', document.querySelector('#debate-nav .sidebar-item'));
-  }
+  APP_MODES.forEach((m) => {
+    document.getElementById('mode-btn-' + m).classList.toggle('active', m === mode);
+    document.getElementById(m + '-nav').style.display = m === mode ? 'flex' : 'none';
+  });
+  const firstItem = document.querySelector('#' + mode + '-nav .sidebar-item');
+  showPanel(firstItem.getAttribute('data-panel'), firstItem);
 }
 
 function showPanel(id, el) {
@@ -1414,7 +1441,7 @@ function showPanel(id, el) {
   document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
   document.getElementById('panel-' + id).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { home:'Dashboard', practice:'Practice Questions', tutor:'AI Tutor', tests:'Mock Tests', formulas:'Formula Bank', progress:'My Progress', leaderboard:'Leaderboard', admin:'Admin', debate:'Debate Coach' };
+  const titles = { home:'Dashboard', practice:'Practice Questions', tutor:'AI Tutor', tests:'Mock Tests', formulas:'Formula Bank', progress:'My Progress', leaderboard:'Leaderboard', admin:'Admin', debate:'Debate Coach', sports:'Sports Coach' };
   document.getElementById('panel-title').textContent = titles[id] || id;
   if (id === 'home') renderHomeStats();
   if (id === 'practice') {
@@ -2350,6 +2377,74 @@ function renderDebateRoundHistory() {
       <div style="font-size:11px;color:var(--gray-500);line-height:1.4">${r.resolution}</div>
       <div style="font-size:10px;color:var(--gray-400);margin-top:2px">${new Date(r.date).toLocaleDateString()}</div>
     </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  SPORTS COACH (video upload → Gemini technique feedback)
+// ═══════════════════════════════════════════════════════
+let sportsVideoObjectUrl = null;
+
+function handleSportsVideoSelected(input) {
+  const file = input.files[0];
+  const preview = document.getElementById('sports-video-preview');
+  if (sportsVideoObjectUrl) URL.revokeObjectURL(sportsVideoObjectUrl);
+  if (!file) { preview.style.display = 'none'; return; }
+  sportsVideoObjectUrl = URL.createObjectURL(file);
+  preview.src = sportsVideoObjectUrl;
+  preview.style.display = 'block';
+  document.getElementById('sports-result-card').style.display = 'none';
+}
+
+async function analyzeSportsVideo() {
+  const skill = document.getElementById('sports-skill-input').value.trim();
+  const fileInput = document.getElementById('sports-video-input');
+  const file = fileInput.files[0];
+  if (!skill) { toast('Tell us what skill or sport this video shows.', 'error'); return; }
+  if (!file) { toast('Choose a video to upload first.', 'error'); return; }
+
+  const btn = document.getElementById('sports-analyze-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Analyzing your video — this can take up to a minute...';
+
+  try {
+    const formData = new FormData();
+    formData.append('video', file);
+    formData.append('sport', skill);
+    const res = await fetch(`${API_BASE}/api/analyze-sports-video`, { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Analysis failed');
+    renderSportsResult(data);
+    progress.points += Math.round((data.score || 0) * 10);
+    logActivity('🏅', '#fef3c7', 'Sports Coach: ' + skill, `${data.score}/10`);
+    logDailyActivity(1);
+    checkForNewBadges();
+    saveProgress();
+    renderHomeStats();
+  } catch (err) {
+    toast("Couldn't analyze that video. Try a shorter clip or try again in a moment!", 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Analyze My Video';
+  }
+}
+
+function renderSportsResult(data) {
+  const card = document.getElementById('sports-result-card');
+  card.style.display = 'block';
+  card.innerHTML = `
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:48px;font-weight:700;color:var(--blue)">${data.score}<span style="font-size:20px;color:var(--gray-400)">/10</span></div>
+      <p style="color:var(--gray-600);max-width:520px;margin:10px auto 0">${formatChatText(data.summary)}</p>
+    </div>
+    <div style="margin-bottom:18px">
+      <h3 style="margin-bottom:10px">✅ Strengths</h3>
+      <ul style="padding-left:20px;line-height:1.8;color:var(--gray-700)">${data.strengths.map(s => `<li>${formatChatText(s)}</li>`).join('')}</ul>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px">📝 Areas to improve</h3>
+      <ul style="padding-left:20px;line-height:1.8;color:var(--gray-700)">${data.improvements.map(s => `<li>${formatChatText(s)}</li>`).join('')}</ul>
+    </div>`;
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // ═══════════════════════════════════════════════════════

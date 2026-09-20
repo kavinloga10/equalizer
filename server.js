@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import { GoogleGenAI } from '@google/genai';
+import multer from 'multer';
+import { GoogleGenAI, createUserContent, createPartFromUri } from '@google/genai';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import 'dotenv/config';
@@ -39,6 +40,19 @@ const DEBATE_GRADING_SYSTEM_PROMPT = `You are scoring a middle schooler's comple
 Score the student's overall performance across the round, weighing: clarity and organization of their case, use of evidence or reasoning (illustrative examples count, but reward specificity), how directly they engaged and rebutted the opponent's arguments rather than repeating their own points, and whether their closing (Summary/Final Focus, if present) crystallized clear voter issues. Do not give easy points — a high score requires genuinely strong argumentation across the round, not just participation.
 
 Return your grading as the requested JSON structure. The score must be a number from 0 to 10 in increments of 0.5. "summary" is a 2-3 sentence overall assessment of the round. "strengths" is a list of 2-4 specific things the student did well, quoting or referencing their actual turns. "improvements" is a list of 2-4 specific, actionable pieces of feedback for their next round.`;
+
+// Sports Coach: analyzes a short uploaded video of the student practicing a
+// skill. Unlike the academic graders, bad feedback here carries real physical
+// risk (form corrections can cause injury if wrong), so the prompt requires
+// honest uncertainty when the video doesn't give a clear view, and an
+// explicit "get a real coach to confirm" flag for anything safety-relevant.
+const SPORTS_COACH_SYSTEM_PROMPT = `You are Equalizer's Sports Coach, giving a middle school student (grades 6-9) feedback on a short training video of themselves practicing a specific skill or sport, which they'll tell you in their message.
+
+Watch the video carefully and give specific, actionable feedback tied to what you actually observe — body positioning, timing, footwork, follow-through, etc. — not generic advice that could apply to any video of that sport. If the camera angle, lighting, distance, or video length makes something hard to judge confidently, say so honestly in your summary rather than guessing with false confidence.
+
+SAFETY: if the skill involves real injury risk when done with poor form (e.g., weightlifting, gymnastics, sprinting mechanics, contact sports, throwing motions), explicitly recommend in your summary that the student have a real coach, trainer, or parent confirm your feedback in person before changing anything that affects safety. You are a supplementary practice tool, not a substitute for in-person coaching.
+
+Stay encouraging and age-appropriate, but do not give easy points — reserve a high score for genuinely strong technique, not just participation. Return your feedback as the requested JSON structure. "score" is a number from 0 to 10 in increments of 0.5 rating the technique shown. "summary" is a 2-3 sentence overview of what you observed (including any safety note or visibility caveat). "strengths" is a list of 2-4 specific things done well. "improvements" is a list of 2-4 specific, actionable things to work on next.`;
 
 const SPS_RUBRIC = `Grading Rubric for SPS (Student Personal Statement):
 
@@ -216,6 +230,28 @@ app.use(cors({ origin: ALLOWED_ORIGINS }));
 app.use(express.json());
 app.use(express.static(__dirname));
 
+// Sports Coach video uploads: kept in memory (never written to disk) and
+// capped at 40MB -- short clips analyze faster and stay well under Render's
+// free-tier memory limits.
+const videoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 40 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('video/')) return cb(new Error('Only video files are supported.'));
+    cb(null, true);
+  },
+});
+
+function handleVideoUpload(req, res, next) {
+  videoUpload.single('video')(req, res, (err) => {
+    if (!err) return next();
+    const message = err.code === 'LIMIT_FILE_SIZE'
+      ? 'That video is too large — keep clips under 40MB.'
+      : (err.message || 'Upload failed.');
+    res.status(400).json({ error: message });
+  });
+}
+
 app.post('/api/chat', async (req, res) => {
   const { messages } = req.body;
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -381,6 +417,58 @@ app.post('/api/grade-writing-assessment', async (req, res) => {
   } catch (err) {
     console.error('Gemini grading error:', err);
     res.status(502).json({ error: "Grading failed. Try again in a moment!" });
+  }
+});
+
+app.post('/api/analyze-sports-video', handleVideoUpload, async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'A video file is required.' });
+  const sport = (req.body.sport || '').trim();
+  if (!sport) return res.status(400).json({ error: 'Tell us what skill or sport this video shows.' });
+
+  let uploadedFile;
+  try {
+    const videoBlob = new Blob([req.file.buffer], { type: req.file.mimetype });
+    uploadedFile = await ai.files.upload({
+      file: videoBlob,
+      config: { mimeType: req.file.mimetype, displayName: 'sports-coach-clip' },
+    });
+
+    // Video files process asynchronously on Google's side before they're
+    // analyzable -- poll until ACTIVE, or give up after 60s so a stuck
+    // upload doesn't hang the request forever.
+    let fileInfo = uploadedFile;
+    const pollStart = Date.now();
+    while (fileInfo.state === 'PROCESSING' && Date.now() - pollStart < 60000) {
+      await new Promise((r) => setTimeout(r, 2000));
+      fileInfo = await ai.files.get({ name: uploadedFile.name });
+    }
+    if (fileInfo.state !== 'ACTIVE') {
+      throw new Error(`Video did not finish processing (state: ${fileInfo.state}).`);
+    }
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.6-flash',
+      contents: createUserContent([
+        createPartFromUri(fileInfo.uri, fileInfo.mimeType),
+        `The student says this video shows them practicing: ${sport}`,
+      ]),
+      config: {
+        systemInstruction: SPORTS_COACH_SYSTEM_PROMPT,
+        responseMimeType: 'application/json',
+        responseSchema: WRITING_RESPONSE_SCHEMA,
+        thinkingConfig: { thinkingLevel: 'minimal' },
+        maxOutputTokens: 4096,
+      },
+    });
+    const graded = JSON.parse(response.text);
+    res.json(graded);
+  } catch (err) {
+    console.error('Sports video analysis error:', err);
+    res.status(502).json({ error: "Couldn't analyze that video. Try a shorter clip or try again in a moment!" });
+  } finally {
+    if (uploadedFile && uploadedFile.name) {
+      ai.files.delete({ name: uploadedFile.name }).catch(() => {});
+    }
   }
 });
 

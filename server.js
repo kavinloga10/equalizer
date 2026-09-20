@@ -58,10 +58,13 @@ SAFETY: if the skill involves real injury risk when done with poor form (e.g., w
 Stay encouraging and age-appropriate, but do not give easy points — reserve a high score for genuinely strong technique, not just participation. Return your feedback as the requested JSON structure. "score" is a number from 0 to 10 in increments of 0.5 rating the technique shown. "summary" is a 2-3 sentence overview of what you observed (including any safety note or visibility caveat). "strengths" is a list of 2-4 specific things done well. "improvements" is a list of 2-4 specific, actionable things to work on next.`;
 
 // Run as a separate, second call (text-only, no video attached) after the
-// main analysis succeeds -- combining video input + the Google Search tool
-// + a JSON response schema in one call turned out to be unreliable, so this
-// keeps the actual coaching feedback (the part that matters most) isolated
-// from anything that could go wrong with the search step.
+// main analysis succeeds. This isolation matters for a real reason, not just
+// caution: Google Search grounding is NOT available on the free tier for
+// Gemini 3.x models at all -- it requires billing enabled on the project
+// (confirmed via Google's own docs and a live 429 on this exact call).
+// Without billing, every grounded search will fail; keeping it in its own
+// call means that failure only costs the video suggestions, not the actual
+// coaching feedback, which works fine on the free tier on its own.
 const SPORTS_SEARCH_SYSTEM_PROMPT = `You are helping a middle school student find real, publicly available video tutorials that address specific gaps in their sports technique. You'll be given a list of specific things they need to work on. You have a Google Search tool available -- for each gap, run a real search to find an actual tutorial or drill video that addresses it (phrase queries like "[specific technique] tutorial video" or "how to fix [specific issue] [sport]", favoring searches likely to surface real instructional video content such as YouTube). Do not invent or guess at video titles, channels, or URLs yourself -- only real search results should ever be referenced. If a search doesn't turn up anything genuinely relevant, skip it rather than force an unrelated result. Respond with a brief one-sentence acknowledgment; the actual sources you find matter more than what you write here.`;
 
 const SPS_RUBRIC = `Grading Rubric for SPS (Student Personal Statement):

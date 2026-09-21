@@ -167,13 +167,6 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .student-count-badge strong { color:var(--blue); font-weight:700; }
 .auth-card h2 { font-size:22px; font-weight:700; margin-bottom:6px; }
 .auth-card p { font-size:14px; color:var(--gray-500); margin-bottom:32px; }
-.role-tabs { display:flex; background:var(--gray-100); border-radius:10px; padding:4px; margin-bottom:28px; }
-.role-tab {
-  flex:1; padding:9px; border-radius:8px; border:none; background:transparent;
-  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500;
-  color:var(--gray-500); cursor:pointer; transition:.2s;
-}
-.role-tab.active { background:var(--white); color:var(--blue); font-weight:600; box-shadow:var(--shadow); }
 .form-group { margin-bottom:18px; }
 .form-group label { display:block; font-size:13px; font-weight:600; color:var(--gray-700); margin-bottom:6px; }
 .form-group input, .form-group select {

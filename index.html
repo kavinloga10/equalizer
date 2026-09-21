@@ -43,11 +43,6 @@
   <!-- Signup form -->
   <div id="auth-signup-form">
     <h2>Create your account</h2>
-    <div class="role-tabs">
-      <button class="role-tab active" onclick="setRole('student',this)">Student</button>
-      <button class="role-tab" onclick="setRole('parent',this)">Parent</button>
-      <button class="role-tab" onclick="setRole('teacher',this)">Teacher</button>
-    </div>
     <div class="form-group">
       <label>Full name</label>
       <input type="text" id="signup-name" placeholder="Alex Johnson">
@@ -706,7 +701,6 @@ sb.auth.onAuthStateChange((event) => {
 //  STATE
 // ═══════════════════════════════════════════════════════
 let currentUser = null;
-let currentRole = 'student';
 let currentSubject = 'acl';
 let currentQuestionIndex = 0;
 let currentQuestion = null;
@@ -810,14 +804,13 @@ async function saveProgress() {
   await sb.from('progress').update(progressToRow(progress)).eq('user_id', currentUser.id);
 }
 
-// Resolves the active Supabase session (if any) into currentUser/currentRole/progress.
+// Resolves the active Supabase session (if any) into currentUser/progress.
 async function loadUserSession() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return false;
   const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
   if (!profile) return false;
   currentUser = { id: session.user.id, name: profile.name, email: session.user.email, targetTest: profile.target_test, targetDate: profile.target_date, policyAccepted: !!profile.policy_accepted };
-  currentRole = profile.role || 'student';
   progress = await loadProgress(session.user.id);
   return true;
 }
@@ -1329,12 +1322,6 @@ function showPage(id) {
   window.scrollTo(0,0);
 }
 
-function setRole(role, btn) {
-  currentRole = role;
-  btn.closest('.role-tabs').querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-}
-
 // Test Prep = the existing exam-prep dashboard (Home/Practice/AI Tutor/etc.),
 // Debate Coach and Sports Coach are separate top-level areas each with their
 // own single-purpose panel. The default panel shown when switching into a
@@ -1467,7 +1454,7 @@ async function doSignup() {
   if (error) { toast(error.message, 'error'); return; }
   if (!data.session) { toast('Check your inbox to confirm your email, then sign in.', 'error'); return; }
   const userId = data.user.id;
-  const { error: profileError } = await sb.from('profiles').insert({ id: userId, name, role: currentRole, policy_accepted: true });
+  const { error: profileError } = await sb.from('profiles').insert({ id: userId, name, role: 'student', policy_accepted: true });
   if (profileError) { toast(profileError.message, 'error'); return; }
   const { error: progressError } = await sb.from('progress').insert({ user_id: userId, ...progressToRow(defaultProgress()) });
   if (progressError) { toast(progressError.message, 'error'); return; }

@@ -58,22 +58,6 @@
       <input type="email" id="signup-email" placeholder="you@example.com">
     </div>
     <div class="form-group">
-      <label>Grade</label>
-      <select id="signup-grade">
-        <option>6th Grade</option><option>7th Grade</option><option selected>8th Grade</option><option>9th Grade</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Target program</label>
-      <select id="signup-target-test">
-        <option value="acl">Academies of Loudoun</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Test date <span style="color:var(--gray-400);font-weight:400">(optional)</span></label>
-      <input type="date" id="signup-target-date">
-    </div>
-    <div class="form-group">
       <label>Password</label>
       <input type="password" id="signup-pw" placeholder="Create a password">
     </div>
@@ -1478,16 +1462,13 @@ async function doSignup() {
   const name = document.getElementById('signup-name').value;
   const email = document.getElementById('signup-email').value;
   const password = document.getElementById('signup-pw').value;
-  const grade = document.getElementById('signup-grade').value;
-  const targetTest = document.getElementById('signup-target-test').value;
-  const targetDate = document.getElementById('signup-target-date').value || null;
   if (!name || !email || !password) { toast('Please fill in all fields.', 'error'); return; }
   if (!document.getElementById('signup-agree').checked) { toast('Please agree to the Terms & Privacy Policy to continue.', 'error'); return; }
   const { data, error } = await sb.auth.signUp({ email, password });
   if (error) { toast(error.message, 'error'); return; }
   if (!data.session) { toast('Check your inbox to confirm your email, then sign in.', 'error'); return; }
   const userId = data.user.id;
-  const { error: profileError } = await sb.from('profiles').insert({ id: userId, name, role: currentRole, grade, target_test: targetTest, target_date: targetDate, policy_accepted: true });
+  const { error: profileError } = await sb.from('profiles').insert({ id: userId, name, role: currentRole, policy_accepted: true });
   if (profileError) { toast(profileError.message, 'error'); return; }
   const { error: progressError } = await sb.from('progress').insert({ user_id: userId, ...progressToRow(defaultProgress()) });
   if (progressError) { toast(progressError.message, 'error'); return; }

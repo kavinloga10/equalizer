@@ -43,7 +43,7 @@
   <!-- Signup form -->
   <div id="auth-signup-form">
     <h2>Create your account</h2>
-    <p>Start preparing for TJHSST or Academies of Loudoun today.</p>
+    <p>Start preparing for the Academies of Loudoun (AOS/AET) today.</p>
     <div class="role-tabs">
       <button class="role-tab active" onclick="setRole('student',this)">Student</button>
       <button class="role-tab" onclick="setRole('parent',this)">Parent</button>
@@ -66,9 +66,7 @@
     <div class="form-group">
       <label>Target program</label>
       <select id="signup-target-test">
-        <option value="tj">TJHSST</option>
         <option value="acl">Academies of Loudoun</option>
-        <option value="both">Both</option>
       </select>
     </div>
     <div class="form-group">
@@ -163,8 +161,7 @@
   <!-- PRACTICE -->
   <div class="dash-panel" id="panel-practice">
     <div class="subject-picker">
-      <button class="subj-btn active" id="subj-btn-tj" onclick="setSubject('tj',this)">🎓 TJ</button>
-      <button class="subj-btn" id="subj-btn-acl" onclick="setSubject('acl',this)">🏫 ACL (AOS/AET)</button>
+      <button class="subj-btn active" id="subj-btn-acl" onclick="setSubject('acl',this)">🏫 ACL (AOS/AET)</button>
       <button class="subj-btn" onclick="setReviewMode(this)">🔁 Review</button>
     </div>
     <div class="subject-picker" id="practice-filters" style="margin-top:-16px">
@@ -245,18 +242,6 @@
           <p>Respond to a real-style AOS/AET scenario and get instant AI feedback scored against LCPS's actual released 5-indicator rubric — Questioning, Evidence, Fluency, Presentation, and Perspective.</p>
           <div class="test-meta"><span class="test-tag">10 prompts</span><span class="test-tag">AI-graded</span><span class="test-tag">AOS/AET</span></div>
         </div>
-        <div class="test-card" onclick="startWritingTest('tj')">
-          <div class="test-icon">✍️</div>
-          <h3>SPS Writing Assessment (TJ)</h3>
-          <p>Write a real SPS prompt and get instant AI feedback, graded against the actual 0–5 TJHSST rubric with specific, actionable comments.</p>
-          <div class="test-meta"><span class="test-tag">13 prompts</span><span class="test-tag">AI-graded</span><span class="test-tag">TJ</span></div>
-        </div>
-        <div class="test-card" onclick="startWritingTest('pse')">
-          <div class="test-icon">🧮</div>
-          <h3>Problem-Solving Essay (TJ)</h3>
-          <p>Work through a multi-step math/science scenario and explain your reasoning — the two things FCPS confirms the real PSE actually requires — with instant AI feedback on your process, not just your final answer.</p>
-          <div class="test-meta"><span class="test-tag">10 prompts</span><span class="test-tag">AI-graded</span><span class="test-tag">PSE</span></div>
-        </div>
       </div>
     </div>
     <div id="test-runner" style="display:none;">
@@ -277,12 +262,12 @@
     </div>
     <div id="writing-runner" style="display:none;max-width:760px;">
       <div class="quiz-header">
-        <h2 id="writing-runner-title" style="font-size:20px;font-weight:700">SPS Writing Assessment (TJ)</h2>
+        <h2 id="writing-runner-title" style="font-size:20px;font-weight:700">Writing Assessment (AOS/AET)</h2>
         <button class="btn btn-outline" onclick="backToTests()" style="margin-left:auto">End practice</button>
       </div>
       <div class="question-card" id="writing-prompt-card">
         <div class="q-meta">
-          <span class="q-badge" id="writing-type-badge" style="background:#dbeafe">SPS</span>
+          <span class="q-badge" id="writing-type-badge" style="background:#dbeafe">AOS/AET</span>
           <span class="q-number" id="writing-category"></span>
         </div>
         <div id="writing-directions" style="display:none;font-size:13px;color:var(--gray-500);background:var(--gray-50);border-radius:var(--radius);padding:12px 14px;margin-bottom:18px;line-height:1.6"></div>
@@ -334,34 +319,17 @@
         <li>Re-read the question stem after solving — it's easy to answer a question the passage didn't actually ask.</li>
       </ul>
     </div>
-    <div class="two-col">
-      <div class="panel-card">
-        <h3>✍️ SPS tips (TJ)</h3>
-        <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px">The exact shorthand our AI grader uses in feedback:</p>
-        <ul style="font-size:14px;color:var(--gray-700);line-height:1.9;padding-left:18px">
-          <li><strong>"Needs more you"</strong> — center yourself in the story, not just the event.</li>
-          <li><strong>"Tie to prompt"</strong> — echo the prompt's own key words.</li>
-          <li><strong>"Needs tech."</strong> — name real components, concepts, or terms, not vague summaries.</li>
-          <li><strong>"Tie to other STEM"</strong> — connect this experience to other activities or academics.</li>
-          <li><strong>"What's next?"</strong> — reflect on where this leads you going forward.</li>
-        </ul>
-      </div>
-      <div class="panel-card">
-        <h3>✍️ Writing Assessment tips (AOS/AET)</h3>
-        <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px">LCPS's real 5-indicator rubric:</p>
-        <ul style="font-size:14px;color:var(--gray-700);line-height:1.9;padding-left:18px">
-          <li>Questioning/Processing — ask probing, open-ended questions, not closed yes/no ones.</li>
-          <li>Information Gathering/Analysis — cite specific, relevant sources or methods.</li>
-          <li>Fluency/Originality — generate 3+ distinct, original ideas, not one idea restated.</li>
-          <li>Presentation/Reasoning — organize clearly and genuinely engage a counter-argument.</li>
-          <li>Point of View — describe impact on a wide audience, not just yourself.</li>
-        </ul>
-        <p style="font-size:12px;color:var(--gray-400);margin-top:10px">Grammar, spelling, and syntax do NOT count against you here — official LCPS rule.</p>
-      </div>
-    </div>
-    <div class="panel-card" style="margin-top:24px">
-      <h3>✍️ Problem-Solving Essay tips (TJ)</h3>
-      <p style="font-size:14px;color:var(--gray-700);line-height:1.8">FCPS doesn't publish an official PSE rubric — but the process matters more than a perfect final number. State your assumptions explicitly when the problem is ambiguous, explain your reasoning in full sentences (not just bare math), and walk through each step before giving your final answer.</p>
+    <div class="panel-card">
+      <h3>✍️ Writing Assessment tips (AOS/AET)</h3>
+      <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px">LCPS's real 5-indicator rubric:</p>
+      <ul style="font-size:14px;color:var(--gray-700);line-height:1.9;padding-left:18px">
+        <li>Questioning/Processing — ask probing, open-ended questions, not closed yes/no ones.</li>
+        <li>Information Gathering/Analysis — cite specific, relevant sources or methods.</li>
+        <li>Fluency/Originality — generate 3+ distinct, original ideas, not one idea restated.</li>
+        <li>Presentation/Reasoning — organize clearly and genuinely engage a counter-argument.</li>
+        <li>Point of View — describe impact on a wide audience, not just yourself.</li>
+      </ul>
+      <p style="font-size:12px;color:var(--gray-400);margin-top:10px">Grammar, spelling, and syntax do NOT count against you here — official LCPS rule.</p>
     </div>
   </div>
 
@@ -551,7 +519,6 @@
       <div class="form-group">
         <label>Subject</label>
         <select id="admin-subject">
-          <option value="tj">TJ</option>
           <option value="acl">ACL (AOS/AET)</option>
         </select>
       </div>
@@ -587,7 +554,6 @@
         <h3>All Questions</h3>
         <select id="admin-filter-subject" onchange="renderAdminList()" style="padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:13px">
           <option value="">All subjects</option>
-          <option value="tj">TJ</option>
           <option value="acl">ACL (AOS/AET)</option>
         </select>
       </div>
@@ -622,7 +588,7 @@
     <button onclick="hideAboutModal()" title="Close" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:18px;color:var(--gray-500);cursor:pointer;width:32px;height:32px;border-radius:99px" onmouseover="this.style.background='var(--gray-100)'" onmouseout="this.style.background='none'">✕</button>
     <div class="section-label">About Equalizer</div>
     <h2 style="margin-bottom:16px">Why we built this.</h2>
-    <p style="color:var(--gray-600);font-size:15px;line-height:1.75;margin-bottom:14px">Equalizer started as a personal study tool built by a student preparing for the TJHSST and Academies of Loudoun admissions process — and frustrated that the best prep resources usually came with a price tag that wasn't in reach for everyone competing for the same spots.</p>
+    <p style="color:var(--gray-600);font-size:15px;line-height:1.75;margin-bottom:14px">Equalizer started as a personal study tool built by a student preparing for the Academies of Loudoun (AOS/AET) admissions process — and frustrated that the best prep resources usually came with a price tag that wasn't in reach for everyone competing for the same spots.</p>
     <p style="color:var(--gray-600);font-size:15px;line-height:1.75">What began as a practice tracker for one student has grown into a full study platform, built on the belief that how well you do shouldn't come down to whether your family can afford private tutoring. Equalizer is free, and built to give every student the same tools, practice, and feedback — regardless of zip code.</p>
   </div>
 </div>
@@ -754,7 +720,7 @@ sb.auth.onAuthStateChange((event) => {
 // ═══════════════════════════════════════════════════════
 let currentUser = null;
 let currentRole = 'student';
-let currentSubject = 'tj';
+let currentSubject = 'acl';
 let currentQuestionIndex = 0;
 let currentQuestion = null;
 let questionShownAt = null;
@@ -780,12 +746,12 @@ function defaultProgress() {
     streak: 0,
     lastActiveDate: null,
     points: 0,
-    subjectStats: { tj: { correct: 0, total: 0 }, acl: { correct: 0, total: 0 } },
+    subjectStats: { acl: { correct: 0, total: 0 } },
     recentActivity: [],
     dailyActivity: {},
     dailyStudyMinutes: {},
     dailyGoal: 10,
-    missedQuestions: { tj: [], acl: [] },
+    missedQuestions: { acl: [] },
     categoryStats: {},
     mockTestsCompleted: 0,
     bestMockScore: 0,
@@ -1019,19 +985,14 @@ const LEGACY_QUESTIONS = {
 };
 
 // Practice questions now live in Supabase (see supabase/migrations_v3.sql) — loaded
-// once at startup into this same {tj:[...], acl:[...]} shape so the rest of the app
+// once at startup into this same {acl:[...]} shape so the rest of the app
 // (rendering, shuffling, missed-question tracking) doesn't need to change.
-let QUESTIONS = { ...LEGACY_QUESTIONS, tj: [], acl: [] };
+let QUESTIONS = { ...LEGACY_QUESTIONS, acl: [] };
 
 async function loadQuestions() {
-  const { data, error } = await sb.from('questions').select('*').order('id');
+  const { data, error } = await sb.from('questions').select('*').eq('subject', 'acl').order('id');
   if (error || !data) return;
-  const grouped = { tj: [], acl: [] };
-  data.forEach(row => {
-    grouped[row.subject].push({ id: row.id, q: row.question, opts: row.options, ans: row.answer_index, exp: row.explanation, cat: row.category });
-  });
-  QUESTIONS.tj = grouped.tj;
-  QUESTIONS.acl = grouped.acl;
+  QUESTIONS.acl = data.map(row => ({ id: row.id, q: row.question, opts: row.options, ans: row.answer_index, exp: row.explanation, cat: row.category }));
   renderBankFreshness(data);
 }
 
@@ -1075,7 +1036,7 @@ function addAdminOption() {
 
 function resetAdminForm() {
   document.getElementById('admin-edit-id').value = '';
-  document.getElementById('admin-subject').value = 'tj';
+  document.getElementById('admin-subject').value = 'acl';
   document.getElementById('admin-category').value = 'Math/Quant';
   document.getElementById('admin-question').value = '';
   document.getElementById('admin-explanation').value = '';
@@ -1102,10 +1063,8 @@ async function saveAdminQuestion() {
   if (editId) {
     const { data, error } = await sb.from('questions').update(row).eq('id', Number(editId)).select().single();
     if (error) { toast(error.message, 'error'); return; }
-    ['tj', 'acl'].forEach(s => {
-      const idx = QUESTIONS[s].findIndex(q => q.id === Number(editId));
-      if (idx !== -1) QUESTIONS[s].splice(idx, 1);
-    });
+    const idx = QUESTIONS.acl.findIndex(q => q.id === Number(editId));
+    if (idx !== -1) QUESTIONS.acl.splice(idx, 1);
     QUESTIONS[data.subject].push({ id: data.id, q: data.question, opts: data.options, ans: data.answer_index, exp: data.explanation, cat: data.category });
     toast('Question updated!', 'success');
   } else {
@@ -1138,10 +1097,8 @@ async function deleteAdminQuestion(id) {
   if (!confirm('Delete this question? This cannot be undone.')) return;
   const { error } = await sb.from('questions').delete().eq('id', id);
   if (error) { toast(error.message, 'error'); return; }
-  ['tj', 'acl'].forEach(s => {
-    const idx = QUESTIONS[s].findIndex(q => q.id === id);
-    if (idx !== -1) QUESTIONS[s].splice(idx, 1);
-  });
+  const idx = QUESTIONS.acl.findIndex(q => q.id === id);
+  if (idx !== -1) QUESTIONS.acl.splice(idx, 1);
   toast('Question deleted.', 'success');
   renderAdminList();
 }
@@ -1157,7 +1114,7 @@ function renderAdminList() {
   const subjectFilter = document.getElementById('admin-filter-subject').value;
   const all = subjectFilter
     ? QUESTIONS[subjectFilter].map(q => ({ ...q, subject: subjectFilter }))
-    : [...QUESTIONS.tj.map(q => ({ ...q, subject: 'tj' })), ...QUESTIONS.acl.map(q => ({ ...q, subject: 'acl' }))];
+    : QUESTIONS.acl.map(q => ({ ...q, subject: 'acl' }));
   all.sort((a, b) => a.id - b.id);
 
   const totalPages = Math.max(1, Math.ceil(all.length / ADMIN_PAGE_SIZE));
@@ -1175,22 +1132,6 @@ function renderAdminList() {
       <button class="btn btn-outline" onclick="deleteAdminQuestion(${q.id})" style="color:var(--red);border-color:var(--red)">Delete</button>
     </div>`).join('') || '<p style="color:var(--gray-400);font-size:14px">No questions match this filter.</p>';
 }
-
-const SPS_PROMPTS = [
-  { category:'ethical global', text:"Should individuals take responsibility for issues and problems that do not affect them directly? Provide and reflect on one example of how you've done such work." },
-  { category:'critical/creative', text:"What STEM topic do you find most compelling to research? Why? Make a case for the importance of this topic to a non-STEM audience." },
-  { category:'collaboration', text:"Recount an experience where you collaborated with others. What did you contribute to the group, and what did this experience teach you about teamwork?" },
-  { category:'ethical global', text:"What does it mean to be an ethical and global citizen? What things have you done that fit this definition?" },
-  { category:'critical/creative', text:"Describe a time where you needed to use creative thinking to solve a problem. What made this approach so effective (or not), and where has it led you so far?" },
-  { category:'goal oriented', text:"Discuss your most important goal. What motivates this goal and how does it help direct the choices you make in life?" },
-  { category:'ethical global, goal oriented', text:"What event in your life has been most significant in shaping your character? Where has this led you so far, and where might it be leading you next?" },
-  { category:'collaborator', text:"Discuss a time where you experienced an issue with teamwork. What would you do differently now to correct this?" },
-  { category:'collaborator', text:"What activity that requires teamwork are you looking forward to next? Why? How does this activity connect to your larger STEM and/or academic interests?" },
-  { category:'ethical global and leadership', text:"If you could undertake one specific project to benefit your community, what would it be and why?" },
-  { category:'communicator', text:"Imagine that you are writing a letter to your local government (board of supervisors, town council, etc) about an issue in your community that you want to bring to their attention. Demonstrate your communication skills by writing that letter." },
-  { category:'communicator', text:"Describe a time where you've used communication to solve a conflict with others. Include both your process for determining the best way to communicate and a description of how you communicated and how others responded." },
-  { category:'communicator', text:"What do you prioritize the most in communicating with others? Provide one example of such communication and reflect on what makes it effective." },
-];
 
 // Sourced from LCPS's own "2023-2024 Released Writing Prompt" and its
 // accompanying rubric document for the Academies of Loudoun (AOS/AET)
@@ -1214,40 +1155,13 @@ const AOS_AET_PROMPTS = [
   { category:'Environmental Science', text:"A school is considering switching entirely to solar power, but some staff worry it won't be reliable enough.\n\nA. Imagine you are advising the school on this decision. What questions would you need to ask to determine whether solar power would meet the school's needs?\n\nB. What information would you gather to support your recommendation, and how would you judge whether your sources are trustworthy?\n\nC. How would you present your recommendation to the school, and how would you address staff members who are skeptical?" },
 ];
 
-// TJHSST admissions has four parts: GPA, the Student Portrait Sheet (SPS,
-// above), the Problem-Solving Essay (PSE), and Experience Factors — but this
-// app only ever built a mock test for SPS. Unlike AOS/AET, FCPS does NOT
-// publish an official PSE prompt, rubric, or timing — only four format facts
-// are public: math/science content, a topic with multiple variables/steps,
-// a response with both a solution and an explanation of the process, and
-// essay format. These prompts are original, written to match that public
-// format description (system-of-linear-equations word problems with
-// explicit multi-part questions), not claimed as official/leaked content.
-const PSE_PROMPTS = [
-  { category:'Environmental Science', text:"In 2022, environmental scientists began tracking two woodlands experiencing different rates of tree loss. Forest A (Oregon) begins with a total area of 20 square kilometers and decreases by 0.2 square kilometers annually, while Forest B (Scotland) begins with a total area of 50 square kilometers and decreases by 0.8 square kilometers annually. Assuming no reforestation takes place in either location: (1) determine the exact calendar year in which both forests will reach an equal size, (2) calculate what that equal area will be in square kilometers, and (3) identify which forest will be completely wiped out first, along with the specific calendar year of its disappearance." },
-  { category:'Urban Planning', text:"A city's public transit ridership is changing in two directions. Bus Route A currently has 4,200 daily riders and is losing 60 riders per month as more people switch to rideshare apps. Bus Route B currently has 1,800 daily riders and is gaining 45 riders per month due to a new station opening nearby. Assuming these trends continue at a constant rate: (1) determine in how many months the two routes will have equal ridership, (2) calculate what that equal ridership number will be, and (3) identify which route will reach zero riders first, along with how many months that will take." },
-  { category:'Chemistry', text:"Two chemistry beakers are cooling in a lab after being heated. Beaker X starts at 92°C and cools by 3°C every minute. Beaker Y starts at 65°C and cools by 1°C every minute. Room temperature is a constant 20°C, and neither beaker can cool below room temperature. Assuming both beakers cool at these constant rates until they reach room temperature: (1) determine after how many minutes the two beakers will have equal temperatures (if this happens before either reaches room temperature), (2) calculate that shared temperature, and (3) identify which beaker reaches room temperature first, along with how many minutes that takes." },
-  { category:'Personal Finance', text:"Two students are managing their allowance money differently. Mia currently has $180 saved and is spending $12 per week on hobbies with no new income. Noah currently has $60 saved and is earning $18 per week from a part-time job with no spending. Assuming both trends continue at these constant weekly rates: (1) determine after how many weeks Mia and Noah will have equal amounts of money, (2) calculate what that equal amount will be, and (3) identify which student will run out of money first, along with how many weeks that takes." },
-  { category:'Agricultural Science', text:"Two water tanks at a farm are being used at different rates. Tank 1 currently holds 800 gallons and is being drained at 25 gallons per hour for irrigation with no refill. Tank 2 currently holds 300 gallons and is being filled by a well pump at 15 gallons per hour with no usage. Assuming both rates stay constant: (1) determine after how many hours the two tanks will hold equal amounts of water, (2) calculate that equal amount, and (3) identify which tank will run empty first, along with how many hours that takes." },
-  { category:'Electronics', text:"Two phones are being used differently at a study session. Phone A starts at 85% battery and loses 4% every 15 minutes due to heavy app use. Phone B starts at 40% battery and gains 6% every 15 minutes because it's plugged into a charger. Assuming both rates stay constant and battery percentage cannot go below 0% or above 100%: (1) determine after how many 15-minute intervals the two phones will have equal battery percentage, (2) calculate that equal percentage, and (3) identify which phone will hit its limit (0% or 100%) first, along with how many intervals that takes." },
-  { category:'Ecology', text:"A wildlife biologist is tracking two fish populations in a lake system. Population P starts at 1,200 fish and is declining by 40 fish per year due to a disease outbreak. Population Q starts at 300 fish and is growing by 25 fish per year after a conservation program began. Assuming these trends continue at constant rates: (1) determine in how many years the two populations will be equal, (2) calculate what that equal population size will be, and (3) identify which population will reach zero first, along with how many years that takes." },
-  { category:'Physics', text:"Two hikers start a trail from opposite ends, 24 miles apart, and walk toward each other. Hiker A walks at a constant 3 miles per hour. Hiker B starts 1 hour later than Hiker A but walks at a constant 4.5 miles per hour. Assuming both continue walking toward each other at these constant speeds without stopping: (1) determine how many hours after Hiker A starts the two hikers will meet, (2) calculate how far from Hiker A's starting point they meet, and (3) identify which hiker walked farther by the time they meet, along with the difference in distance." },
-  { category:'Engineering', text:"Two 3D printers at a robotics lab are producing parts for a competition. Printer 1 has already produced 15 parts and produces 1 new part every 20 minutes. Printer 2 has already produced 4 parts and produces 1 new part every 8 minutes. Assuming both printers run continuously at these constant rates: (1) determine after how many minutes the two printers will have produced an equal number of parts, (2) calculate that equal number of parts, and (3) if the competition needs a total of 100 parts combined from both printers, determine how many more minutes after reaching equal production it will take to reach that total." },
-  { category:'Renewable Energy', text:"A homeowner is comparing solar panel energy production to household energy usage. The solar panels currently generate 18 kWh per day and, due to a home upgrade adding more panels next month, are expected to increase output by 0.5 kWh per day. Household energy usage currently is 30 kWh per day and, due to new energy-efficient appliances being installed, is expected to decrease by 0.4 kWh per day. Assuming both trends continue at these constant daily rates starting today: (1) determine after how many days the household's solar generation will equal its energy usage, (2) calculate that equal daily amount in kWh, and (3) determine on which day generation first exceeds usage." },
-];
-
 const WRITING_TEST_CONFIGS = {
-  tj: { label:'SPS Writing Assessment (TJ)', badge:'SPS', prompts:SPS_PROMPTS, endpoint:'/api/grade-sps', activityLabel:'SPS Writing Assessment (TJ)', maxScore:5, pointsMultiplier:20 },
   acl: {
     label:'Writing Assessment (AOS/AET)', badge:'AOS/AET', prompts:AOS_AET_PROMPTS, endpoint:'/api/grade-writing-assessment', activityLabel:'Writing Assessment (AOS/AET)', maxScore:10, pointsMultiplier:10,
     directions:"Official LCPS directions: your response is evaluated on the strength of your argument(s) and ideas. Structure it however you like — bullets, an outline, paragraphs. Grammar, spelling, and syntax do not count against you. You'd have 45 minutes on the real assessment.",
   },
-  pse: {
-    label:'Problem-Solving Essay (TJ)', badge:'PSE', prompts:PSE_PROMPTS, endpoint:'/api/grade-pse', activityLabel:'Problem-Solving Essay (TJ)', maxScore:5, pointsMultiplier:20,
-    directions:"FCPS does not publish an official prompt, rubric, or timing for the real PSE — only that it's math/science content with multiple steps, requiring both a solution and an explanation, in essay format. Answer every part of the prompt, show your work, and explain your reasoning in complete sentences.",
-  },
 };
-let currentWritingType = 'tj';
+let currentWritingType = 'acl';
 let currentWritingPrompt = null;
 
 function startWritingTest(type) {
@@ -1372,7 +1286,6 @@ const BADGES = [
   { id:'streak-30', icon:'🔥', label:'30-Day Streak', description:'Practice 30 days in a row', check: p => p.streak >= 30 },
   { id:'first-mock', icon:'🏁', label:'First Mock Test', description:'Complete your first mock test', check: p => p.mockTestsCompleted >= 1 },
   { id:'perfect-score', icon:'⭐', label:'Perfect Score', description:'Score 100% on a mock test', check: p => p.bestMockScore >= 100 },
-  { id:'tj-scholar', icon:'🎓', label:'TJ Scholar', description:'80%+ accuracy across 20+ TJ questions', check: p => p.subjectStats.tj.total >= 20 && (p.subjectStats.tj.correct / p.subjectStats.tj.total) >= 0.8 },
   { id:'acl-scholar', icon:'🏫', label:'ACL (AOS/AET) Scholar', description:'80%+ accuracy across 20+ ACL (AOS/AET) questions', check: p => p.subjectStats.acl.total >= 20 && (p.subjectStats.acl.correct / p.subjectStats.acl.total) >= 0.8 },
   { id:'first-essay', icon:'✍️', label:'First Essay', description:'Submit your first writing assessment', check: p => p.writingPracticesCompleted >= 1 },
   { id:'point-milestone', icon:'🏆', label:'500 Points', description:'Earn 500 total points', check: p => p.points >= 500 },
@@ -1730,7 +1643,7 @@ let currentQuestionSubject = null;
 let currentQuestionOrigIndex = null;
 
 function questionSubject(id) {
-  return QUESTIONS.tj.some(q => q.id === id) ? 'tj' : 'acl';
+  return 'acl';
 }
 
 // Shared by Review mode and the post-login review prompt: questions the
@@ -1738,7 +1651,7 @@ function questionSubject(id) {
 // schedule in progress.questionSchedule.
 function buildReviewQueue() {
   const now = new Date().toISOString();
-  const missedIds = ['tj', 'acl'].flatMap(subj => progress.missedQuestions[subj]);
+  const missedIds = progress.missedQuestions.acl || [];
   const dueIds = Object.entries(progress.questionSchedule)
     .filter(([, s]) => s.dueAt <= now)
     .map(([id]) => Number(id));
@@ -1792,7 +1705,7 @@ function renderQuestion() {
   const q = currentQuestion;
   const letters = ['A','B','C','D','E','F'];
   const badgeClass = currentQuestionSubject;
-  const badgeLabels = { math:'📐 Math', science:'🔬 Science', logic:'🧩 Logic', reading:'📖 Reading', vocab:'🔤 Vocab', tj:'🎓 TJ', acl:'🏫 ACL (AOS/AET)' };
+  const badgeLabels = { math:'📐 Math', science:'🔬 Science', logic:'🧩 Logic', reading:'📖 Reading', vocab:'🔤 Vocab', acl:'🏫 ACL (AOS/AET)' };
   const totalCount = reviewMode ? reviewQueue.length : practiceOrder.length;
 
   document.getElementById('question-area').innerHTML = `
@@ -1863,9 +1776,9 @@ function selectOption(chosen) {
   practiceTotal++;
 
   if (practiceSessionTotal >= 10) {
-    const icon = reviewMode ? '🔁' : (currentSubject === 'tj' ? '🎓' : '🏫');
-    const bg = reviewMode ? 'var(--purple-light)' : (currentSubject === 'tj' ? 'var(--blue-light)' : 'var(--green-light)');
-    const label = reviewMode ? 'Review' : (currentSubject === 'tj' ? 'TJ' : 'ACL (AOS/AET)') + ' Practice';
+    const icon = reviewMode ? '🔁' : '🏫';
+    const bg = reviewMode ? 'var(--purple-light)' : 'var(--green-light)';
+    const label = (reviewMode ? 'Review' : 'ACL (AOS/AET)') + ' Practice';
     logActivity(icon, bg, label, `${practiceSessionCorrect}/${practiceSessionTotal}`);
     practiceSessionCorrect = 0;
     practiceSessionTotal = 0;
@@ -2686,7 +2599,6 @@ async function sendDrawerMessage() {
 //  MOCK TESTS
 // ═══════════════════════════════════════════════════════
 const TEST_CONFIGS = {
-  tj:  { label:'TJ Critical Thinking Prep', subjects:['tj'], count:31, time:2700 },
   acl: { label:'ACL (AOS/AET) Critical Thinking Prep', subjects:['acl'], count:32, time:2700 },
 };
 
@@ -2715,7 +2627,7 @@ function renderQuizQuestion() {
   document.getElementById('quiz-answered-label').textContent = `${answeredCount} of ${quizState.total} answered`;
   document.getElementById('quiz-progress-fill').style.width = pctComplete + '%';
   const letters = ['A','B','C','D','E','F'];
-  const badgeColors = { math:'var(--blue-light)', science:'var(--green-light)', logic:'var(--purple-light)', reading:'var(--orange-light)', vocab:'#fce7f3', tj:'#fef3c7', acl:'#dbeafe' };
+  const badgeColors = { math:'var(--blue-light)', science:'var(--green-light)', logic:'var(--purple-light)', reading:'var(--orange-light)', vocab:'#fce7f3', acl:'#dbeafe' };
   const selected = quizState.answers[quizState.current];
   document.getElementById('quiz-container').innerHTML = `
     <div class="question-card">
@@ -2798,10 +2710,7 @@ function endTest() {
 
   const pct = total ? Math.round(score/total*100) : 0;
   if (quizState && total > 0) {
-    const subj = quizState.config.subjects[0];
-    const icon = subj === 'tj' ? '🎓' : '🏫';
-    const bg = subj === 'tj' ? 'var(--blue-light)' : 'var(--green-light)';
-    logActivity(icon, bg, quizState.config.label, `${score}/${total}`);
+    logActivity('🏫', 'var(--green-light)', quizState.config.label, `${score}/${total}`);
     progress.mockTestsCompleted++;
     progress.bestMockScore = Math.max(progress.bestMockScore, pct);
     checkForNewBadges();
@@ -2943,7 +2852,6 @@ function renderHomeStats() {
   const masteryHome = el('subject-mastery-home');
   if (masteryHome) {
     masteryHome.innerHTML = `
-      <div class="progress-bar-wrap"><div class="progress-label"><span>🎓 TJ</span><span>${subjectAccuracy('tj')}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${subjectAccuracy('tj')}%;background:var(--blue)"></div></div></div>
       <div class="progress-bar-wrap"><div class="progress-label"><span>🏫 ACL (AOS/AET)</span><span>${subjectAccuracy('acl')}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${subjectAccuracy('acl')}%;background:var(--green)"></div></div></div>`;
   }
 
@@ -2969,7 +2877,7 @@ function renderHomeBanners() {
 
   if (currentUser && currentUser.targetDate) {
     const days = daysUntil(currentUser.targetDate);
-    const testLabel = { tj: 'TJ', acl: 'ACL (AOS/AET)', both: 'TJ/ACL (AOS/AET)' }[currentUser.targetTest] || 'your';
+    const testLabel = 'ACL (AOS/AET)';
     if (days > 0) html += `<div class="home-banner countdown" onclick="showTargetDatePrompt()">🎯 <strong>${days}</strong> day${days === 1 ? '' : 's'} until your ${testLabel} exam</div>`;
     else if (days === 0) html += `<div class="home-banner countdown" onclick="showTargetDatePrompt()">🎯 Your ${testLabel} exam is today — good luck!</div>`;
   } else if (currentUser) {
@@ -2980,11 +2888,9 @@ function renderHomeBanners() {
 }
 
 async function showTargetDatePrompt() {
-  const test = prompt('Which test are you preparing for? Type: tj, acl, or both', currentUser.targetTest || 'tj');
-  if (!test || !['tj', 'acl', 'both'].includes(test.trim().toLowerCase())) return;
-  const date = prompt('Test date (YYYY-MM-DD):', currentUser.targetDate || '');
+  const date = prompt('ACL (AOS/AET) test date (YYYY-MM-DD):', currentUser.targetDate || '');
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date.trim())) return;
-  await updateProfile({ target_test: test.trim().toLowerCase(), target_date: date.trim() });
+  await updateProfile({ target_test: 'acl', target_date: date.trim() });
   renderHomeBanners();
 }
 
@@ -3029,7 +2935,7 @@ function renderProgressStats() {
   const focusEl = el('focus-areas');
   if (focusEl) {
     if (!categories.length) {
-      focusEl.innerHTML = `<div style="background:var(--gray-100);color:var(--gray-600);padding:14px 18px;border-radius:var(--radius);font-size:14px;flex:1;min-width:160px">Answer some TJ or ACL (AOS/AET) practice questions to see personalized focus areas here.</div>`;
+      focusEl.innerHTML = `<div style="background:var(--gray-100);color:var(--gray-600);padding:14px 18px;border-radius:var(--radius);font-size:14px;flex:1;min-width:160px">Answer some ACL (AOS/AET) practice questions to see personalized focus areas here.</div>`;
     } else {
       const sorted = [...categories].sort((a, b) => categoryAccuracy(a) - categoryAccuracy(b));
       const weakest = sorted[0];

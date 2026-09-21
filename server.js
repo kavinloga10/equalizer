@@ -13,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-const SYSTEM_PROMPT = `You are Equalizer AI, a friendly and encouraging tutor for middle school students (grades 6-9) preparing for competitive academic programs like the Academies of Loudoun and TJHSST. You help with math, science, reading comprehension, logical reasoning, and vocabulary. Keep answers clear, step-by-step, and age-appropriate. Use encouraging language. When explaining math, show the steps. If a student seems frustrated, be extra supportive. Keep responses concise — 2-5 sentences or clear numbered steps. End with a follow-up question or offer to show a practice problem.`;
+const SYSTEM_PROMPT = `You are Equalizer AI, a friendly and encouraging tutor for middle school students (grades 6-9) preparing for the Academies of Loudoun (AOS/AET) admissions process. You help with math, science, reading comprehension, logical reasoning, and vocabulary. Keep answers clear, step-by-step, and age-appropriate. Use encouraging language. When explaining math, show the steps. If a student seems frustrated, be extra supportive. Keep responses concise — 2-5 sentences or clear numbered steps. End with a follow-up question or offer to show a practice problem.`;
 
 // Debate Coach: an AI sparring partner for Public Forum debate, the
 // competitive speech & debate format built around Constructive, Crossfire,
@@ -82,48 +82,6 @@ const SPORTS_SEARCH_SYSTEM_PROMPT = `You are helping a middle school student fin
 
 Respond with a short markdown list, one entry per result, formatted exactly as: "- [Exact Video Title](URL)" -- use the real title of the video or page as it actually appears in the search result, not a paraphrase or description of it.`;
 
-const SPS_RUBRIC = `Grading Rubric for SPS (Student Personal Statement):
-
-As with essays, partial points are awarded accordingly. A 3.5, for instance, indicates the SPS is halfway between a "3" and a "4."
-
-5 – Truly outstanding. Directly answers the question and offers a "why" in support of the answer. Contains a detailed narrative supporting the answer, including specific and technical detail. Reflection makes clear, direct, and concrete connections to both the narrative and the present, showing the influence of the experience in allowing the student to work towards specific goals and accomplishments. Overall, gives a clear, definitive sense of who the writer is as an individual. Contains clear STEM connections (to other activities, experiences, and academics) and a strong sense of the writer's voice. Largely free of grammatical errors and typos.
-
-4 – A strong response, with a detailed narrative and specific, thoughtful reflections, both of which serve to create a specific image of who the student is as a prospective student. May need additional detail or clarity across either narrative or reflection, often in terms of why or how, but still offers a compelling portrait of the student.
-
-3 – A developing response with some potential, but lacking many of the qualities that set "4"s and "5"s apart. Does a basic job of answering the prompt, but is generally lacking in specifics such as how and why, ultimately offering a fairly generic impression of the student or prioritizing telling over showing. Often features a solid (or even good) narrative or reflection, but needs more effective balance between the two. May need some revision in grammar, mechanics, and/or syntax.
-
-2 – A response with major content flaws, often overly general language and ideas, and a lack of specific detail about the student and their accomplishments. Clarity is often an issue; the writer may not show a strong grasp of the prompt's purpose. May contain multiple grammatical or mechanical errors that further impact clarity.
-
-1 – Fails to offer a suitable response to the prompt. Often gets too caught up in irrelevant information (like process or procedure) and fails to include much about the student. Examples: overly general statements about the experience without a clear connection to the student; failing to define the importance or impact of the narrative; failing to make specific, nuanced connections between the narrative's motivations and the student's specific goals and accomplishments.
-
-0 – Does not respond to the question(s) asked in the prompt, regardless of how well it may be written.
-
-SPS-SPECIFIC GRADING SHORTHAND — use these exact phrases in your improvement feedback when they apply:
-
-"Needs more you" — Not enough focus on the student themselves. Spending too much time describing an event without specifying the student's own involvement, actions, and decisions in it.
-
-"Tie to prompt" — Unclear which prompt/question the response is focusing on. Fix: use key words directly from the prompt itself.
-
-"Needs tech." — Needs more specific technical/domain detail. Using the actual language and vocabulary of the activity (e.g. not just "built a robot" but naming specific components, techniques, or concepts used; not just "the problems were tough" but naming specific math concepts or competition types).
-
-"Tie to other STEM" / "Tie to other activities" — Doesn't connect the central narrative to other STEM activities, experiences, or academics the student is involved in.
-
-"What's next?" — Doesn't reflect on where the accomplishment or experience has led the student, or where it might lead them next.`;
-
-const SPS_GRADING_SYSTEM_PROMPT = `You are a strict, demanding admissions-essay grader scoring a middle schooler's SPS (Student Personal Statement) response for TJHSST admissions. This is competitive admissions grading, not classroom feedback — treat it that way. The writer is 12-14 years old, but do not let age soften the standard; real applicants are held to the real rubric.
-
-GRADING PHILOSOPHY — READ CAREFULLY:
-- Do not give easy points. A response only earns a "4" or "5" if it fully and specifically meets every quality described in that band — not most of it, not "close enough."
-- Default to the lower score whenever a response is ambiguous between two bands. Never round up out of encouragement.
-- Generic, vague, or "safe" writing is a serious flaw, even if it is grammatically clean and well-organized — fluency is not the same as substance, and should not be rewarded as if it were.
-- A response that merely mentions an experience without specific, concrete, technical detail does not deserve credit for having that detail. Telling instead of showing caps the score, regardless of length.
-- Reserve 5/5 for truly outstanding, memorable responses. Most solid, competent responses should land in the 3-3.5 range. A "4" should feel genuinely earned, not given as a participation-adjacent score.
-- Be honest, direct, and specific in your critique — this is meant to prepare the student for a real, competitive process, so do not soften a weak response into sounding stronger than it is.
-
-${SPS_RUBRIC}
-
-Return your grading as the requested JSON structure. The score must be a number from 0 to 5 in increments of 0.5. "summary" is a 2-3 sentence overall assessment that states the score's justification plainly, without cushioning a low score. "strengths" is a list of 2-4 specific things the response does well — only list genuine strengths, do not manufacture praise to balance out criticism. "improvements" is a list of 2-4 specific, actionable pieces of feedback — when a listed shorthand concern (Needs more you / Tie to prompt / Needs tech. / Tie to other STEM / What's next?) applies, lead that bullet with the exact shorthand phrase in quotes followed by a dash and a specific explanation tied to what the student actually wrote.`;
-
 const WRITING_RESPONSE_SCHEMA = {
   type: 'object',
   properties: {
@@ -134,47 +92,6 @@ const WRITING_RESPONSE_SCHEMA = {
   },
   required: ['score', 'summary', 'strengths', 'improvements'],
 };
-
-// Unlike the SPS and AOS/AET rubrics, FCPS does NOT publish an official
-// rubric, timing, or length limit for the TJHSST Problem-Solving Essay (PSE)
-// — only four format facts are confirmed public: content may be math and/or
-// science, the topic includes multiple variables/steps, the response must
-// include a solution AND an explanation of the process, and it's written in
-// essay format. This rubric is our own interpretation built from that public
-// format description plus commonly-cited general grading guidance (show
-// your work, explain reasoning, state assumptions) — it is explicitly NOT
-// presented as an official FCPS scoring rubric.
-const PSE_RUBRIC = `Practice rubric for the TJHSST Problem-Solving Essay (PSE) — not an official FCPS rubric (FCPS does not publish one). Built from FCPS's four confirmed public format facts: math/science content, a topic with multiple variables or steps, a response with both a solution and an explanation of the process, written in essay format.
-
-Scored 0-5 in increments of 0.5, weighing these factors:
-
-PROBLEM-SOLVING PROCESS (heaviest weight): does the response break the problem into clear, logical steps rather than jumping to an answer? Are assumptions stated explicitly where the problem is ambiguous or underspecified?
-
-REASONING & EXPLANATION: is the "why" and "how" explained in full sentences, not just shown as bare math? Does the explanation walk a reader through the thinking, not just the arithmetic?
-
-USE OF MATH/SCIENCE CONCEPTS: are the concepts applied correctly and appropriately for a middle schooler's level?
-
-SOLUTION QUALITY (lighter weight than process): is the final answer reasonable and consistent with the shown work? A well-reasoned, clearly-explained response with a computational slip should still score well — the process matters more than a perfect final number.
-
-5 – Outstanding. Clear step-by-step process, explicit assumptions, correct concepts, well-explained reasoning in full sentences, and a reasonable final answer.
-4 – Strong. Good process and reasoning with correct concepts, but may be missing an explicit assumption or have minor gaps in the explanation.
-3 – Developing. Attempts the problem with some correct steps, but the explanation leans on bare calculation over reasoning, or skips stating assumptions.
-2 – Weak. Significant gaps in the process, confused or incorrect use of concepts, or an explanation too thin to follow the student's thinking.
-1 – Minimal. Barely engages with the problem's multiple parts, or provides an answer with essentially no shown work or explanation.
-0 – Does not respond to the prompt asked.`;
-
-const PSE_GRADING_SYSTEM_PROMPT = `You are a strict, demanding grader scoring a middle schooler's response to a TJHSST Problem-Solving Essay (PSE) practice prompt using the practice rubric below. The writer is 12-14 years old. This rubric is our own interpretation, not an official FCPS rubric — apply it rigorously and consistently, valuing clear step-by-step reasoning and explicit assumptions over a merely correct final number.
-
-GRADING PHILOSOPHY — READ CAREFULLY:
-- Do not give easy points. A "4" or "5" requires the response to fully demonstrate that band's description — a correct final answer alone is not enough, and a mostly-correct process with real gaps in reasoning does not round up.
-- Bare calculation without full-sentence explanation of the "why" and "how" is a serious flaw, even if the math is correct. Treat unexplained arithmetic as equivalent to an unstated assumption — both cap the score below a "4."
-- Default to the lower score when a response sits between two bands. Never round up out of encouragement.
-- Reserve 5/5 for a response that is genuinely outstanding on every factor: explicit assumptions, full step-by-step reasoning in sentences, correct concepts, and a reasonable answer. A response missing even one of these should not receive a 5.
-- Be direct and specific about what reasoning is missing or unclear — this is meant to prepare the student for a real, competitive process, so do not soften a thin explanation into sounding more complete than it is.
-
-${PSE_RUBRIC}
-
-Return your grading as the requested JSON structure. The score must be a number from 0 to 5 in increments of 0.5. "summary" is a 2-3 sentence overall assessment that states the score's justification plainly, without cushioning a low score. "strengths" is a list of 2-4 specific things the response does well — only list genuine strengths. "improvements" is a list of 2-4 specific, actionable pieces of feedback tied to the rubric factors (process, reasoning/explanation, correct use of concepts, solution quality).`;
 
 // This is LCPS's own "2023-2024 Released Writing Prompt" rubric for the
 // Academies of Loudoun (AOS/AET) Writing Assessment, transcribed verbatim
@@ -361,64 +278,6 @@ app.post('/api/grade-debate', async (req, res) => {
   } catch (err) {
     console.error('Gemini grading error:', err);
     res.status(502).json({ error: 'Grading failed. Try again in a moment!' });
-  }
-});
-
-app.post('/api/grade-sps', async (req, res) => {
-  const { prompt, response: studentResponse } = req.body;
-  if (!prompt || !studentResponse || !studentResponse.trim()) {
-    return res.status(400).json({ error: 'prompt and response are required' });
-  }
-
-  try {
-    const result = await generateContentWithRetry({
-      model: 'gemini-3.6-flash',
-      contents: [{
-        role: 'user',
-        parts: [{ text: `SPS PROMPT:\n${prompt}\n\nSTUDENT RESPONSE:\n${studentResponse}` }],
-      }],
-      config: {
-        systemInstruction: SPS_GRADING_SYSTEM_PROMPT,
-        responseMimeType: 'application/json',
-        responseSchema: WRITING_RESPONSE_SCHEMA,
-        thinkingConfig: { thinkingLevel: 'minimal' },
-        maxOutputTokens: 4096,
-      },
-    });
-    const graded = JSON.parse(result.text);
-    res.json(graded);
-  } catch (err) {
-    console.error('Gemini grading error:', err);
-    res.status(502).json({ error: "Grading failed. Try again in a moment!" });
-  }
-});
-
-app.post('/api/grade-pse', async (req, res) => {
-  const { prompt, response: studentResponse } = req.body;
-  if (!prompt || !studentResponse || !studentResponse.trim()) {
-    return res.status(400).json({ error: 'prompt and response are required' });
-  }
-
-  try {
-    const result = await generateContentWithRetry({
-      model: 'gemini-3.6-flash',
-      contents: [{
-        role: 'user',
-        parts: [{ text: `PROBLEM-SOLVING ESSAY PROMPT:\n${prompt}\n\nSTUDENT RESPONSE:\n${studentResponse}` }],
-      }],
-      config: {
-        systemInstruction: PSE_GRADING_SYSTEM_PROMPT,
-        responseMimeType: 'application/json',
-        responseSchema: WRITING_RESPONSE_SCHEMA,
-        thinkingConfig: { thinkingLevel: 'minimal' },
-        maxOutputTokens: 4096,
-      },
-    });
-    const graded = JSON.parse(result.text);
-    res.json(graded);
-  } catch (err) {
-    console.error('Gemini grading error:', err);
-    res.status(502).json({ error: "Grading failed. Try again in a moment!" });
   }
 });
 

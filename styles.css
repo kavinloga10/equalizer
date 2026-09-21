@@ -334,7 +334,6 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .q-badge.logic { background:var(--purple-light); color:var(--purple); }
 .q-badge.reading { background:var(--orange-light); color:var(--orange); }
 .q-badge.vocab { background:#fce7f3; color:#db2777; }
-.q-badge.tj { background:#fef3c7; color:#92400e; }
 .q-badge.acl { background:#dbeafe; color:var(--blue); }
 .q-number { font-size:13px; color:var(--gray-400); font-weight:500; }
 .q-text { font-size:18px; font-weight:600; line-height:1.6; margin-bottom:28px; color:var(--gray-900); white-space:pre-line; }
@@ -485,7 +484,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
 
 /* ── TESTS PANEL ── */
-.tests-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:32px; }
+.tests-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; margin-bottom:32px; }
 .test-card {
   background:var(--white); border-radius:var(--radius-lg); padding:28px;
   border:1px solid var(--gray-200); box-shadow:var(--shadow); cursor:pointer; transition:.25s;

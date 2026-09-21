@@ -425,20 +425,69 @@
 
   <!-- DEBATE COACH -->
   <div class="dash-panel" id="panel-debate">
-    <div class="tutor-wrap">
-      <div class="chat-area">
-        <div class="chat-header">
+
+    <!-- SCREEN 1: SETUP -->
+    <div id="debate-screen-setup" class="debate-screen">
+      <div class="panel-card" style="max-width:520px;margin:0 auto 20px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
           <div class="avatar" style="font-size:20px">🎙️</div>
-          <div><strong>Debate Coach</strong><br><span>Public Forum practice <span class="status"></span></span></div>
-          <button onclick="openDebateSettings()" title="Settings" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:19px;color:var(--gray-500);padding:6px;border-radius:8px;transition:.2s" onmouseover="this.style.background='var(--gray-100)'" onmouseout="this.style.background='none'">⚙️</button>
+          <div><strong>Debate Coach</strong><br><span style="font-size:12px;color:var(--gray-500)">Public Forum practice</span></div>
+          <button class="icon-btn" onclick="openDebateSettings()" title="Settings" style="margin-left:auto">⚙️</button>
         </div>
-        <div id="debate-phase-bar" style="display:none;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px;border-bottom:1px solid var(--gray-200);background:var(--gray-50)">
-          <div style="font-size:13px;font-weight:600" id="debate-phase-label">Constructive</div>
-          <div class="quiz-timer" id="debate-phase-timer" style="font-size:15px">⏱️ 4:00</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-outline" style="padding:6px 12px;font-size:12px" onclick="advanceDebatePhase()" id="debate-next-phase-btn">Next Phase →</button>
-            <button class="btn btn-outline" style="padding:6px 12px;font-size:12px" onclick="restartDebateRound()" title="Start this round over from scratch">🔄 Restart</button>
-            <button class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="endDebateRound()" id="debate-end-round-btn">End Round &amp; Get Score</button>
+
+        <label class="debate-field-label" style="display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:8px">Resolution</label>
+        <div id="debate-resolution-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;max-height:150px;overflow-y:auto">
+          <!-- JS renders saved resolutions here -->
+        </div>
+        <button class="btn btn-outline" style="width:100%;margin-bottom:18px" onclick="addDebateResolution()">+ Add resolution</button>
+
+        <label class="debate-field-label" style="display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:8px">Side</label>
+        <div style="display:flex;gap:8px;margin-bottom:18px">
+          <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px" id="debate-side-pro" onclick="setDebateSide('Pro')">Pro</button>
+          <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px" id="debate-side-con" onclick="setDebateSide('Con')">Con</button>
+        </div>
+
+        <label class="debate-field-label" style="display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:8px">Difficulty</label>
+        <div style="display:flex;gap:8px;margin-bottom:20px">
+          <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px" id="debate-difficulty-novice" onclick="setDebateDifficulty('Novice')">🌱 Novice</button>
+          <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px" id="debate-difficulty-varsity" onclick="setDebateDifficulty('Varsity')">🔥 Varsity</button>
+        </div>
+
+        <button class="btn btn-primary" style="width:100%;margin-bottom:14px" onclick="startDebateRound()">Start Round</button>
+
+        <button class="debate-link-btn" onclick="toggleDebateFormatInfo()" id="debate-format-toggle">How does Public Forum work? ▾</button>
+        <p id="debate-format-info" style="display:none;font-size:12px;color:var(--gray-500);line-height:1.9;margin-top:10px">
+          1. Constructive — state your case<br>
+          2. Crossfire — direct Q&amp;A<br>
+          3. Rebuttal — attack their case<br>
+          4. Summary — extend your best points<br>
+          5. Final Focus — your closing voter issues
+        </p>
+      </div>
+
+      <div class="panel-card" style="max-width:520px;margin:0 auto">
+        <h3>Past rounds</h3>
+        <div id="debate-round-history" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto">
+          <!-- JS renders round history here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: ACTIVE ROUND -->
+    <div id="debate-screen-round" class="debate-screen" style="display:none;height:calc(100vh - 160px)">
+      <div class="chat-area" style="height:100%">
+        <div class="debate-stepper-bar">
+          <div class="debate-stepper" id="debate-stepper"><!-- JS renders 5 phase dots here --></div>
+          <div class="debate-phase-info">
+            <span id="debate-phase-label">Constructive</span>
+            <span class="mono" id="debate-phase-timer">4:00</span>
+          </div>
+          <div class="debate-more-wrap">
+            <button class="icon-btn" onclick="toggleDebateMoreMenu()" title="More options">⋯</button>
+            <div class="debate-more-menu" id="debate-more-menu">
+              <button onclick="restartDebateRound()">🔄 Restart round</button>
+              <button onclick="endDebateRound()" id="debate-end-round-btn">🏁 End round &amp; get score</button>
+            </div>
           </div>
         </div>
         <div class="chat-messages" id="debate-chat-messages">
@@ -450,48 +499,25 @@
             </div>
           </div>
         </div>
-        <div class="question-card" id="debate-scorecard" style="display:none;margin:20px"></div>
+        <div class="debate-round-actions">
+          <button class="btn btn-outline" style="width:100%" onclick="advanceDebatePhase()" id="debate-next-phase-btn">Next Phase →</button>
+        </div>
         <div class="chat-input-bar">
           <textarea class="chat-input" id="debate-chat-input" placeholder="Start a round first, then type your argument…" rows="1" onkeydown="handleDebateChatKey(event)"></textarea>
           <button class="mic-btn" id="debate-chat-input-mic" onclick="toggleVoiceInput('debate-chat-input','debate-chat-input-mic')" title="Speak instead of typing">🎤</button>
           <button class="send-btn" onclick="sendDebateMessage()" title="Send">➤</button>
         </div>
       </div>
-      <div class="tutor-sidebar">
-        <div class="panel-card">
-          <h3>Start a round</h3>
-          <div id="debate-resolution-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;max-height:150px;overflow-y:auto">
-            <!-- JS renders saved resolutions here -->
-          </div>
-          <button class="btn btn-outline" style="width:100%;margin-bottom:10px" onclick="addDebateResolution()">+ Add resolution</button>
-          <div style="display:flex;gap:8px;margin-bottom:10px">
-            <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px" id="debate-side-pro" onclick="setDebateSide('Pro')">Pro</button>
-            <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px" id="debate-side-con" onclick="setDebateSide('Con')">Con</button>
-          </div>
-          <div style="display:flex;gap:8px;margin-bottom:10px">
-            <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px" id="debate-difficulty-novice" onclick="setDebateDifficulty('Novice')">🌱 Novice</button>
-            <button class="btn btn-outline" style="flex:1;padding:8px;font-size:13px" id="debate-difficulty-varsity" onclick="setDebateDifficulty('Varsity')">🔥 Varsity</button>
-          </div>
-          <button class="btn btn-primary" style="width:100%" onclick="startDebateRound()">Start Round</button>
-        </div>
-        <div class="panel-card">
-          <h3>Public Forum format</h3>
-          <p style="font-size:12px;color:var(--gray-500);line-height:1.9">
-            1. Constructive — state your case<br>
-            2. Crossfire — direct Q&amp;A<br>
-            3. Rebuttal — attack their case<br>
-            4. Summary — extend your best points<br>
-            5. Final Focus — your closing voter issues
-          </p>
-        </div>
-        <div class="panel-card">
-          <h3>Past rounds</h3>
-          <div id="debate-round-history" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto">
-            <!-- JS renders round history here -->
-          </div>
-        </div>
+    </div>
+
+    <!-- SCREEN 3: RESULTS -->
+    <div id="debate-screen-results" class="debate-screen" style="display:none">
+      <div class="question-card" id="debate-scorecard" style="max-width:640px;margin:0 auto"></div>
+      <div style="max-width:640px;margin:20px auto 0">
+        <button class="btn btn-primary" style="width:100%" onclick="showDebateScreen('setup')">Start a New Round</button>
       </div>
     </div>
+
   </div>
 
   <!-- SPORTS COACH -->
@@ -1615,8 +1641,8 @@ async function doLogout() {
   debateSide = null;
   if (debatePhaseTimerHandle) clearInterval(debatePhaseTimerHandle);
   if (window.speechSynthesis) window.speechSynthesis.cancel();
-  document.getElementById('debate-phase-bar').style.display = 'none';
   document.getElementById('debate-scorecard').style.display = 'none';
+  showDebateScreen('setup');
   try { localStorage.removeItem(DEBATE_KEY); } catch (e) {}
   document.getElementById('debate-chat-messages').innerHTML = `<div class="msg ai"><div class="msg-avatar">🎙️</div><div class="msg-body"><div class="msg-bubble">Welcome to Public Forum practice! Pick a resolution, a side, and a difficulty on the right, hit <strong>Start Round</strong>, and I'll argue the other side with you — Constructive, Crossfire, Rebuttal, Summary, and Final Focus, just like a real round.</div><div class="msg-time">Just now</div></div></div>`;
   setAppMode('testprep');
@@ -2038,6 +2064,50 @@ const DEBATE_PHASES = [
 let debatePhaseIndex = 0;
 let debatePhaseSecondsLeft = 0;
 
+// Guided-round flow: setup, the live round, and results each get their own
+// full screen instead of sharing a sidebar, so only what's relevant to the
+// current moment is on screen.
+let debateScreen = 'setup'; // 'setup' | 'round' | 'results'
+
+function showDebateScreen(screen) {
+  debateScreen = screen;
+  ['setup', 'round', 'results'].forEach((s) => {
+    document.getElementById('debate-screen-' + s).style.display = s === screen ? 'block' : 'none';
+  });
+  closeDebateMoreMenu();
+}
+
+function renderDebateStepper() {
+  const el = document.getElementById('debate-stepper');
+  if (!el) return;
+  el.innerHTML = DEBATE_PHASES.map((p, i) => {
+    const state = i < debatePhaseIndex ? 'done' : i === debatePhaseIndex ? 'now' : '';
+    const dot = `<div class="debate-step-dot ${state}" title="${p.name}">${i < debatePhaseIndex ? '✓' : i + 1}</div>`;
+    const track = i < DEBATE_PHASES.length - 1 ? `<div class="debate-step-track ${i < debatePhaseIndex ? 'done' : ''}"></div>` : '';
+    return dot + track;
+  }).join('');
+}
+
+function toggleDebateMoreMenu() {
+  document.getElementById('debate-more-menu').classList.toggle('open');
+}
+
+function closeDebateMoreMenu() {
+  document.getElementById('debate-more-menu').classList.remove('open');
+}
+
+function toggleDebateFormatInfo() {
+  const info = document.getElementById('debate-format-info');
+  const isOpen = info.style.display !== 'none';
+  info.style.display = isOpen ? 'none' : 'block';
+  document.getElementById('debate-format-toggle').textContent = isOpen ? 'How does Public Forum work? ▾' : 'How does Public Forum work? ▴';
+}
+
+document.addEventListener('click', (e) => {
+  const wrap = document.querySelector('.debate-more-wrap');
+  if (wrap && !wrap.contains(e.target)) closeDebateMoreMenu();
+});
+
 let debateSettings = {
   phaseSeconds: Object.fromEntries(DEBATE_PHASES.map(p => [p.name, p.seconds])),
   defaultDifficulty: 'Novice',
@@ -2140,7 +2210,7 @@ function appendSystemNote(text, containerId) {
 }
 
 function saveDebateHistory() {
-  try { localStorage.setItem(DEBATE_KEY, JSON.stringify({ history: debateHistory, resolution: debateResolution, side: debateSide })); } catch (e) {}
+  try { localStorage.setItem(DEBATE_KEY, JSON.stringify({ history: debateHistory, resolution: debateResolution, side: debateSide, phaseIndex: debatePhaseIndex })); } catch (e) {}
 }
 
 function loadDebateHistory() {
@@ -2151,6 +2221,7 @@ function loadDebateHistory() {
     debateHistory = parsed.history || [];
     debateResolution = parsed.resolution || null;
     debateSide = parsed.side || null;
+    debatePhaseIndex = Number.isInteger(parsed.phaseIndex) ? parsed.phaseIndex : 0;
   } catch (e) {}
 }
 
@@ -2225,6 +2296,7 @@ function startDebateRound() {
   document.getElementById('debate-scorecard').style.display = 'none';
   appendMsg('ai', `Round started! Resolution: "${debateResolution}" — you're arguing ${debateSide} against a ${debateDifficulty} opponent. Give me your Constructive: lay out your case in a few sentences, then I'll respond as the other side.`, 'debate-chat-messages');
   debatePhaseIndex = 0;
+  showDebateScreen('round');
   startDebatePhase();
 }
 
@@ -2232,13 +2304,9 @@ function startDebatePhase() {
   const phase = DEBATE_PHASES[debatePhaseIndex];
   const isLastPhase = debatePhaseIndex === DEBATE_PHASES.length - 1;
   debatePhaseSecondsLeft = debateSettings.phaseSeconds[phase.name] ?? phase.seconds;
-  document.getElementById('debate-phase-bar').style.display = 'flex';
+  renderDebateStepper();
   document.getElementById('debate-phase-label').textContent = phase.name;
   document.getElementById('debate-next-phase-btn').style.display = isLastPhase ? 'none' : 'inline-flex';
-  // End Round is available at every phase, not just the last one, so a
-  // student can end (and get scored on) a round early instead of being
-  // forced through every remaining phase.
-  document.getElementById('debate-end-round-btn').style.display = 'inline-flex';
   const timerEl = document.getElementById('debate-phase-timer');
   timerEl.classList.remove('warning');
   updateDebatePhaseTimerDisplay();
@@ -2311,8 +2379,8 @@ async function sendDebateMessage() {
 
 async function endDebateRound() {
   if (!debateHistory.length) { toast('Make at least one argument before ending the round.', 'error'); return; }
+  closeDebateMoreMenu();
   if (debatePhaseTimerHandle) clearInterval(debatePhaseTimerHandle);
-  document.getElementById('debate-phase-bar').style.display = 'none';
   const btn = document.getElementById('debate-end-round-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Scoring...';
@@ -2328,17 +2396,15 @@ async function endDebateRound() {
     if (!res.ok) throw new Error(data.error || 'Grading failed');
     renderDebateScorecard(data);
     saveDebateRoundToHistory(data);
-    // The scorecard already summarizes what happened -- clear the transcript
-    // so the round reads as closed rather than leaving a stale conversation
-    // sitting above the score.
     debateHistory = [];
     saveDebateHistory();
     document.getElementById('debate-chat-messages').innerHTML = '';
+    showDebateScreen('results');
   } catch (err) {
     toast('Grading failed. Try again in a moment!', 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'End Round & Get Score';
+    btn.innerHTML = '🏁 End round &amp; get score';
   }
 }
 
@@ -3108,6 +3174,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="msg-body"><div class="msg-bubble">${formatChatText(m.content)}</div></div>
         </div>`).join('');
       if (debateSide) setDebateSide(debateSide);
+      // Resume on the round screen with the phase it was actually on, rather
+      // than silently dropping back to Constructive on a refresh.
+      showDebateScreen('round');
+      startDebatePhase();
     }
     loadDebateRoundHistory();
     renderDebateRoundHistory();

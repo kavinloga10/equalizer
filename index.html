@@ -1337,23 +1337,6 @@ function launchConfetti() {
   }
 }
 
-const LEADERBOARD_DATA = [
-  { name:"Jordan K.", school:"Eagle Ridge", pts:2440, badge:"🥇" },
-  { name:"Priya M.", school:"Belmont Ridge", pts:2315, badge:"🥈" },
-  { name:"Carlos R.", school:"Brambleton", pts:2210, badge:"🥉" },
-  { name:"Aisha T.", school:"Trailside", pts:2105, badge:"🎖️" },
-  { name:"Noah P.", school:"Stone Hill", pts:1990, badge:"🎖️" },
-  { name:"Emma S.", school:"Smart's Mill", pts:1912, badge:"🎖️" },
-  { name:"Liam W.", school:"Seneca Ridge", pts:1888, badge:"🎖️" },
-  { name:"Sofia D.", school:"Sterling", pts:1876, badge:"🎖️" },
-  { name:"James L.", school:"Harper Park", pts:1863, badge:"🎖️" },
-  { name:"Mei C.", school:"Stone Hill", pts:1855, badge:"🎖️" },
-  { name:"Tyler B.", school:"Eagle Ridge", pts:1849, badge:"🎖️" },
-  { name:"Hannah N.", school:"Brambleton", pts:1820, badge:"🎖️" },
-  { name:"Ryan F.", school:"Trailside", pts:1795, badge:"🎖️" },
-  { name:"Ava G.", school:"Belmont Ridge", pts:1780, badge:"🎖️" },
-];
-
 // ═══════════════════════════════════════════════════════
 //  NAVIGATION
 // ═══════════════════════════════════════════════════════
@@ -2819,7 +2802,6 @@ function getBoardWithYou() {
     .map(p => ({ name: p.name, school: '', pts: p.points, badge: '🎖️' }));
   const you = { name: (currentUser ? currentUser.name.split(' ')[0] : 'Alex') + ' ★ YOU', school: 'Your School', pts: progress.points, badge: '🎖️', isYou: true };
   return realStudents
-    .concat(LEADERBOARD_DATA)
     .concat([you])
     .sort((a, b) => b.pts - a.pts);
 }

@@ -337,6 +337,8 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .q-badge.acl { background:#dbeafe; color:var(--blue); }
 .q-number { font-size:13px; color:var(--gray-400); font-weight:500; }
 .q-text { font-size:18px; font-weight:600; line-height:1.6; margin-bottom:28px; color:var(--gray-900); white-space:pre-line; }
+.q-diagram { background:var(--gray-50); border:1px solid var(--gray-200); border-radius:var(--radius); padding:16px; margin:-8px 0 24px; color:var(--gray-800); }
+.q-diagram svg { display:block; max-width:340px; margin:0 auto; width:100%; height:auto; }
 .options { display:flex; flex-direction:column; gap:12px; margin-bottom:28px; }
 .option-btn {
   display:flex; align-items:center; gap:14px; padding:16px 20px;

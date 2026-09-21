@@ -544,6 +544,10 @@
         <label>Explanation</label>
         <textarea id="admin-explanation" rows="3" style="width:100%;padding:11px 14px;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--gray-800);background:var(--white)"></textarea>
       </div>
+      <div class="form-group">
+        <label>Diagram (SVG code, optional — shown above the question text)</label>
+        <textarea id="admin-diagram" rows="3" placeholder="<svg viewBox=&quot;0 0 300 150&quot;>...</svg>" style="width:100%;padding:11px 14px;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-family:ui-monospace,monospace;font-size:12px;color:var(--gray-800);background:var(--white)"></textarea>
+      </div>
       <div style="display:flex;gap:12px">
         <button class="btn btn-primary" onclick="saveAdminQuestion()" id="admin-save-btn">Add Question</button>
         <button class="btn btn-outline" onclick="resetAdminForm()" style="display:none" id="admin-cancel-btn">Cancel edit</button>
@@ -992,7 +996,7 @@ let QUESTIONS = { ...LEGACY_QUESTIONS, acl: [] };
 async function loadQuestions() {
   const { data, error } = await sb.from('questions').select('*').eq('subject', 'acl').order('id');
   if (error || !data) return;
-  QUESTIONS.acl = data.map(row => ({ id: row.id, q: row.question, opts: row.options, ans: row.answer_index, exp: row.explanation, cat: row.category }));
+  QUESTIONS.acl = data.map(row => ({ id: row.id, q: row.question, opts: row.options, ans: row.answer_index, exp: row.explanation, cat: row.category, diagram: row.diagram_svg || null }));
   renderBankFreshness(data);
 }
 
@@ -1040,6 +1044,7 @@ function resetAdminForm() {
   document.getElementById('admin-category').value = 'Math/Quant';
   document.getElementById('admin-question').value = '';
   document.getElementById('admin-explanation').value = '';
+  document.getElementById('admin-diagram').value = '';
   renderAdminOptions();
   document.getElementById('admin-form-title').textContent = 'Add a Question';
   document.getElementById('admin-save-btn').textContent = 'Add Question';
@@ -1052,25 +1057,26 @@ async function saveAdminQuestion() {
   const category = document.getElementById('admin-category').value;
   const question = document.getElementById('admin-question').value.trim();
   const explanation = document.getElementById('admin-explanation').value.trim();
+  const diagram = document.getElementById('admin-diagram').value.trim();
   const options = [...document.querySelectorAll('.admin-opt-input')].map(i => i.value.trim());
   const checked = document.querySelector('input[name="admin-correct"]:checked');
   if (!question || !explanation || options.some(o => !o) || !checked) {
     toast('Fill in the question, all options, the correct answer, and the explanation.', 'error');
     return;
   }
-  const row = { subject, category, question, options, answer_index: Number(checked.value), explanation };
+  const row = { subject, category, question, options, answer_index: Number(checked.value), explanation, diagram_svg: diagram || null };
 
   if (editId) {
     const { data, error } = await sb.from('questions').update(row).eq('id', Number(editId)).select().single();
     if (error) { toast(error.message, 'error'); return; }
     const idx = QUESTIONS.acl.findIndex(q => q.id === Number(editId));
     if (idx !== -1) QUESTIONS.acl.splice(idx, 1);
-    QUESTIONS[data.subject].push({ id: data.id, q: data.question, opts: data.options, ans: data.answer_index, exp: data.explanation, cat: data.category });
+    QUESTIONS[data.subject].push({ id: data.id, q: data.question, opts: data.options, ans: data.answer_index, exp: data.explanation, cat: data.category, diagram: data.diagram_svg || null });
     toast('Question updated!', 'success');
   } else {
     const { data, error } = await sb.from('questions').insert(row).select().single();
     if (error) { toast(error.message, 'error'); return; }
-    QUESTIONS[data.subject].push({ id: data.id, q: data.question, opts: data.options, ans: data.answer_index, exp: data.explanation, cat: data.category });
+    QUESTIONS[data.subject].push({ id: data.id, q: data.question, opts: data.options, ans: data.answer_index, exp: data.explanation, cat: data.category, diagram: data.diagram_svg || null });
     toast('Question added!', 'success');
   }
   resetAdminForm();
@@ -1086,6 +1092,7 @@ function editAdminQuestion(id) {
   document.getElementById('admin-category').value = q.cat;
   document.getElementById('admin-question').value = q.q;
   document.getElementById('admin-explanation').value = q.exp;
+  document.getElementById('admin-diagram').value = q.diagram || '';
   renderAdminOptions(q.opts, q.ans);
   document.getElementById('admin-form-title').textContent = 'Edit Question #' + q.id;
   document.getElementById('admin-save-btn').textContent = 'Save Changes';
@@ -1432,6 +1439,7 @@ function renderLoginGateQuestion() {
   const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
   document.getElementById('login-gate-body').innerHTML = `
     <p style="font-size:13px;color:var(--gray-500);margin-bottom:14px">🔁 Quick review — from your missed &amp; due questions</p>
+    ${q.diagram ? `<div class="q-diagram">${q.diagram}</div>` : ''}
     <div class="q-text" style="margin-bottom:20px">${q.q}</div>
     <div class="options" id="login-gate-options">
       ${q.opts.map((o, i) => `
@@ -1714,6 +1722,7 @@ function renderQuestion() {
         <span class="q-badge ${badgeClass}">${badgeLabels[currentQuestionSubject]}</span>
         <span class="q-number">Question ${currentQuestionIndex + 1} of ${totalCount}</span>
       </div>
+      ${q.diagram ? `<div class="q-diagram">${q.diagram}</div>` : ''}
       <div class="q-text">${q.q}</div>
       <div class="options" id="options">
         ${q.opts.map((o,i) => `
@@ -2632,6 +2641,7 @@ function renderQuizQuestion() {
   document.getElementById('quiz-container').innerHTML = `
     <div class="question-card">
       <div class="q-meta"><span class="q-badge ${q.subject}" style="background:${badgeColors[q.subject]}">${q.subject.toUpperCase()}</span></div>
+      ${q.diagram ? `<div class="q-diagram">${q.diagram}</div>` : ''}
       <div class="q-text">${q.q}</div>
       <div class="options" id="quiz-options">
         ${q.opts.map((o,i) => `<button class="option-btn ${selected === i ? 'selected' : ''}" onclick="selectQuizOption(${i})">${letters[i]}. ${o}</button>`).join('')}

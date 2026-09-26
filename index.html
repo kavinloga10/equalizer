@@ -1666,11 +1666,11 @@ function renderQuestion() {
           </button>
         `).join('')}
       </div>
-      <div class="q-actions">
-        <button class="btn btn-outline" onclick="prevQuestion()" ${currentQuestionIndex === 0 ? 'disabled' : ''}>← Back</button>
-        <button class="btn btn-outline" onclick="nextQuestion()">Skip →</button>
-      </div>
       <div class="feedback-box" id="feedback"></div>
+    </div>
+    <div class="q-actions">
+      <button class="btn btn-outline" onclick="prevQuestion()" ${currentQuestionIndex === 0 ? 'disabled' : ''}>← Back</button>
+      <button class="btn btn-outline" onclick="nextQuestion()" id="skip-next-btn">Skip →</button>
     </div>`;
 }
 
@@ -1725,7 +1725,8 @@ function selectOption(chosen) {
   saveProgress();
   renderHomeStats();
 
-  if (wasCorrect) setTimeout(nextQuestion, 5000);
+  const skipNextBtn = document.getElementById('skip-next-btn');
+  if (skipNextBtn) skipNextBtn.textContent = 'Next →';
 }
 
 // Wrong-answer feedback is fixed to the side of the screen (not stacked below
@@ -1737,7 +1738,6 @@ function showWrongFeedbackPanel(exp) {
     <div>❌ Not quite. ${exp}</div>
     <div class="feedback-actions">
       <button class="btn btn-outline" onclick="askTutorAboutQuestion()">🤖 Ask Tutor</button>
-      <button class="btn btn-primary" onclick="nextQuestion()">Next Question →</button>
     </div>`;
   panel.classList.add('active');
   requestAnimationFrame(() => panel.classList.add('show'));

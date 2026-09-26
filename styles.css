@@ -349,7 +349,15 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   display:flex; align-items:center; justify-content:center; font-size:13px;
   font-weight:700; flex-shrink:0;
 }
-.q-actions { display:flex; gap:12px; }
+/* Fixed to the bottom of the viewport (not stacked below the options list)
+   so Back/Skip/Next are always reachable without scrolling, no matter how
+   long the question or its option list runs. */
+.q-actions {
+  position:fixed; bottom:0; left:240px; right:0; z-index:150;
+  display:flex; gap:12px; padding:14px 36px; background:var(--white);
+  border-top:1px solid var(--gray-200); box-shadow:var(--shadow-lg);
+}
+#question-area { padding-bottom:90px; }
 .feedback-box {
   margin-top:20px; padding:18px 20px; border-radius:var(--radius);
   font-size:14px; line-height:1.7; display:none;
@@ -372,10 +380,11 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .wrong-feedback-panel .feedback-actions { display:flex; gap:12px; margin-top:16px; flex-wrap:wrap; }
 @media(max-width:768px) {
   .wrong-feedback-panel {
-    top:auto; bottom:0; left:0; right:0; width:auto; max-width:100vw;
+    top:auto; bottom:70px; left:0; right:0; width:auto; max-width:100vw;
     border-radius:var(--radius-lg) var(--radius-lg) 0 0; transform:translateY(120%);
   }
   .wrong-feedback-panel.show { transform:translateY(0); }
+  .q-actions { left:0; padding:12px 20px; }
 }
 
 /* ── ASK TUTOR DRAWER ── */

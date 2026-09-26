@@ -359,6 +359,25 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .feedback-box.active { display:block; }
 .feedback-actions { display:flex; gap:12px; margin-top:16px; }
 
+/* Wrong-answer feedback: fixed to the side so reading it never requires
+   scrolling past a long question card. */
+.wrong-feedback-panel {
+  display:none; position:fixed; top:96px; right:24px; width:340px; max-width:calc(100vw - 48px);
+  background:var(--red-light); color:#7f1d1d; border:1px solid #fca5a5; border-radius:var(--radius-lg);
+  padding:20px; font-size:14px; line-height:1.7; box-shadow:var(--shadow-lg);
+  transform:translateX(120%); transition:transform .25s ease; z-index:250;
+}
+.wrong-feedback-panel.active { display:block; }
+.wrong-feedback-panel.show { transform:translateX(0); }
+.wrong-feedback-panel .feedback-actions { display:flex; gap:12px; margin-top:16px; flex-wrap:wrap; }
+@media(max-width:768px) {
+  .wrong-feedback-panel {
+    top:auto; bottom:0; left:0; right:0; width:auto; max-width:100vw;
+    border-radius:var(--radius-lg) var(--radius-lg) 0 0; transform:translateY(120%);
+  }
+  .wrong-feedback-panel.show { transform:translateY(0); }
+}
+
 /* ── ASK TUTOR DRAWER ── */
 .tutor-drawer {
   position:fixed; top:0; right:0; width:380px; max-width:100vw; height:100vh;

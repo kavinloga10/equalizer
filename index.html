@@ -109,6 +109,8 @@
     </div>
   </div>
 
+  <div class="wrong-feedback-panel" id="wrong-feedback-panel"></div>
+
   <!-- HOME -->
   <div class="dash-panel active" id="panel-home">
     <div class="greeting">
@@ -1628,6 +1630,7 @@ function setReviewMode(btn) {
 
 function renderQuestion() {
   questionShownAt = Date.now();
+  hideWrongFeedbackPanel();
 
   if (reviewMode) {
     if (reviewQueue.length === 0) {
@@ -1724,13 +1727,7 @@ function selectOption(chosen) {
     practiceSessionCorrect++;
     toast('Correct! +10 points', 'success');
   } else {
-    fb.className = 'feedback-box wrong active';
-    fb.innerHTML = `
-      <div>❌ Not quite. ${exp}</div>
-      <div class="feedback-actions">
-        <button class="btn btn-outline" onclick="askTutorAboutQuestion()">🤖 Ask Tutor</button>
-        <button class="btn btn-primary" onclick="nextQuestion()">Next Question →</button>
-      </div>`;
+    showWrongFeedbackPanel(exp);
   }
   practiceTotal++;
 
@@ -1746,7 +1743,28 @@ function selectOption(chosen) {
   saveProgress();
   renderHomeStats();
 
-  if (wasCorrect) setTimeout(nextQuestion, 2800);
+  if (wasCorrect) setTimeout(nextQuestion, 5000);
+}
+
+// Wrong-answer feedback is fixed to the side of the screen (not stacked below
+// the question) so a student never has to scroll to read it, however long
+// the question or its option list runs.
+function showWrongFeedbackPanel(exp) {
+  const panel = document.getElementById('wrong-feedback-panel');
+  panel.innerHTML = `
+    <div>❌ Not quite. ${exp}</div>
+    <div class="feedback-actions">
+      <button class="btn btn-outline" onclick="askTutorAboutQuestion()">🤖 Ask Tutor</button>
+      <button class="btn btn-primary" onclick="nextQuestion()">Next Question →</button>
+    </div>`;
+  panel.classList.add('active');
+  requestAnimationFrame(() => panel.classList.add('show'));
+}
+
+function hideWrongFeedbackPanel() {
+  const panel = document.getElementById('wrong-feedback-panel');
+  panel.classList.remove('show', 'active');
+  panel.innerHTML = '';
 }
 
 function nextQuestion() {

@@ -397,15 +397,18 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 }
 .tutor-drawer-close:hover { background:var(--gray-100); color:var(--gray-900); }
 
-/* ── AI TUTOR (ChatGPT-style single-column layout) ── */
-.gpt-chat { display:flex; flex-direction:column; height:calc(100vh - 90px); max-width:768px; width:100%; margin:0 auto; }
-#panel-tutor .chat-messages { flex:1; overflow-y:auto; padding:32px 4px 12px; display:flex; flex-direction:column; gap:2px; }
+/* ── AI TUTOR (ChatGPT-style, input pinned at the top) ──
+   The input lives at the top of the page and only the latest exchange is
+   ever shown live below it, so the student never has to scroll down to
+   find the text field — everything earlier collapses into a searchable
+   history panel below, expanded only on request. */
+.gpt-chat { max-width:768px; width:100%; margin:0 auto; padding:24px 4px 60px; }
 
 /* Plain message flow: no avatars, no colored AI bubble — just a right-aligned
    gray pill for the student and full-width plain text for the AI, matching
    ChatGPT's own message styling instead of the boxed chat-bubble look used
    elsewhere (Debate Coach keeps that look; these rules are scoped here only). */
-#panel-tutor .msg { padding:6px 0; }
+#panel-tutor .msg { padding:6px 0; display:flex; }
 #panel-tutor .msg-avatar { display:none; }
 #panel-tutor .msg-body { max-width:100%; }
 #panel-tutor .msg.user { justify-content:flex-end; }
@@ -414,10 +417,10 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 #panel-tutor .msg.user .msg-bubble { background:var(--gray-100); color:var(--gray-900); border-radius:20px; padding:10px 18px; font-size:15px; }
 #panel-tutor .msg-time { display:none; }
 
-#panel-tutor .gpt-empty-state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; }
+#panel-tutor .gpt-empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:48px 24px 24px; }
 #panel-tutor .gpt-empty-icon { font-size:38px; margin-bottom:14px; }
 #panel-tutor .gpt-empty-state h2 { font-size:23px; font-weight:700; margin-bottom:26px; color:var(--gray-900); }
-#panel-tutor .gpt-suggestions { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; width:100%; max-width:560px; }
+#panel-tutor .gpt-suggestions { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; width:100%; max-width:560px; margin:0 auto; }
 #panel-tutor .gpt-suggestion-card {
   display:flex; flex-direction:column; text-align:left; padding:13px 16px; border:1px solid var(--gray-200);
   border-radius:14px; background:var(--white); cursor:pointer; transition:.15s; font-family:'DM Sans',sans-serif;
@@ -426,7 +429,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 #panel-tutor .gpt-suggestion-title { font-size:13.5px; font-weight:700; color:var(--gray-900); margin-bottom:2px; }
 #panel-tutor .gpt-suggestion-sub { font-size:12px; color:var(--gray-500); }
 
-#panel-tutor .gpt-input-dock { padding:8px 4px 20px; }
+#panel-tutor .gpt-input-dock { padding:4px 4px 8px; margin-bottom:8px; }
 #panel-tutor .chat-input-bar {
   border:1.5px solid var(--gray-200); border-radius:26px; padding:8px 8px 8px 20px;
   box-shadow:var(--shadow-md); background:var(--white);
@@ -435,6 +438,24 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 #panel-tutor .chat-input:focus { border:none; }
 #panel-tutor .send-btn, #panel-tutor .mic-btn { border-radius:50%; width:40px; height:40px; }
 #panel-tutor .gpt-disclaimer { text-align:center; font-size:11.5px; color:var(--gray-400); margin-top:10px; }
+
+#panel-tutor .gpt-current { min-height:60px; padding:8px 4px; }
+
+.gpt-history-wrap { margin:8px 4px 0; border-top:1px solid var(--gray-200); padding-top:14px; }
+.gpt-history-toggle {
+  background:none; border:none; cursor:pointer; font-family:'DM Sans',sans-serif;
+  font-size:13px; font-weight:600; color:var(--gray-500); padding:4px 0;
+}
+.gpt-history-toggle:hover { color:var(--blue); }
+.gpt-history-panel { margin-top:12px; }
+.gpt-history-search {
+  width:100%; padding:10px 14px; border:1.5px solid var(--gray-200); border-radius:var(--radius);
+  font-family:'DM Sans',sans-serif; font-size:13px; margin-bottom:12px; outline:none;
+  background:var(--white); color:var(--gray-800); transition:.2s;
+}
+.gpt-history-search:focus { border-color:var(--blue); }
+#tutor-history-messages { max-height:340px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; padding-right:4px; }
+.gpt-history-empty { font-size:13px; color:var(--gray-400); padding:12px 2px; text-align:center; }
 
 @media(max-width:768px) {
   #panel-tutor .gpt-suggestions { grid-template-columns:1fr; }

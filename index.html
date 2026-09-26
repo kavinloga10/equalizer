@@ -166,22 +166,6 @@
   <!-- TUTOR -->
   <div class="dash-panel" id="panel-tutor">
     <div class="gpt-chat">
-      <div class="chat-messages" id="chat-messages">
-        <div class="gpt-empty-state" id="tutor-empty-state">
-          <div class="gpt-empty-icon">🤖</div>
-          <h2>How can I help you study today?</h2>
-          <div class="gpt-suggestions">
-            <button class="gpt-suggestion-card" onclick="quickAsk('Explain how to solve linear equations step by step')"><span class="gpt-suggestion-title">Linear equations</span><span class="gpt-suggestion-sub">Solve them step by step</span></button>
-            <button class="gpt-suggestion-card" onclick="quickAsk('What is photosynthesis and how does it work?')"><span class="gpt-suggestion-title">Photosynthesis</span><span class="gpt-suggestion-sub">How it actually works</span></button>
-            <button class="gpt-suggestion-card" onclick="quickAsk('Give me a tip for reading comprehension exams')"><span class="gpt-suggestion-title">Reading tips</span><span class="gpt-suggestion-sub">For comprehension exams</span></button>
-            <button class="gpt-suggestion-card" onclick="quickAsk('What is the difference between inference and conclusion?')"><span class="gpt-suggestion-title">Inference vs conclusion</span><span class="gpt-suggestion-sub">What's the real difference</span></button>
-            <button class="gpt-suggestion-card" onclick="quickAsk('Explain a syllogism with an example')"><span class="gpt-suggestion-title">Syllogisms</span><span class="gpt-suggestion-sub">With a worked example</span></button>
-            <button class="gpt-suggestion-card" onclick="quickAsk('What is the order of operations and why does it matter?')"><span class="gpt-suggestion-title">Order of operations</span><span class="gpt-suggestion-sub">And why it matters</span></button>
-            <button class="gpt-suggestion-card" onclick="quickAsk('How do I find the area and perimeter of complex shapes?')"><span class="gpt-suggestion-title">Area &amp; perimeter</span><span class="gpt-suggestion-sub">For complex shapes</span></button>
-            <button class="gpt-suggestion-card" onclick="quickAsk('Explain DNA replication simply')"><span class="gpt-suggestion-title">DNA replication</span><span class="gpt-suggestion-sub">Explained simply</span></button>
-          </div>
-        </div>
-      </div>
       <div class="gpt-input-dock">
         <div class="chat-input-bar">
           <textarea class="chat-input" id="chat-input" placeholder="Message Equalizer AI…" rows="1" onkeydown="handleChatKey(event)"></textarea>
@@ -189,6 +173,14 @@
           <button class="send-btn" onclick="sendMessage()" title="Send">➤</button>
         </div>
         <div class="gpt-disclaimer">💡 Use the AI tutor to understand <em>why</em>, not just what the answer is — it can make mistakes, so double-check anything important.</div>
+      </div>
+      <div class="gpt-current" id="tutor-current"></div>
+      <div class="gpt-history-wrap" id="tutor-history-wrap" style="display:none">
+        <button class="gpt-history-toggle" onclick="toggleTutorHistory()"><span id="tutor-history-toggle-label"></span></button>
+        <div class="gpt-history-panel" id="tutor-history-panel" style="display:none">
+          <input type="text" class="gpt-history-search" id="tutor-history-search" placeholder="Search earlier conversation…" oninput="renderTutorChat()">
+          <div class="chat-messages" id="tutor-history-messages"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1462,6 +1454,7 @@ function enterDashboard(showToast) {
   if (adminNavItem) adminNavItem.style.display = isAdmin() ? 'flex' : 'none';
   touchStreak();
   renderQuestion();
+  renderTutorChat();
   renderHomeStats();
   refreshLeaderboard().then(renderHomeStats);
   if (showToast) toast('Welcome back, ' + firstName + '!', 'success');
@@ -1496,7 +1489,8 @@ async function doLogout() {
   progress = defaultProgress();
   chatHistory = [];
   try { localStorage.removeItem(CHAT_KEY); } catch (e) {}
-  document.getElementById('chat-messages').innerHTML = `<div class="msg ai"><div class="msg-avatar">🤖</div><div class="msg-body"><div class="msg-bubble">Hi! I'm your Equalizer tutor. Ask me anything — algebra, chemistry, reading strategies, logic puzzles, vocabulary, you name it. What would you like help with today?</div><div class="msg-time">Just now</div></div></div>`;
+  tutorHistoryExpanded = false;
+  renderTutorChat();
   debateHistory = [];
   debateResolution = null;
   debateSide = null;
@@ -1780,16 +1774,81 @@ function quickAsk(text) {
   sendMessage();
 }
 
+// AI Tutor's own chat renderer (separate from the shared appendMsg/appendTyping
+// helpers Debate Coach and the Ask Tutor drawer use): only the most recent
+// exchange is ever shown live, so the input field at the top of the page never
+// requires scrolling past a long transcript. Everything earlier lives in a
+// collapsed, searchable history panel the student can expand on demand.
+const TUTOR_EMPTY_STATE_HTML = `
+  <div class="gpt-empty-state">
+    <div class="gpt-empty-icon">🤖</div>
+    <h2>How can I help you study today?</h2>
+    <div class="gpt-suggestions">
+      <button class="gpt-suggestion-card" onclick="quickAsk('Explain how to solve linear equations step by step')"><span class="gpt-suggestion-title">Linear equations</span><span class="gpt-suggestion-sub">Solve them step by step</span></button>
+      <button class="gpt-suggestion-card" onclick="quickAsk('What is photosynthesis and how does it work?')"><span class="gpt-suggestion-title">Photosynthesis</span><span class="gpt-suggestion-sub">How it actually works</span></button>
+      <button class="gpt-suggestion-card" onclick="quickAsk('Give me a tip for reading comprehension exams')"><span class="gpt-suggestion-title">Reading tips</span><span class="gpt-suggestion-sub">For comprehension exams</span></button>
+      <button class="gpt-suggestion-card" onclick="quickAsk('What is the difference between inference and conclusion?')"><span class="gpt-suggestion-title">Inference vs conclusion</span><span class="gpt-suggestion-sub">What's the real difference</span></button>
+      <button class="gpt-suggestion-card" onclick="quickAsk('Explain a syllogism with an example')"><span class="gpt-suggestion-title">Syllogisms</span><span class="gpt-suggestion-sub">With a worked example</span></button>
+      <button class="gpt-suggestion-card" onclick="quickAsk('What is the order of operations and why does it matter?')"><span class="gpt-suggestion-title">Order of operations</span><span class="gpt-suggestion-sub">And why it matters</span></button>
+      <button class="gpt-suggestion-card" onclick="quickAsk('How do I find the area and perimeter of complex shapes?')"><span class="gpt-suggestion-title">Area &amp; perimeter</span><span class="gpt-suggestion-sub">For complex shapes</span></button>
+      <button class="gpt-suggestion-card" onclick="quickAsk('Explain DNA replication simply')"><span class="gpt-suggestion-title">DNA replication</span><span class="gpt-suggestion-sub">Explained simply</span></button>
+    </div>
+  </div>`;
+const TUTOR_TYPING_HTML = `<div class="msg ai"><div class="msg-body"><div class="msg-bubble"><div class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div></div></div>`;
+let tutorTypingActive = false;
+let tutorHistoryExpanded = false;
+
+function renderTutorMsgHTML(m) {
+  return `<div class="msg ${m.role === 'assistant' ? 'ai' : 'user'}"><div class="msg-body"><div class="msg-bubble">${formatChatText(m.content)}</div></div></div>`;
+}
+
+function renderTutorChat() {
+  const current = document.getElementById('tutor-current');
+  const historyWrap = document.getElementById('tutor-history-wrap');
+
+  if (chatHistory.length === 0 && !tutorTypingActive) {
+    current.innerHTML = TUTOR_EMPTY_STATE_HTML;
+    historyWrap.style.display = 'none';
+    return;
+  }
+
+  const currentEntries = chatHistory.slice(-2);
+  const olderEntries = chatHistory.slice(0, -2);
+  current.innerHTML = currentEntries.map(renderTutorMsgHTML).join('') + (tutorTypingActive ? TUTOR_TYPING_HTML : '');
+
+  if (olderEntries.length === 0) {
+    historyWrap.style.display = 'none';
+    return;
+  }
+  historyWrap.style.display = 'block';
+  document.getElementById('tutor-history-toggle-label').textContent =
+    (tutorHistoryExpanded ? '▴ Hide' : '▾ View') + ` earlier conversation (${olderEntries.length})`;
+
+  if (tutorHistoryExpanded) {
+    const query = (document.getElementById('tutor-history-search').value || '').trim().toLowerCase();
+    const filtered = query ? olderEntries.filter(m => m.content.toLowerCase().includes(query)) : olderEntries;
+    document.getElementById('tutor-history-messages').innerHTML = filtered.length
+      ? filtered.map(renderTutorMsgHTML).join('')
+      : '<div class="gpt-history-empty">No matching messages.</div>';
+  }
+}
+
+function toggleTutorHistory() {
+  tutorHistoryExpanded = !tutorHistoryExpanded;
+  document.getElementById('tutor-history-panel').style.display = tutorHistoryExpanded ? 'block' : 'none';
+  if (!tutorHistoryExpanded) document.getElementById('tutor-history-search').value = '';
+  renderTutorChat();
+}
+
 async function sendMessage() {
   const input = document.getElementById('chat-input');
   const text = input.value.trim();
   if (!text) return;
   input.value = '';
-  appendMsg('user', text);
   chatHistory.push({ role:'user', content: text });
   saveChatHistory();
-
-  const typingId = appendTyping();
+  tutorTypingActive = true;
+  renderTutorChat();
 
   try {
     const messages = chatHistory.slice(-12); // keep last 12 for context
@@ -1802,14 +1861,13 @@ async function sendMessage() {
 
     const data = await res.json();
     const reply = data.reply || "I'm here to help! Could you rephrase your question?";
-    removeTyping(typingId);
-    appendMsg('ai', reply);
     chatHistory.push({ role:'assistant', content: reply });
     saveChatHistory();
   } catch (err) {
-    removeTyping(typingId);
-    appendMsg('ai', "I'm having trouble connecting right now. Try refreshing or check your internet connection!");
+    chatHistory.push({ role:'assistant', content: "I'm having trouble connecting right now. Try refreshing or check your internet connection!" });
   }
+  tutorTypingActive = false;
+  renderTutorChat();
 }
 
 function formatChatText(text) {
@@ -1820,7 +1878,6 @@ function formatChatText(text) {
 }
 
 function appendMsg(role, text, containerId = 'chat-messages') {
-  if (containerId === 'chat-messages') document.getElementById('tutor-empty-state')?.remove();
   const container = document.getElementById(containerId);
   const now = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
   const div = document.createElement('div');
@@ -1837,7 +1894,6 @@ function appendMsg(role, text, containerId = 'chat-messages') {
 }
 
 function appendTyping(containerId = 'chat-messages') {
-  if (containerId === 'chat-messages') document.getElementById('tutor-empty-state')?.remove();
   const container = document.getElementById(containerId);
   const id = 'typing-' + Date.now();
   const div = document.createElement('div');
@@ -3024,14 +3080,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const hasSession = await loadUserSession();
   if (hasSession) {
     chatHistory = loadChatHistory();
-    if (chatHistory.length) {
-      const container = document.getElementById('chat-messages');
-      container.innerHTML = chatHistory.map(m => `
-        <div class="msg ${m.role === 'assistant' ? 'ai' : 'user'}">
-          <div class="msg-avatar">${m.role === 'assistant' ? '🤖' : '👤'}</div>
-          <div class="msg-body"><div class="msg-bubble">${formatChatText(m.content)}</div></div>
-        </div>`).join('');
-    }
     loadDebateResolutions();
     loadDebateHistory();
     if (debateResolution && !debateResolutions.includes(debateResolution)) {

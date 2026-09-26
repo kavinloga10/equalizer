@@ -165,43 +165,30 @@
 
   <!-- TUTOR -->
   <div class="dash-panel" id="panel-tutor">
-    <div class="tutor-wrap">
-      <div class="chat-area">
-        <div class="chat-header">
-          <div class="avatar" style="font-size:20px">🤖</div>
-          <div><strong>Equalizer AI</strong><br><span>AI-powered tutor <span class="status"></span></span></div>
-        </div>
-        <div class="chat-messages" id="chat-messages">
-          <div class="msg ai">
-            <div class="msg-avatar">🤖</div>
-            <div class="msg-body">
-              <div class="msg-bubble">Hi! I'm your Equalizer tutor. Ask me anything — algebra, chemistry, reading strategies, logic puzzles, vocabulary, you name it. What would you like help with today?</div>
-              <div class="msg-time">Just now</div>
-            </div>
+    <div class="gpt-chat">
+      <div class="chat-messages" id="chat-messages">
+        <div class="gpt-empty-state" id="tutor-empty-state">
+          <div class="gpt-empty-icon">🤖</div>
+          <h2>How can I help you study today?</h2>
+          <div class="gpt-suggestions">
+            <button class="gpt-suggestion-card" onclick="quickAsk('Explain how to solve linear equations step by step')"><span class="gpt-suggestion-title">Linear equations</span><span class="gpt-suggestion-sub">Solve them step by step</span></button>
+            <button class="gpt-suggestion-card" onclick="quickAsk('What is photosynthesis and how does it work?')"><span class="gpt-suggestion-title">Photosynthesis</span><span class="gpt-suggestion-sub">How it actually works</span></button>
+            <button class="gpt-suggestion-card" onclick="quickAsk('Give me a tip for reading comprehension exams')"><span class="gpt-suggestion-title">Reading tips</span><span class="gpt-suggestion-sub">For comprehension exams</span></button>
+            <button class="gpt-suggestion-card" onclick="quickAsk('What is the difference between inference and conclusion?')"><span class="gpt-suggestion-title">Inference vs conclusion</span><span class="gpt-suggestion-sub">What's the real difference</span></button>
+            <button class="gpt-suggestion-card" onclick="quickAsk('Explain a syllogism with an example')"><span class="gpt-suggestion-title">Syllogisms</span><span class="gpt-suggestion-sub">With a worked example</span></button>
+            <button class="gpt-suggestion-card" onclick="quickAsk('What is the order of operations and why does it matter?')"><span class="gpt-suggestion-title">Order of operations</span><span class="gpt-suggestion-sub">And why it matters</span></button>
+            <button class="gpt-suggestion-card" onclick="quickAsk('How do I find the area and perimeter of complex shapes?')"><span class="gpt-suggestion-title">Area &amp; perimeter</span><span class="gpt-suggestion-sub">For complex shapes</span></button>
+            <button class="gpt-suggestion-card" onclick="quickAsk('Explain DNA replication simply')"><span class="gpt-suggestion-title">DNA replication</span><span class="gpt-suggestion-sub">Explained simply</span></button>
           </div>
         </div>
+      </div>
+      <div class="gpt-input-dock">
         <div class="chat-input-bar">
-          <textarea class="chat-input" id="chat-input" placeholder="Ask a question…" rows="1" onkeydown="handleChatKey(event)"></textarea>
+          <textarea class="chat-input" id="chat-input" placeholder="Message Equalizer AI…" rows="1" onkeydown="handleChatKey(event)"></textarea>
           <button class="mic-btn" id="chat-input-mic" onclick="toggleVoiceInput('chat-input','chat-input-mic')" title="Speak instead of typing">🎤</button>
           <button class="send-btn" onclick="sendMessage()" title="Send">➤</button>
         </div>
-      </div>
-      <div class="tutor-sidebar">
-        <div class="panel-card quick-topics">
-          <h3>Quick topics</h3>
-          <button class="topic-pill" onclick="quickAsk('Explain how to solve linear equations step by step')">Linear equations</button>
-          <button class="topic-pill" onclick="quickAsk('What is photosynthesis and how does it work?')">Photosynthesis</button>
-          <button class="topic-pill" onclick="quickAsk('Give me a tip for reading comprehension exams')">Reading tips</button>
-          <button class="topic-pill" onclick="quickAsk('What is the difference between inference and conclusion?')">Inference vs conclusion</button>
-          <button class="topic-pill" onclick="quickAsk('Explain a syllogism with an example')">Syllogisms</button>
-          <button class="topic-pill" onclick="quickAsk('What is the order of operations and why does it matter?')">Order of operations</button>
-          <button class="topic-pill" onclick="quickAsk('How do I find the area and perimeter of complex shapes?')">Area & perimeter</button>
-          <button class="topic-pill" onclick="quickAsk('Explain DNA replication simply')">DNA replication</button>
-        </div>
-        <div class="panel-card">
-          <h3>Study tips</h3>
-          <p style="font-size:13px;color:var(--gray-500);line-height:1.7">💡 Use the AI tutor to <strong>understand why</strong>, not just what the answer is. Ask for a different explanation if the first one doesn't click.</p>
-        </div>
+        <div class="gpt-disclaimer">💡 Use the AI tutor to understand <em>why</em>, not just what the answer is — it can make mistakes, so double-check anything important.</div>
       </div>
     </div>
   </div>
@@ -1833,6 +1820,7 @@ function formatChatText(text) {
 }
 
 function appendMsg(role, text, containerId = 'chat-messages') {
+  if (containerId === 'chat-messages') document.getElementById('tutor-empty-state')?.remove();
   const container = document.getElementById(containerId);
   const now = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
   const div = document.createElement('div');
@@ -1849,6 +1837,7 @@ function appendMsg(role, text, containerId = 'chat-messages') {
 }
 
 function appendTyping(containerId = 'chat-messages') {
+  if (containerId === 'chat-messages') document.getElementById('tutor-empty-state')?.remove();
   const container = document.getElementById(containerId);
   const id = 'typing-' + Date.now();
   const div = document.createElement('div');

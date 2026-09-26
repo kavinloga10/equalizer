@@ -397,16 +397,53 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 }
 .tutor-drawer-close:hover { background:var(--gray-100); color:var(--gray-900); }
 
-/* ── AI TUTOR ── */
-.tutor-wrap { display:grid; grid-template-columns:1fr 360px; gap:24px; height:calc(100vh - 90px); }
+/* ── AI TUTOR (ChatGPT-style single-column layout) ── */
+.gpt-chat { display:flex; flex-direction:column; height:calc(100vh - 90px); max-width:768px; width:100%; margin:0 auto; }
+#panel-tutor .chat-messages { flex:1; overflow-y:auto; padding:32px 4px 12px; display:flex; flex-direction:column; gap:2px; }
+
+/* Plain message flow: no avatars, no colored AI bubble — just a right-aligned
+   gray pill for the student and full-width plain text for the AI, matching
+   ChatGPT's own message styling instead of the boxed chat-bubble look used
+   elsewhere (Debate Coach keeps that look; these rules are scoped here only). */
+#panel-tutor .msg { padding:6px 0; }
+#panel-tutor .msg-avatar { display:none; }
+#panel-tutor .msg-body { max-width:100%; }
+#panel-tutor .msg.user { justify-content:flex-end; }
+#panel-tutor .msg.user .msg-body { max-width:70%; }
+#panel-tutor .msg.ai .msg-bubble { background:none; padding:2px 0; color:var(--gray-800); border-radius:0; font-size:15px; line-height:1.75; }
+#panel-tutor .msg.user .msg-bubble { background:var(--gray-100); color:var(--gray-900); border-radius:20px; padding:10px 18px; font-size:15px; }
+#panel-tutor .msg-time { display:none; }
+
+#panel-tutor .gpt-empty-state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; }
+#panel-tutor .gpt-empty-icon { font-size:38px; margin-bottom:14px; }
+#panel-tutor .gpt-empty-state h2 { font-size:23px; font-weight:700; margin-bottom:26px; color:var(--gray-900); }
+#panel-tutor .gpt-suggestions { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; width:100%; max-width:560px; }
+#panel-tutor .gpt-suggestion-card {
+  display:flex; flex-direction:column; text-align:left; padding:13px 16px; border:1px solid var(--gray-200);
+  border-radius:14px; background:var(--white); cursor:pointer; transition:.15s; font-family:'DM Sans',sans-serif;
+}
+#panel-tutor .gpt-suggestion-card:hover { border-color:var(--blue); background:var(--gray-50); }
+#panel-tutor .gpt-suggestion-title { font-size:13.5px; font-weight:700; color:var(--gray-900); margin-bottom:2px; }
+#panel-tutor .gpt-suggestion-sub { font-size:12px; color:var(--gray-500); }
+
+#panel-tutor .gpt-input-dock { padding:8px 4px 20px; }
+#panel-tutor .chat-input-bar {
+  border:1.5px solid var(--gray-200); border-radius:26px; padding:8px 8px 8px 20px;
+  box-shadow:var(--shadow-md); background:var(--white);
+}
+#panel-tutor .chat-input { border:none; padding:10px 0; min-height:24px; }
+#panel-tutor .chat-input:focus { border:none; }
+#panel-tutor .send-btn, #panel-tutor .mic-btn { border-radius:50%; width:40px; height:40px; }
+#panel-tutor .gpt-disclaimer { text-align:center; font-size:11.5px; color:var(--gray-400); margin-top:10px; }
+
+@media(max-width:768px) {
+  #panel-tutor .gpt-suggestions { grid-template-columns:1fr; }
+}
+
 .chat-area {
   background:var(--white); border-radius:var(--radius-lg); border:1px solid var(--gray-200);
   display:flex; flex-direction:column; overflow:hidden;
 }
-.chat-header { padding:18px 24px; border-bottom:1px solid var(--gray-200); display:flex; align-items:center; gap:12px; }
-.chat-header .status { width:8px; height:8px; border-radius:99px; background:var(--green); }
-.chat-header strong { font-size:15px; }
-.chat-header span { font-size:12px; color:var(--gray-500); }
 .chat-messages { flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:16px; }
 .msg { display:flex; gap:12px; align-items:flex-start; }
 .msg.user { flex-direction:row-reverse; }
@@ -417,7 +454,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .msg-bubble {
   padding:12px 16px; border-radius:12px; font-size:14px; line-height:1.7;
 }
-.msg.ai .msg-bubble { background:var(--blue-light); color:var(--gray-800); border-radius:4px 12px 12px 12px; }
+.msg.ai .msg-bubble { background:var(--blue-light); color:#1f2937; border-radius:4px 12px 12px 12px; }
 .msg.user .msg-bubble { background:var(--blue); color:#fff; border-radius:12px 4px 12px 12px; }
 .msg-time { font-size:11px; color:var(--gray-400); margin-top:4px; }
 .msg.user .msg-time { text-align:right; }
@@ -484,13 +521,6 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .debate-more-menu button:hover { background:var(--gray-100); }
 .debate-round-actions { padding:10px 20px 0; }
 
-.tutor-sidebar { display:flex; flex-direction:column; gap:16px; overflow-y:auto; }
-.quick-topics .topic-pill {
-  display:inline-flex; padding:8px 14px; border-radius:99px; font-size:12px;
-  font-weight:600; background:var(--gray-100); color:var(--gray-600);
-  cursor:pointer; margin:4px; transition:.2s; border:none; font-family:'DM Sans',sans-serif;
-}
-.quick-topics .topic-pill:hover { background:var(--blue-light); color:var(--blue); }
 .typing-indicator { display:flex; gap:4px; align-items:center; padding:4px 0; }
 .dot { width:7px; height:7px; border-radius:99px; background:var(--blue); animation:bounce .8s infinite; }
 .dot:nth-child(2) { animation-delay:.15s; }
@@ -601,8 +631,6 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   .kpi-row { grid-template-columns:repeat(2,1fr); }
   .features-grid { grid-template-columns:repeat(2,1fr); }
   .tests-grid { grid-template-columns:repeat(2,1fr); }
-  .tutor-wrap { grid-template-columns:1fr; height:auto; }
-  .tutor-sidebar { display:none; }
 }
 @media(max-width:768px) {
   .hero { flex-direction:column; padding:48px 24px; text-align:center; }

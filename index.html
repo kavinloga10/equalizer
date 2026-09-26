@@ -1339,6 +1339,7 @@ function setAppMode(mode) {
 }
 
 function showPanel(id, el) {
+  hideWrongFeedbackPanel();
   document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
   document.getElementById('panel-' + id).classList.add('active');

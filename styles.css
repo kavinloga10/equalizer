@@ -416,6 +416,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
 .practice-tutor-current .msg.ai .msg-bubble { background:none; padding:2px 0; color:var(--gray-800); border-radius:0; font-size:13.5px; line-height:1.65; }
 .practice-tutor-current .msg.user .msg-bubble { background:var(--gray-100); color:var(--gray-900); border-radius:16px; padding:8px 14px; font-size:13.5px; }
 .practice-tutor-current .msg-time { display:none; }
+.tutor-context-question { color:var(--gray-600); font-style:italic; }
 .practice-tutor-current .gpt-empty-state { padding:20px 8px; }
 #practice-tutor-input-bar { flex-shrink:0; border-top:1px solid var(--gray-200); padding:10px; }
 @media(max-width:768px) {

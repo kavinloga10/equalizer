@@ -1782,10 +1782,22 @@ function renderTutorChat() {
 
 }
 
+function renderPracticeTutorMsgHTML(m) {
+  if (m.role === 'user' && m.contextQuestion) {
+    return `<div class="msg user"><div class="msg-body"><div class="msg-bubble">
+      I just got this practice question wrong. Can you explain step by step how to arrive at the correct answer?<br><br>
+      Question: <span class="tutor-context-question">${escapeHtml(m.contextQuestion)}</span><br>
+      Answer options: ${escapeHtml(m.contextOptions)}<br>
+      The correct answer is: <strong>${escapeHtml(m.contextAnswer)}</strong>
+    </div></div></div>`;
+  }
+  return renderTutorMsgHTML(m);
+}
+
 function renderPracticeTutorChat() {
   const current = document.getElementById('practice-tutor-current');
   if (!current) return;
-  current.innerHTML = practiceTutorHistory.map(renderTutorMsgHTML).join('')
+  current.innerHTML = practiceTutorHistory.map(renderPracticeTutorMsgHTML).join('')
     + (practiceTutorTypingActive ? TUTOR_TYPING_HTML : '');
 }
 
@@ -1826,17 +1838,20 @@ async function sendMessage() {
   renderTutorChat();
 }
 
-async function sendPracticeTutorMessage() {
-  const input = document.getElementById('practice-tutor-input');
-  const text = input.value.trim();
+async function sendPracticeTutorMessage(presetText, contextMeta) {
+  let text = presetText;
+  if (text === undefined) {
+    const input = document.getElementById('practice-tutor-input');
+    text = input.value.trim();
+    input.value = '';
+  }
   if (!text) return;
-  input.value = '';
-  practiceTutorHistory.push({ role:'user', content: text });
+  practiceTutorHistory.push(Object.assign({ role:'user', content: text }, contextMeta));
   practiceTutorTypingActive = true;
   renderPracticeTutorChat();
 
   try {
-    const messages = practiceTutorHistory.slice(-12); // keep last 12 for context
+    const messages = practiceTutorHistory.slice(-12).map(m => ({ role: m.role, content: m.content })); // keep last 12 for context
 
     const res = await fetch(`${API_BASE}/api/chat`, {
       method: 'POST',
@@ -1854,9 +1869,12 @@ async function sendPracticeTutorMessage() {
   renderPracticeTutorChat();
 }
 
+function escapeHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 function formatChatText(text) {
-  const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  return escaped
+  return escapeHtml(text)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\n/g, '<br>');
 }
@@ -2552,8 +2570,11 @@ function askTutorAboutQuestion() {
   const panel = document.getElementById('practice-tutor-panel');
   panel.classList.add('active');
   requestAnimationFrame(() => panel.classList.add('show'));
-  document.getElementById('practice-tutor-input').value = prompt;
-  sendPracticeTutorMessage();
+  sendPracticeTutorMessage(prompt, {
+    contextQuestion: q.q,
+    contextOptions: q.opts.join(' / '),
+    contextAnswer: q.opts[q.ans]
+  });
 }
 
 function closePracticeTutorPanel() {

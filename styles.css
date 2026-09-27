@@ -387,6 +387,43 @@ body { font-family:'DM Sans',sans-serif; background:var(--gray-50); color:var(--
   .q-actions { left:0; padding:12px 20px; }
 }
 
+/* AI Tutor pane docked to the side of the Practice page (opened via "Ask
+   Tutor" on a missed question) -- a real, if compact, chat surface rather
+   than a static explanation, so a student can ask follow-ups without ever
+   navigating away from the question they're stuck on. */
+.practice-tutor-panel {
+  display:none; position:fixed; top:96px; right:24px; bottom:86px; width:360px; max-width:calc(100vw - 48px);
+  background:var(--white); color:var(--gray-900); border:1px solid var(--gray-200); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg); z-index:260; flex-direction:column; overflow:hidden;
+  transform:translateX(120%); transition:transform .25s ease;
+}
+.practice-tutor-panel.active { display:flex; }
+.practice-tutor-panel.show { transform:translateX(0); }
+.practice-tutor-header {
+  display:flex; align-items:center; justify-content:space-between; padding:14px 16px;
+  border-bottom:1px solid var(--gray-200); font-weight:700; font-size:14px; flex-shrink:0;
+}
+.practice-tutor-close {
+  background:none; border:none; cursor:pointer; font-size:16px; color:var(--gray-500);
+  width:28px; height:28px; border-radius:99px; transition:.2s;
+}
+.practice-tutor-close:hover { background:var(--gray-100); color:var(--gray-900); }
+.practice-tutor-current { flex:1; overflow-y:auto; padding:14px 16px; }
+.practice-tutor-current .msg { padding:4px 0; display:flex; }
+.practice-tutor-current .msg-avatar { display:none; }
+.practice-tutor-current .msg.user { justify-content:flex-end; }
+.practice-tutor-current .msg.user .msg-body { max-width:85%; }
+.practice-tutor-current .msg.ai .msg-bubble { background:none; padding:2px 0; color:var(--gray-800); border-radius:0; font-size:13.5px; line-height:1.65; }
+.practice-tutor-current .msg.user .msg-bubble { background:var(--gray-100); color:var(--gray-900); border-radius:16px; padding:8px 14px; font-size:13.5px; }
+.practice-tutor-current .msg-time { display:none; }
+.practice-tutor-current .gpt-empty-state { padding:20px 8px; }
+#practice-tutor-input-bar { flex-shrink:0; border-top:1px solid var(--gray-200); padding:10px; }
+@media(max-width:768px) {
+  .practice-tutor-panel { top:auto; bottom:70px; left:0; right:0; width:auto; max-width:100vw; height:60vh;
+    border-radius:var(--radius-lg) var(--radius-lg) 0 0; transform:translateY(120%); }
+  .practice-tutor-panel.show { transform:translateY(0); }
+}
+
 /* ── AI TUTOR (ChatGPT-style, input pinned at the top) ──
    The input lives at the top of the page and only the latest exchange is
    ever shown live below it, so the student never has to scroll down to

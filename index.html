@@ -583,12 +583,6 @@
   </div>
 </div>
 
-<div id="login-review-gate" style="display:none;position:fixed;inset:0;background:rgba(17,24,39,.7);z-index:2000;align-items:center;justify-content:center;padding:20px">
-  <div class="panel-card" style="max-width:560px;background:var(--white)" id="login-gate-body">
-    <!-- JS renders here -->
-  </div>
-</div>
-
 <div id="debate-settings-modal" style="display:none;position:fixed;inset:0;background:rgba(17,24,39,.7);z-index:2000;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this) closeDebateSettings()">
   <div class="panel-card" style="max-width:440px;width:100%;background:var(--white);position:relative;max-height:85vh;overflow-y:auto">
     <button onclick="closeDebateSettings()" title="Close" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:18px;color:var(--gray-500);cursor:pointer;width:32px;height:32px;border-radius:99px" onmouseover="this.style.background='var(--gray-100)'" onmouseout="this.style.background='none'">✕</button>
@@ -1353,68 +1347,6 @@ function closeMobileSidebar() {
 // ═══════════════════════════════════════════════════════
 //  AUTH
 // ═══════════════════════════════════════════════════════
-// Shown right after a successful login/signup, before the dashboard appears:
-// one question pulled from the student's own review queue (missed or due
-// questions), as a nudge to actually use Review mode. Skips straight to the
-// dashboard if there's nothing to review yet.
-let loginGateQuestion = null;
-
-function maybeShowLoginReviewGate() {
-  const queue = buildReviewQueue();
-  if (queue.length === 0) { enterDashboard(true); return; }
-  const pick = queue[Math.floor(Math.random() * queue.length)];
-  loginGateQuestion = QUESTIONS[pick.subject].find(q => q.id === pick.id);
-  loginGateQuestion.subject = pick.subject;
-  renderLoginGateQuestion();
-  document.getElementById('login-review-gate').style.display = 'flex';
-}
-
-function renderLoginGateQuestion() {
-  const q = loginGateQuestion;
-  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-  document.getElementById('login-gate-body').innerHTML = `
-    <p style="font-size:13px;color:var(--gray-500);margin-bottom:14px">🔁 Quick review — from your missed &amp; due questions</p>
-    ${q.diagram ? `<div class="q-diagram">${q.diagram}</div>` : ''}
-    <div class="q-text" style="margin-bottom:20px">${q.q}</div>
-    <div class="options" id="login-gate-options">
-      ${q.opts.map((o, i) => `
-        <button class="option-btn" onclick="answerLoginGateQuestion(${i})">
-          <span class="option-letter">${letters[i]}</span> ${o}
-        </button>`).join('')}
-    </div>
-    <div class="feedback-box" id="login-gate-feedback"></div>
-    <div id="login-gate-continue-row" style="margin-top:18px;text-align:right">
-      <button class="btn btn-outline" onclick="closeLoginGate()">Skip for now</button>
-    </div>`;
-}
-
-function answerLoginGateQuestion(chosen) {
-  const q = loginGateQuestion;
-  const wasCorrect = chosen === q.ans;
-  document.querySelectorAll('#login-gate-options .option-btn').forEach((b, i) => {
-    b.disabled = true;
-    if (i === q.ans) b.classList.add('correct');
-    else if (i === chosen) b.classList.add('wrong');
-  });
-  bumpCategoryStat(q.cat, wasCorrect);
-  trackMissedQuestion(q.subject, q.id, wasCorrect);
-  updateQuestionSchedule(q.id, wasCorrect);
-  progress.questionsAnswered++;
-  if (wasCorrect) { progress.correctAnswers++; progress.points += 10; }
-  saveProgress();
-
-  const fb = document.getElementById('login-gate-feedback');
-  fb.className = 'feedback-box ' + (wasCorrect ? 'correct' : 'wrong') + ' active';
-  fb.innerHTML = (wasCorrect ? '✅ ' : '❌ ') + q.exp;
-  document.getElementById('login-gate-continue-row').innerHTML =
-    `<button class="btn btn-primary" onclick="closeLoginGate()">Continue to Dashboard →</button>`;
-}
-
-function closeLoginGate() {
-  document.getElementById('login-review-gate').style.display = 'none';
-  enterDashboard(true);
-}
-
 async function doLogin() {
   const email = document.getElementById('login-email').value;
   const password = document.getElementById('login-pw').value;
@@ -1423,7 +1355,7 @@ async function doLogin() {
   if (error) { toast(error.message, 'error'); return; }
   const loaded = await loadUserSession();
   if (!loaded) { toast('Signed in, but something went wrong loading your dashboard.', 'error'); return; }
-  maybeShowLoginReviewGate();
+  enterDashboard(true);
 }
 
 async function doSignup() {
@@ -1442,7 +1374,7 @@ async function doSignup() {
   if (progressError) { toast(progressError.message, 'error'); return; }
   const loaded = await loadUserSession();
   if (!loaded) { toast('Account created, but something went wrong loading your dashboard. Try signing in.', 'error'); return; }
-  maybeShowLoginReviewGate();
+  enterDashboard(true);
 }
 
 function enterDashboard(showToast) {

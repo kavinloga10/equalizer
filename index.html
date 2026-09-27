@@ -78,7 +78,6 @@
   <nav class="sidebar-nav" id="testprep-nav">
     <a class="sidebar-item active" data-panel="home" onclick="showPanel('home',this)"><span class="icon">🏠</span> Home</a>
     <a class="sidebar-item" onclick="showPanel('practice',this)"><span class="icon">📝</span> Practice</a>
-    <a class="sidebar-item" onclick="showPanel('tutor',this)"><span class="icon">🤖</span> AI Tutor</a>
     <a class="sidebar-item" onclick="showPanel('tests',this)"><span class="icon">⏱️</span> Mock Tests</a>
     <a class="sidebar-item" onclick="showPanel('formulas',this)"><span class="icon">📐</span> Formula Bank</a>
     <a class="sidebar-item" onclick="showPanel('progress',this)"><span class="icon">📊</span> Progress</a>
@@ -110,6 +109,24 @@
   </div>
 
   <div class="wrong-feedback-panel" id="wrong-feedback-panel"></div>
+
+  <!-- AI Tutor pane for a missed practice question -- stays docked to the
+       side of the Practice page itself, so asking for help never navigates
+       the student away from where they were. Scoped only to the current
+       question: its own history, reset every time it opens and cleared
+       again when it closes. -->
+  <div class="practice-tutor-panel" id="practice-tutor-panel">
+    <div class="practice-tutor-header">
+      <span>🤖 AI Tutor</span>
+      <button class="practice-tutor-close" onclick="closePracticeTutorPanel()" title="Close">✕</button>
+    </div>
+    <div class="practice-tutor-current" id="practice-tutor-current"></div>
+    <div class="chat-input-bar" id="practice-tutor-input-bar">
+      <textarea class="chat-input" id="practice-tutor-input" placeholder="Ask a follow-up…" rows="1" onkeydown="handlePracticeTutorKey(event)"></textarea>
+      <button class="mic-btn" id="practice-tutor-mic" onclick="toggleVoiceInput('practice-tutor-input','practice-tutor-mic')" title="Speak instead of typing">🎤</button>
+      <button class="send-btn" onclick="sendPracticeTutorMessage()" title="Send">➤</button>
+    </div>
+  </div>
 
   <!-- HOME -->
   <div class="dash-panel active" id="panel-home">
@@ -160,28 +177,6 @@
     </div>
     <div id="question-area">
       <!-- JS renders here -->
-    </div>
-  </div>
-
-  <!-- TUTOR -->
-  <div class="dash-panel" id="panel-tutor">
-    <div class="gpt-chat">
-      <div class="gpt-input-dock">
-        <div class="chat-input-bar">
-          <textarea class="chat-input" id="chat-input" placeholder="Message Equalizer AI…" rows="1" onkeydown="handleChatKey(event)"></textarea>
-          <button class="mic-btn" id="chat-input-mic" onclick="toggleVoiceInput('chat-input','chat-input-mic')" title="Speak instead of typing">🎤</button>
-          <button class="send-btn" onclick="sendMessage()" title="Send">➤</button>
-        </div>
-        <div class="gpt-disclaimer">💡 Use the AI tutor to understand <em>why</em>, not just what the answer is — it can make mistakes, so double-check anything important.</div>
-      </div>
-      <div class="gpt-current" id="tutor-current"></div>
-      <div class="gpt-history-wrap" id="tutor-history-wrap" style="display:none">
-        <button class="gpt-history-toggle" onclick="toggleTutorHistory()"><span id="tutor-history-toggle-label"></span></button>
-        <div class="gpt-history-panel" id="tutor-history-panel" style="display:none">
-          <input type="text" class="gpt-history-search" id="tutor-history-search" placeholder="Search earlier conversation…" oninput="renderTutorChat()">
-          <div class="chat-messages" id="tutor-history-messages"></div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -673,13 +668,10 @@ let practiceTotal = 0;
 let quizState = null;
 let quizTimer = null;
 let timerSeconds = 0;
-let chatHistory = [];
 
 // ═══════════════════════════════════════════════════════
-//  PERSISTENCE (Supabase — real accounts + progress, synced across devices.
-//  Chat history stays in localStorage: low-stakes, not worth syncing.)
+//  PERSISTENCE (Supabase — real accounts + progress, synced across devices.)
 // ═══════════════════════════════════════════════════════
-const CHAT_KEY = 'equalizer_chat';
 
 function defaultProgress() {
   return {
@@ -867,18 +859,6 @@ function updateQuestionSchedule(id, wasCorrect) {
     entry.dueAt = new Date().toISOString();
   }
   progress.questionSchedule[key] = entry;
-}
-
-function saveChatHistory() {
-  try { localStorage.setItem(CHAT_KEY, JSON.stringify(chatHistory)); } catch (e) {}
-}
-
-function loadChatHistory() {
-  try {
-    const raw = localStorage.getItem(CHAT_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {}
-  return [];
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1300,11 +1280,12 @@ function setAppMode(mode) {
 
 function showPanel(id, el) {
   hideWrongFeedbackPanel();
+  closePracticeTutorPanel();
   document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
   document.getElementById('panel-' + id).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { home:'Dashboard', practice:'Practice Questions', tutor:'AI Tutor', tests:'Mock Tests', formulas:'Formula Bank', progress:'My Progress', leaderboard:'Leaderboard', admin:'Admin', debate:'Debate Coach', sports:'Sports Coach' };
+  const titles = { home:'Dashboard', practice:'Practice Questions', tests:'Mock Tests', formulas:'Formula Bank', progress:'My Progress', leaderboard:'Leaderboard', admin:'Admin', debate:'Debate Coach', sports:'Sports Coach' };
   document.getElementById('panel-title').textContent = titles[id] || id;
   if (id === 'home') renderHomeStats();
   if (id === 'practice') {
@@ -1373,7 +1354,6 @@ function enterDashboard(showToast) {
   if (adminNavItem) adminNavItem.style.display = isAdmin() ? 'flex' : 'none';
   touchStreak();
   renderQuestion();
-  renderTutorChat();
   renderHomeStats();
   refreshLeaderboard().then(renderHomeStats);
   if (showToast) toast('Welcome back, ' + firstName + '!', 'success');
@@ -1406,10 +1386,7 @@ async function doLogout() {
   await sb.auth.signOut();
   currentUser = null;
   progress = defaultProgress();
-  chatHistory = [];
-  try { localStorage.removeItem(CHAT_KEY); } catch (e) {}
-  tutorHistoryExpanded = false;
-  renderTutorChat();
+  closePracticeTutorPanel();
   debateHistory = [];
   debateResolution = null;
   debateSide = null;
@@ -1532,6 +1509,7 @@ function setReviewMode(btn) {
 function renderQuestion() {
   questionShownAt = Date.now();
   hideWrongFeedbackPanel();
+  closePracticeTutorPanel();
 
   if (reviewMode) {
     if (reviewQueue.length === 0) {
@@ -1680,40 +1658,13 @@ function prevQuestion() {
 }
 
 // ═══════════════════════════════════════════════════════
-//  AI TUTOR
+//  AI TUTOR (docked pane on the Practice page, scoped to whichever single
+//  question is currently wrong -- its own history, reset every time it
+//  opens and cleared again when it closes.)
 // ═══════════════════════════════════════════════════════
-function handleChatKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-}
-
-function quickAsk(text) {
-  document.getElementById('chat-input').value = text;
-  sendMessage();
-}
-
-// AI Tutor's own chat renderer (separate from the shared appendMsg/appendTyping
-// helpers Debate Coach uses): only the most recent exchange is ever shown
-// live, so the input field at the top of the page never requires scrolling
-// past a long transcript. Everything earlier lives in a collapsed,
-// searchable history panel the student can expand on demand.
-const TUTOR_EMPTY_STATE_HTML = `
-  <div class="gpt-empty-state">
-    <div class="gpt-empty-icon">🤖</div>
-    <h2>How can I help you study today?</h2>
-    <div class="gpt-suggestions">
-      <button class="gpt-suggestion-card" onclick="quickAsk('Explain how to solve linear equations step by step')"><span class="gpt-suggestion-title">Linear equations</span><span class="gpt-suggestion-sub">Solve them step by step</span></button>
-      <button class="gpt-suggestion-card" onclick="quickAsk('What is photosynthesis and how does it work?')"><span class="gpt-suggestion-title">Photosynthesis</span><span class="gpt-suggestion-sub">How it actually works</span></button>
-      <button class="gpt-suggestion-card" onclick="quickAsk('Give me a tip for reading comprehension exams')"><span class="gpt-suggestion-title">Reading tips</span><span class="gpt-suggestion-sub">For comprehension exams</span></button>
-      <button class="gpt-suggestion-card" onclick="quickAsk('What is the difference between inference and conclusion?')"><span class="gpt-suggestion-title">Inference vs conclusion</span><span class="gpt-suggestion-sub">What's the real difference</span></button>
-      <button class="gpt-suggestion-card" onclick="quickAsk('Explain a syllogism with an example')"><span class="gpt-suggestion-title">Syllogisms</span><span class="gpt-suggestion-sub">With a worked example</span></button>
-      <button class="gpt-suggestion-card" onclick="quickAsk('What is the order of operations and why does it matter?')"><span class="gpt-suggestion-title">Order of operations</span><span class="gpt-suggestion-sub">And why it matters</span></button>
-      <button class="gpt-suggestion-card" onclick="quickAsk('How do I find the area and perimeter of complex shapes?')"><span class="gpt-suggestion-title">Area &amp; perimeter</span><span class="gpt-suggestion-sub">For complex shapes</span></button>
-      <button class="gpt-suggestion-card" onclick="quickAsk('Explain DNA replication simply')"><span class="gpt-suggestion-title">DNA replication</span><span class="gpt-suggestion-sub">Explained simply</span></button>
-    </div>
-  </div>`;
 const TUTOR_TYPING_HTML = `<div class="msg ai"><div class="msg-body"><div class="msg-bubble"><div class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div></div></div>`;
-let tutorTypingActive = false;
-let tutorHistoryExpanded = false;
+let practiceTutorHistory = [];
+let practiceTutorTypingActive = false;
 
 function renderTutorMsgHTML(m) {
   if (m.role === 'user' && m.contextQuestion) {
@@ -1727,64 +1678,31 @@ function renderTutorMsgHTML(m) {
   return `<div class="msg ${m.role === 'assistant' ? 'ai' : 'user'}"><div class="msg-body"><div class="msg-bubble">${formatChatText(m.content)}</div></div></div>`;
 }
 
-function tutorCurrentHTML() {
-  if (chatHistory.length === 0 && !tutorTypingActive) return TUTOR_EMPTY_STATE_HTML;
-  const currentEntries = chatHistory.slice(-2);
-  return currentEntries.map(renderTutorMsgHTML).join('') + (tutorTypingActive ? TUTOR_TYPING_HTML : '');
+function renderPracticeTutorChat() {
+  const current = document.getElementById('practice-tutor-current');
+  if (!current) return;
+  current.innerHTML = practiceTutorHistory.map(renderTutorMsgHTML).join('')
+    + (practiceTutorTypingActive ? TUTOR_TYPING_HTML : '');
 }
 
-function renderTutorChat() {
-  const current = document.getElementById('tutor-current');
-  const historyWrap = document.getElementById('tutor-history-wrap');
-
-  if (chatHistory.length === 0 && !tutorTypingActive) {
-    current.innerHTML = TUTOR_EMPTY_STATE_HTML;
-    historyWrap.style.display = 'none';
-  } else {
-    const olderEntries = chatHistory.slice(0, -2);
-    current.innerHTML = tutorCurrentHTML();
-
-    if (olderEntries.length === 0) {
-      historyWrap.style.display = 'none';
-    } else {
-      historyWrap.style.display = 'block';
-      document.getElementById('tutor-history-toggle-label').textContent =
-        (tutorHistoryExpanded ? '▴ Hide' : '▾ View') + ` earlier conversation (${olderEntries.length})`;
-
-      if (tutorHistoryExpanded) {
-        const query = (document.getElementById('tutor-history-search').value || '').trim().toLowerCase();
-        const filtered = query ? olderEntries.filter(m => m.content.toLowerCase().includes(query)) : olderEntries;
-        document.getElementById('tutor-history-messages').innerHTML = filtered.length
-          ? filtered.map(renderTutorMsgHTML).join('')
-          : '<div class="gpt-history-empty">No matching messages.</div>';
-      }
-    }
-  }
-
+function handlePracticeTutorKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendPracticeTutorMessage(); }
 }
 
-function toggleTutorHistory() {
-  tutorHistoryExpanded = !tutorHistoryExpanded;
-  document.getElementById('tutor-history-panel').style.display = tutorHistoryExpanded ? 'block' : 'none';
-  if (!tutorHistoryExpanded) document.getElementById('tutor-history-search').value = '';
-  renderTutorChat();
-}
-
-async function sendMessage(presetText, contextMeta) {
+async function sendPracticeTutorMessage(presetText, contextMeta) {
   let text = presetText;
   if (text === undefined) {
-    const input = document.getElementById('chat-input');
+    const input = document.getElementById('practice-tutor-input');
     text = input.value.trim();
     input.value = '';
   }
   if (!text) return;
-  chatHistory.push(Object.assign({ role:'user', content: text }, contextMeta));
-  saveChatHistory();
-  tutorTypingActive = true;
-  renderTutorChat();
+  practiceTutorHistory.push(Object.assign({ role:'user', content: text }, contextMeta));
+  practiceTutorTypingActive = true;
+  renderPracticeTutorChat();
 
   try {
-    const messages = chatHistory.slice(-12).map(m => ({ role: m.role, content: m.content })); // keep last 12 for context
+    const messages = practiceTutorHistory.slice(-12).map(m => ({ role: m.role, content: m.content })); // keep last 12 for context
 
     const res = await fetch(`${API_BASE}/api/chat`, {
       method: 'POST',
@@ -1794,13 +1712,12 @@ async function sendMessage(presetText, contextMeta) {
 
     const data = await res.json();
     const reply = data.reply || "I'm here to help! Could you rephrase your question?";
-    chatHistory.push({ role:'assistant', content: reply });
-    saveChatHistory();
+    practiceTutorHistory.push({ role:'assistant', content: reply });
   } catch (err) {
-    chatHistory.push({ role:'assistant', content: "I'm having trouble connecting right now. Try refreshing or check your internet connection!" });
+    practiceTutorHistory.push({ role:'assistant', content: "I'm having trouble connecting right now. Try refreshing or check your internet connection!" });
   }
-  tutorTypingActive = false;
-  renderTutorChat();
+  practiceTutorTypingActive = false;
+  renderPracticeTutorChat();
 }
 
 function escapeHtml(text) {
@@ -2498,12 +2415,25 @@ function askTutorAboutQuestion() {
   const q = currentQuestion;
   const prompt = `I just got this practice question wrong. Can you explain step by step how to arrive at the correct answer?\n\nQuestion: ${q.q}\nAnswer options: ${q.opts.join(' / ')}\nThe correct answer is: ${q.opts[q.ans]}`;
   hideWrongFeedbackPanel();
-  showPanel('tutor', document.querySelector('.sidebar-item[onclick*="tutor"]'));
-  sendMessage(prompt, {
+  practiceTutorHistory = [];
+  practiceTutorTypingActive = false;
+  renderPracticeTutorChat();
+  const panel = document.getElementById('practice-tutor-panel');
+  panel.classList.add('active');
+  requestAnimationFrame(() => panel.classList.add('show'));
+  sendPracticeTutorMessage(prompt, {
     contextQuestion: q.q,
     contextOptions: q.opts.join(' / '),
     contextAnswer: q.opts[q.ans]
   });
+}
+
+function closePracticeTutorPanel() {
+  const panel = document.getElementById('practice-tutor-panel');
+  panel.classList.remove('show', 'active');
+  practiceTutorHistory = [];
+  practiceTutorTypingActive = false;
+  renderPracticeTutorChat();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2636,10 +2566,10 @@ function endTest() {
       <h2 style="font-size:28px;margin-bottom:8px">${pct >= 80 ? 'Excellent work!' : pct >= 60 ? 'Good effort!' : 'Keep practicing!'}</h2>
       <div style="font-size:52px;font-weight:700;color:var(--blue);margin:16px 0">${pct}%</div>
       <p style="color:var(--gray-500);margin-bottom:8px">You answered <strong>${score} out of ${total}</strong> correctly.</p>
-      <p style="color:var(--gray-500);font-size:14px;margin-bottom:32px">${pct >= 80 ? 'You\'re ready for the next challenge!' : 'Review the questions you missed with the AI Tutor.'}</p>
+      <p style="color:var(--gray-500);font-size:14px;margin-bottom:32px">${pct >= 80 ? 'You\'re ready for the next challenge!' : 'Review the questions you missed, and ask the AI Tutor about any of them.'}</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
         <button class="btn btn-primary btn-lg" onclick="backToTests()">Try another test</button>
-        <button class="btn btn-outline btn-lg" onclick="showPanel('tutor', document.querySelector(\'.sidebar-item:nth-child(3)\'))">Ask AI Tutor</button>
+        <button class="btn btn-outline btn-lg" onclick="showPanel('practice', document.querySelector('.sidebar-item[onclick*=\'practice\']')); setReviewMode(document.querySelector('.subj-btn[onclick*=\'setReviewMode\']'))">Review missed questions</button>
       </div>
     </div>`;
   quizState = null;
@@ -2967,7 +2897,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadQuestions();
   const hasSession = await loadUserSession();
   if (hasSession) {
-    chatHistory = loadChatHistory();
     loadDebateResolutions();
     loadDebateHistory();
     if (debateResolution && !debateResolutions.includes(debateResolution)) {

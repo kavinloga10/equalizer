@@ -616,19 +616,6 @@
   </div>
 </div>
 
-<div class="tutor-drawer" id="tutor-drawer">
-  <div class="tutor-drawer-header">
-    <h3>🤖 Ask Tutor</h3>
-    <button class="tutor-drawer-close" onclick="closeTutorDrawer()" title="Close">✕</button>
-  </div>
-  <div class="chat-messages" id="drawer-chat-messages"></div>
-  <div class="chat-input-bar">
-    <textarea class="chat-input" id="drawer-chat-input" placeholder="Ask about this problem…" rows="1" onkeydown="handleDrawerChatKey(event)"></textarea>
-    <button class="mic-btn" id="drawer-chat-input-mic" onclick="toggleVoiceInput('drawer-chat-input','drawer-chat-input-mic')" title="Speak instead of typing">🎤</button>
-    <button class="send-btn" onclick="sendDrawerMessage()" title="Send">➤</button>
-  </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // Applied first, before anything else renders, to minimize theme flash.
@@ -1682,14 +1669,12 @@ function hideWrongFeedbackPanel() {
 }
 
 function nextQuestion() {
-  closeTutorDrawer();
   currentQuestionIndex++;
   renderQuestion();
 }
 
 function prevQuestion() {
   if (currentQuestionIndex === 0) return;
-  closeTutorDrawer();
   currentQuestionIndex--;
   renderQuestion();
 }
@@ -1707,10 +1692,10 @@ function quickAsk(text) {
 }
 
 // AI Tutor's own chat renderer (separate from the shared appendMsg/appendTyping
-// helpers Debate Coach and the Ask Tutor drawer use): only the most recent
-// exchange is ever shown live, so the input field at the top of the page never
-// requires scrolling past a long transcript. Everything earlier lives in a
-// collapsed, searchable history panel the student can expand on demand.
+// helpers Debate Coach uses): only the most recent exchange is ever shown
+// live, so the input field at the top of the page never requires scrolling
+// past a long transcript. Everything earlier lives in a collapsed,
+// searchable history panel the student can expand on demand.
 const TUTOR_EMPTY_STATE_HTML = `
   <div class="gpt-empty-state">
     <div class="gpt-empty-icon">🤖</div>
@@ -1844,7 +1829,7 @@ function removeTyping(id) {
 
 // ═══════════════════════════════════════════════════════
 //  VOICE INPUT (Web Speech API — talk instead of typing, shared by every
-//  chat surface: AI Tutor, the Ask Tutor drawer, and Debate Coach)
+//  chat surface: AI Tutor and Debate Coach)
 // ═══════════════════════════════════════════════════════
 const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
 let voiceRecognition = null;
@@ -2484,70 +2469,18 @@ function renderSportsResult(data) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  ASK TUTOR DRAWER (practice-question help, side panel)
+//  ASK TUTOR (from a missed practice question)
 // ═══════════════════════════════════════════════════════
-let drawerContext = '';
-let drawerMessages = [];
-
+// Sends the full question (options + correct answer) into the real AI
+// Tutor conversation and asks for a step-by-step walkthrough, instead of
+// just opening a blank chat -- the tutor gets the actual problem, not a
+// vague "help me" with no context.
 function askTutorAboutQuestion() {
   const q = currentQuestion;
-  drawerContext = `A student is reviewing this practice problem, which they just answered incorrectly. Here is the problem so you can see it:
-
-Question: ${q.q}
-Answer options: ${q.opts.join(' / ')}
-Correct answer: ${q.opts[q.ans]}
-Explanation: ${q.exp}
-
-Help the student understand their mistake and the underlying concept. Don't just repeat the explanation verbatim — help them reason through it, and answer whatever follow-up questions they have about this specific problem.`;
-  drawerMessages = [];
-  document.getElementById('drawer-chat-messages').innerHTML = `<div class="msg ai"><div class="msg-avatar">🤖</div><div class="msg-body"><div class="msg-bubble">Hi! I can see the problem you're working on — what would you like help with?</div><div class="msg-time">Just now</div></div></div>`;
-  openTutorDrawer();
-}
-
-function openTutorDrawer() {
-  document.getElementById('tutor-drawer').classList.add('open');
-}
-
-function closeTutorDrawer() {
-  document.getElementById('tutor-drawer').classList.remove('open');
-}
-
-function handleDrawerChatKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendDrawerMessage(); }
-}
-
-async function sendDrawerMessage() {
-  const input = document.getElementById('drawer-chat-input');
-  const text = input.value.trim();
-  if (!text) return;
-  input.value = '';
-  appendMsg('user', text, 'drawer-chat-messages');
-  drawerMessages.push({ role: 'user', content: text });
-
-  const typingId = appendTyping('drawer-chat-messages');
-
-  try {
-    const messages = [
-      { role: 'user', content: drawerContext },
-      { role: 'assistant', content: 'Got it, I can see the problem. What would you like help with?' },
-      ...drawerMessages.slice(-10),
-    ];
-
-    const res = await fetch(`${API_BASE}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages })
-    });
-
-    const data = await res.json();
-    const reply = data.reply || "I'm here to help! Could you rephrase your question?";
-    removeTyping(typingId);
-    appendMsg('ai', reply, 'drawer-chat-messages');
-    drawerMessages.push({ role: 'assistant', content: reply });
-  } catch (err) {
-    removeTyping(typingId);
-    appendMsg('ai', "I'm having trouble connecting right now. Try again in a moment!", 'drawer-chat-messages');
-  }
+  const prompt = `I just got this practice question wrong. Can you explain step by step how to arrive at the correct answer?\n\nQuestion: ${q.q}\nAnswer options: ${q.opts.join(' / ')}\nThe correct answer is: ${q.opts[q.ans]}`;
+  showPanel('tutor', document.querySelector('.sidebar-item:nth-child(3)'));
+  document.getElementById('chat-input').value = prompt;
+  sendMessage();
 }
 
 // ═══════════════════════════════════════════════════════

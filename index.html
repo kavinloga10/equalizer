@@ -113,8 +113,10 @@
 
   <!-- AI Tutor pane for a missed practice question -- stays docked to the
        side of the Practice page itself, so asking for help never navigates
-       the student away from where they were. Shares the same chatHistory
-       conversation as the full AI Tutor page (see renderTutorChat()). -->
+       the student away from where they were. Scoped only to the current
+       question: its own history (practiceTutorHistory), reset every time it
+       opens and cleared again when it closes -- never the full AI Tutor
+       conversation. -->
   <div class="practice-tutor-panel" id="practice-tutor-panel">
     <div class="practice-tutor-header">
       <span>🤖 AI Tutor</span>
@@ -124,7 +126,7 @@
     <div class="chat-input-bar" id="practice-tutor-input-bar">
       <textarea class="chat-input" id="practice-tutor-input" placeholder="Ask a follow-up…" rows="1" onkeydown="handlePracticeTutorKey(event)"></textarea>
       <button class="mic-btn" id="practice-tutor-mic" onclick="toggleVoiceInput('practice-tutor-input','practice-tutor-mic')" title="Speak instead of typing">🎤</button>
-      <button class="send-btn" onclick="sendMessage('practice-tutor-input')" title="Send">➤</button>
+      <button class="send-btn" onclick="sendPracticeTutorMessage()" title="Send">➤</button>
     </div>
   </div>
 
@@ -1734,6 +1736,12 @@ const TUTOR_TYPING_HTML = `<div class="msg ai"><div class="msg-body"><div class=
 let tutorTypingActive = false;
 let tutorHistoryExpanded = false;
 
+// The Practice page's docked tutor pane is scoped to whichever single
+// question is currently wrong -- its own history, never the full AI Tutor
+// conversation, and always wiped when the pane closes or reopens.
+let practiceTutorHistory = [];
+let practiceTutorTypingActive = false;
+
 function renderTutorMsgHTML(m) {
   return `<div class="msg ${m.role === 'assistant' ? 'ai' : 'user'}"><div class="msg-body"><div class="msg-bubble">${formatChatText(m.content)}</div></div></div>`;
 }
@@ -1772,11 +1780,13 @@ function renderTutorChat() {
     }
   }
 
-  // The Practice page's own AI Tutor side panel (opened via "Ask Tutor" on a
-  // missed question) shares this same chatHistory/conversation -- just shows
-  // the latest exchange, without the full history section.
-  const practiceCurrent = document.getElementById('practice-tutor-current');
-  if (practiceCurrent) practiceCurrent.innerHTML = tutorCurrentHTML();
+}
+
+function renderPracticeTutorChat() {
+  const current = document.getElementById('practice-tutor-current');
+  if (!current) return;
+  current.innerHTML = practiceTutorHistory.map(renderTutorMsgHTML).join('')
+    + (practiceTutorTypingActive ? TUTOR_TYPING_HTML : '');
 }
 
 function toggleTutorHistory() {
@@ -1786,8 +1796,8 @@ function toggleTutorHistory() {
   renderTutorChat();
 }
 
-async function sendMessage(inputId = 'chat-input') {
-  const input = document.getElementById(inputId);
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
   const text = input.value.trim();
   if (!text) return;
   input.value = '';
@@ -1814,6 +1824,34 @@ async function sendMessage(inputId = 'chat-input') {
   }
   tutorTypingActive = false;
   renderTutorChat();
+}
+
+async function sendPracticeTutorMessage() {
+  const input = document.getElementById('practice-tutor-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  practiceTutorHistory.push({ role:'user', content: text });
+  practiceTutorTypingActive = true;
+  renderPracticeTutorChat();
+
+  try {
+    const messages = practiceTutorHistory.slice(-12); // keep last 12 for context
+
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages })
+    });
+
+    const data = await res.json();
+    const reply = data.reply || "I'm here to help! Could you rephrase your question?";
+    practiceTutorHistory.push({ role:'assistant', content: reply });
+  } catch (err) {
+    practiceTutorHistory.push({ role:'assistant', content: "I'm having trouble connecting right now. Try refreshing or check your internet connection!" });
+  }
+  practiceTutorTypingActive = false;
+  renderPracticeTutorChat();
 }
 
 function formatChatText(text) {
@@ -2508,20 +2546,26 @@ function askTutorAboutQuestion() {
   const q = currentQuestion;
   const prompt = `I just got this practice question wrong. Can you explain step by step how to arrive at the correct answer?\n\nQuestion: ${q.q}\nAnswer options: ${q.opts.join(' / ')}\nThe correct answer is: ${q.opts[q.ans]}`;
   hideWrongFeedbackPanel();
+  practiceTutorHistory = [];
+  practiceTutorTypingActive = false;
+  renderPracticeTutorChat();
   const panel = document.getElementById('practice-tutor-panel');
   panel.classList.add('active');
   requestAnimationFrame(() => panel.classList.add('show'));
   document.getElementById('practice-tutor-input').value = prompt;
-  sendMessage('practice-tutor-input');
+  sendPracticeTutorMessage();
 }
 
 function closePracticeTutorPanel() {
   const panel = document.getElementById('practice-tutor-panel');
   panel.classList.remove('show', 'active');
+  practiceTutorHistory = [];
+  practiceTutorTypingActive = false;
+  renderPracticeTutorChat();
 }
 
 function handlePracticeTutorKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage('practice-tutor-input'); }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendPracticeTutorMessage(); }
 }
 
 // ═══════════════════════════════════════════════════════

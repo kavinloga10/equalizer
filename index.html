@@ -1493,7 +1493,8 @@ function buildReviewQueue() {
   const dueIds = Object.entries(progress.questionSchedule)
     .filter(([, s]) => s.dueAt <= now)
     .map(([id]) => Number(id));
-  const allIds = [...new Set([...missedIds, ...dueIds])];
+  const existingIds = new Set(QUESTIONS.acl.map(q => q.id));
+  const allIds = [...new Set([...missedIds, ...dueIds])].filter(id => existingIds.has(id));
   return allIds.map(id => ({ subject: questionSubject(id), id }));
 }
 
@@ -1721,7 +1722,7 @@ async function sendPracticeTutorMessage(presetText, contextMeta) {
 }
 
 function escapeHtml(text) {
-  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function formatChatText(text) {
@@ -2034,7 +2035,7 @@ function renderDebateResolutions() {
   }
   el.innerHTML = debateResolutions.map((r, i) => `
     <div class="resolution-row ${r === debateResolution ? 'selected' : ''}">
-      <span class="res-text" onclick="selectDebateResolution(${i})">${r}</span>
+      <span class="res-text" onclick="selectDebateResolution(${i})">${escapeHtml(r)}</span>
       <button class="res-delete" title="Delete" onclick="deleteDebateResolution(${i})">🗑️</button>
     </div>`).join('');
 }
@@ -2375,7 +2376,7 @@ function renderRecommendedVideos(videos) {
             try { subtitle = new URL(v.url).hostname.replace(/^www\./, ''); } catch (e) {}
           }
           return `
-            <a href="${v.url}" target="_blank" rel="noopener noreferrer" style="display:block;padding:10px 14px;border:1.5px solid var(--gray-200);border-radius:8px;text-decoration:none;transition:.15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--gray-200)'">
+            <a href="${escapeHtml(v.url)}" target="_blank" rel="noopener noreferrer" style="display:block;padding:10px 14px;border:1.5px solid var(--gray-200);border-radius:8px;text-decoration:none;transition:.15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--gray-200)'">
               <div style="font-size:13px;font-weight:600;color:var(--gray-900)">${formatChatText(displayTitle)}</div>
               ${subtitle ? `<div style="font-size:11px;color:var(--gray-400);margin-top:2px">${subtitle}</div>` : ''}
             </a>`;

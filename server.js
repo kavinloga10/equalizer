@@ -1,10 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import multer from 'multer';
-import fs from 'fs/promises';
-import os from 'os';
-import crypto from 'crypto';
-import { GoogleGenAI, createUserContent, createPartFromUri } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import 'dotenv/config';
@@ -56,31 +52,6 @@ const DEBATE_GRADING_SYSTEM_PROMPT = `You are scoring a middle schooler's comple
 Score the student's overall performance across the round, weighing: clarity and organization of their case, use of evidence or reasoning (illustrative examples count, but reward specificity), how directly they engaged and rebutted the opponent's arguments rather than repeating their own points, and whether their closing (Summary/Final Focus, if present) crystallized clear voter issues. Do not give easy points — a high score requires genuinely strong argumentation across the round, not just participation.
 
 Return your grading as the requested JSON structure. The score must be a number from 0 to 10 in increments of 0.5. "summary" is a 2-3 sentence overall assessment of the round. "strengths" is a list of 2-4 specific things the student did well, quoting or referencing their actual turns. "improvements" is a list of 2-4 specific, actionable pieces of feedback for their next round.`;
-
-// Sports Coach: analyzes a short uploaded video of the student practicing a
-// skill. Unlike the academic graders, bad feedback here carries real physical
-// risk (form corrections can cause injury if wrong), so the prompt requires
-// honest uncertainty when the video doesn't give a clear view, and an
-// explicit "get a real coach to confirm" flag for anything safety-relevant.
-const SPORTS_COACH_SYSTEM_PROMPT = `You are Equalizer's Sports Coach, giving a middle school student (grades 6-9) feedback on a short training video of themselves practicing a specific skill or sport, which they'll tell you in their message.
-
-Watch the video carefully and give specific, actionable feedback tied to what you actually observe — body positioning, timing, footwork, follow-through, etc. — not generic advice that could apply to any video of that sport. If the camera angle, lighting, distance, or video length makes something hard to judge confidently, say so honestly in your summary rather than guessing with false confidence.
-
-SAFETY: if the skill involves real injury risk when done with poor form (e.g., weightlifting, gymnastics, sprinting mechanics, contact sports, throwing motions), explicitly recommend in your summary that the student have a real coach, trainer, or parent confirm your feedback in person before changing anything that affects safety. You are a supplementary practice tool, not a substitute for in-person coaching.
-
-Stay encouraging and age-appropriate, but do not give easy points — reserve a high score for genuinely strong technique, not just participation. Return your feedback as the requested JSON structure. "score" is a number from 0 to 10 in increments of 0.5 rating the technique shown. "summary" is a 2-3 sentence overview of what you observed (including any safety note or visibility caveat). "strengths" is a list of 2-4 specific things done well. "improvements" is a list of 2-4 specific, actionable things to work on next.`;
-
-// Run as a separate, second call (text-only, no video attached) after the
-// main analysis succeeds. This isolation matters for a real reason, not just
-// caution: Google Search grounding is NOT available on the free tier for
-// Gemini 3.x models at all -- it requires billing enabled on the project
-// (confirmed via Google's own docs and a live 429 on this exact call).
-// Without billing, every grounded search will fail; keeping it in its own
-// call means that failure only costs the video suggestions, not the actual
-// coaching feedback, which works fine on the free tier on its own.
-const SPORTS_SEARCH_SYSTEM_PROMPT = `You are helping a middle school student find real, publicly available video tutorials that address specific gaps in their sports technique. You'll be given a list of specific things they need to work on. You have a Google Search tool available -- for each gap, run a real search to find an actual tutorial or drill video that addresses it (phrase queries like "[specific technique] tutorial video" or "how to fix [specific issue] [sport]", favoring searches likely to surface real instructional video content such as YouTube). Do not invent or guess at video titles, channels, or URLs yourself -- only real search results should ever be referenced. If a search doesn't turn up anything genuinely relevant, skip it rather than force an unrelated result.
-
-Respond with a short markdown list, one entry per result, formatted exactly as: "- [Exact Video Title](URL)" -- use the real title of the video or page as it actually appears in the search result, not a paraphrase or description of it.`;
 
 const WRITING_RESPONSE_SCHEMA = {
   type: 'object',
@@ -174,31 +145,6 @@ const ALLOWED_ORIGINS = [
 app.use(cors({ origin: ALLOWED_ORIGINS }));
 app.use(express.json());
 app.use(express.static(__dirname));
-
-// Sports Coach video uploads: written to a temp file on disk rather than
-// held in memory -- a couple minutes of real phone-camera video easily runs
-// 80-150MB (video bitrate, not duration, drives file size), and buffering
-// that in RAM risks OOM on Render's free tier. 200MB comfortably covers a
-// few minutes of footage; the temp file is deleted after analysis either way.
-const VIDEO_SIZE_LIMIT_MB = 200;
-const videoUpload = multer({
-  storage: multer.diskStorage({ destination: os.tmpdir() }),
-  limits: { fileSize: VIDEO_SIZE_LIMIT_MB * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith('video/')) return cb(new Error('Only video files are supported.'));
-    cb(null, true);
-  },
-});
-
-function handleVideoUpload(req, res, next) {
-  videoUpload.single('video')(req, res, (err) => {
-    if (!err) return next();
-    const message = err.code === 'LIMIT_FILE_SIZE'
-      ? `That video is too large — keep clips under ${VIDEO_SIZE_LIMIT_MB}MB (a shorter clip is also faster to analyze).`
-      : (err.message || 'Upload failed.');
-    res.status(400).json({ error: message });
-  });
-}
 
 app.post('/api/chat', async (req, res) => {
   const { messages } = req.body;
@@ -310,16 +256,6 @@ app.post('/api/grade-writing-assessment', async (req, res) => {
   }
 });
 
-// Video analysis (Gemini file processing + a search-grounded generateContent
-// call) can easily run past a minute, and that time varies per video -- held
-// open as a single synchronous HTTP request, it's at the mercy of whatever
-// proxy/platform timeout Render enforces, which is exactly why this was
-// failing inconsistently rather than by video length. Making it a background
-// job the client polls for means no single request needs to stay open longer
-// than a couple seconds, regardless of how long the actual analysis takes.
-const sportsJobs = new Map(); // jobId -> { status: 'processing'|'done'|'error', result?, error? }
-const SPORTS_JOB_TTL_MS = 10 * 60 * 1000;
-
 // Real-world testing turned up transient Gemini errors -- 503 "model is
 // experiencing high demand" and 429 rate-limit -- that Google's own error
 // message says to just retry. Both are common enough in practice that
@@ -342,146 +278,6 @@ async function generateContentWithRetry(params, retries = 2) {
     }
   }
 }
-
-// Separate, best-effort call: text-only (no video, no response schema) with
-// the Google Search tool enabled, run after the main analysis succeeds. Any
-// failure here is swallowed -- missing video suggestions is a fine outcome,
-// failing the whole analysis over them is not.
-//
-// IMPORTANT, verified the hard way: the model's own inline text -- even
-// when it just cited a real search result -- cannot be trusted for URLs.
-// Checked every video ID the model wrote across 8+ live test runs against
-// YouTube's oembed endpoint (which reliably 404s for videos that don't
-// exist): every single one was fabricated, despite groundingMetadata
-// confirming a real search had genuinely run. The model apparently
-// reconstructs a plausible-looking destination URL from what it read
-// (titles/snippets) rather than having the literal URL, since the tool
-// result it sees is an opaque Google redirect link, not the real one.
-//
-// So URLs ONLY ever come from groundingChunks -- that's the one thing
-// actually backed by the real search call. Titles are a different story:
-// they can't be cross-verified the same way (redirect tokens don't match
-// between the structured metadata and inline text -- tested, 0/8+ matches),
-// so this pairs each grounding chunk's real URL with the model's
-// corresponding parsed title *by position* as a best-effort label. Worst
-// case if a pairing is imperfect: a title slightly mismatches what's
-// actually at a still-100%-real link -- not a dead or fake one.
-function extractMarkdownLinks(text) {
-  const links = [];
-  const re = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
-  let match;
-  while ((match = re.exec(text)) !== null) {
-    const title = match[1].replace(/^[*_]+|[*_]+$/g, '').trim();
-    if (title) links.push(title);
-  }
-  return links;
-}
-
-async function findRecommendedVideos(improvements) {
-  if (!improvements || !improvements.length) return [];
-  try {
-    const response = await generateContentWithRetry({
-      model: 'gemini-3.6-flash',
-      contents: `Areas the student needs to work on:\n${improvements.map((s) => `- ${s}`).join('\n')}`,
-      config: {
-        systemInstruction: SPORTS_SEARCH_SYSTEM_PROMPT,
-        thinkingConfig: { thinkingLevel: 'low' },
-        maxOutputTokens: 1024,
-        tools: [{ googleSearch: {} }],
-      },
-    });
-
-    const chunks = (response.candidates?.[0]?.groundingMetadata?.groundingChunks || [])
-      .map((c) => c.web)
-      .filter((w) => w && w.uri);
-    const parsedTitles = extractMarkdownLinks(response.text || '');
-
-    const seenUrls = new Set();
-    const results = [];
-    for (const w of chunks) {
-      if (seenUrls.has(w.uri)) continue;
-      seenUrls.add(w.uri);
-      results.push({ title: parsedTitles[results.length] || w.title || 'Resource', url: w.uri });
-      if (results.length >= 4) break;
-    }
-    return results;
-  } catch (err) {
-    console.error('Video recommendation search failed (non-fatal):', err);
-    return [];
-  }
-}
-
-async function runSportsVideoAnalysis(jobId, filePath, mimeType, sport) {
-  let uploadedFile;
-  try {
-    uploadedFile = await ai.files.upload({
-      file: filePath,
-      config: { mimeType, displayName: 'sports-coach-clip' },
-    });
-
-    // Video files process asynchronously on Google's side before they're
-    // analyzable -- poll until ACTIVE, or give up after 3 minutes so a stuck
-    // upload doesn't hang the job forever.
-    let fileInfo = uploadedFile;
-    const pollStart = Date.now();
-    while (fileInfo.state === 'PROCESSING' && Date.now() - pollStart < 180000) {
-      await new Promise((r) => setTimeout(r, 2000));
-      fileInfo = await ai.files.get({ name: uploadedFile.name });
-    }
-    if (fileInfo.state !== 'ACTIVE') {
-      throw new Error(`Video did not finish processing (state: ${fileInfo.state}).`);
-    }
-
-    // Main analysis: video input + structured JSON output, no search tool.
-    // This is the part that has to be reliable -- keep it as simple as
-    // possible.
-    const response = await generateContentWithRetry({
-      model: 'gemini-3.6-flash',
-      contents: createUserContent([
-        createPartFromUri(fileInfo.uri, fileInfo.mimeType),
-        `The student says this video shows them practicing: ${sport}`,
-      ]),
-      config: {
-        systemInstruction: SPORTS_COACH_SYSTEM_PROMPT,
-        responseMimeType: 'application/json',
-        responseSchema: WRITING_RESPONSE_SCHEMA,
-        thinkingConfig: { thinkingLevel: 'minimal' },
-        maxOutputTokens: 4096,
-      },
-    });
-    const graded = JSON.parse(response.text);
-    graded.recommendedVideos = await findRecommendedVideos(graded.improvements);
-
-    sportsJobs.set(jobId, { status: 'done', result: graded });
-  } catch (err) {
-    console.error('Sports video analysis error:', err);
-    sportsJobs.set(jobId, { status: 'error', error: "Couldn't analyze that video. Try a shorter clip or try again in a moment!" });
-  } finally {
-    fs.unlink(filePath).catch(() => {});
-    if (uploadedFile && uploadedFile.name) {
-      ai.files.delete({ name: uploadedFile.name }).catch(() => {});
-    }
-    setTimeout(() => sportsJobs.delete(jobId), SPORTS_JOB_TTL_MS);
-  }
-}
-
-app.post('/api/analyze-sports-video', handleVideoUpload, (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'A video file is required.' });
-  const sport = (req.body.sport || '').trim();
-  if (!sport) return res.status(400).json({ error: 'Tell us what skill or sport this video shows.' });
-
-  const jobId = crypto.randomUUID();
-  sportsJobs.set(jobId, { status: 'processing' });
-  res.json({ jobId });
-
-  runSportsVideoAnalysis(jobId, req.file.path, req.file.mimetype, sport);
-});
-
-app.get('/api/analyze-sports-video/:jobId', (req, res) => {
-  const job = sportsJobs.get(req.params.jobId);
-  if (!job) return res.status(404).json({ error: 'Job not found or expired.' });
-  res.json(job);
-});
 
 const PORT = process.env.PORT || 8743;
 app.listen(PORT, () => console.log(`Equalizer server listening on http://localhost:${PORT}`));

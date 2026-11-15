@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from '@google/genai';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -8,6 +10,17 @@ import 'dotenv/config';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
+
+// Service-role client: ONLY used here, server-side, to flip a user's is_pro
+// status from the Stripe webhook (which has no user session to act as).
+// Never expose this key to the frontend -- it bypasses every RLS policy.
+const SUPABASE_URL = 'https://xdsrpjsrtwqqppoxwsot.supabase.co';
+const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
+  : null;
+
+const PRO_MONTHLY_PRICE_CENTS = 499; // $4.99/mo -- change here to adjust the price shown at checkout.
 
 const SYSTEM_PROMPT = `You are Equalizer AI, a friendly and encouraging tutor for middle school students (grades 6-9) preparing for the Academies of Loudoun (AOS/AET) admissions process. You help with math, science, reading comprehension, logical reasoning, and vocabulary. Keep answers clear, step-by-step, and age-appropriate. Use encouraging language. When explaining math, show the steps. If a student seems frustrated, be extra supportive. Keep responses concise — 2-5 sentences or clear numbered steps. End with a follow-up question or offer to show a practice problem.`;
 
@@ -143,8 +156,142 @@ const ALLOWED_ORIGINS = [
 ];
 
 app.use(cors({ origin: ALLOWED_ORIGINS }));
+
+// Stripe needs the raw, unparsed body to verify a webhook's signature, so
+// this route is registered (with its own raw-body middleware) before the
+// global express.json() below -- a request that matches this path and gets
+// a response here never reaches that later JSON-parsing middleware.
+app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  if (!supabaseAdmin || !stripe) return res.status(500).send('Server not configured for Pro subscriptions.');
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'], process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error('Stripe webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  try {
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      const userId = session.client_reference_id;
+      if (userId) {
+        await supabaseAdmin.from('profiles').update({
+          is_pro: true,
+          stripe_customer_id: session.customer,
+          stripe_subscription_id: session.subscription,
+        }).eq('id', userId);
+      }
+    } else if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+      const sub = event.data.object;
+      const stillActive = sub.status === 'active' || sub.status === 'trialing';
+      await supabaseAdmin.from('profiles').update({ is_pro: stillActive }).eq('stripe_subscription_id', sub.id);
+    }
+    res.json({ received: true });
+  } catch (err) {
+    console.error('Stripe webhook handling error:', err);
+    res.status(500).send('Webhook handler error');
+  }
+});
+
 app.use(express.json());
 app.use(express.static(__dirname));
+
+// Creates a Stripe Checkout session for the $4.99/mo Equalizer Pro
+// subscription. client_reference_id carries our own user id through to the
+// webhook above, since Stripe has no idea who our users are otherwise.
+app.post('/api/create-checkout-session', async (req, res) => {
+  const { userId, email } = req.body;
+  if (!userId) return res.status(400).json({ error: 'userId is required' });
+  if (!process.env.STRIPE_SECRET_KEY) return res.status(500).json({ error: 'Payments are not configured yet.' });
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      client_reference_id: userId,
+      customer_email: email,
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: { name: 'Equalizer Pro', description: 'Unlimited AI Tutor chat + AI-generated custom practice sets' },
+          unit_amount: PRO_MONTHLY_PRICE_CENTS,
+          recurring: { interval: 'month' },
+        },
+        quantity: 1,
+      }],
+      success_url: `${req.headers.origin || 'https://equalizer-app.com'}/?pro=success`,
+      cancel_url: `${req.headers.origin || 'https://equalizer-app.com'}/?pro=cancel`,
+    });
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('Stripe checkout session error:', err);
+    res.status(502).json({ error: 'Could not start checkout. Try again in a moment!' });
+  }
+});
+
+// Guards the two Pro AI endpoints below: trusts the DB's is_pro flag, never
+// a client-supplied boolean, since this gate gives access to a metered AI
+// feature someone is paying for.
+async function requirePro(userId) {
+  if (!supabaseAdmin || !userId) return false;
+  const { data } = await supabaseAdmin.from('profiles').select('is_pro').eq('id', userId).single();
+  return !!data?.is_pro;
+}
+
+const PRACTICE_SET_SCHEMA = {
+  type: 'object',
+  properties: {
+    questions: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          q: { type: 'string' },
+          opts: { type: 'array', items: { type: 'string' } },
+          ans: { type: 'number' },
+          exp: { type: 'string' },
+        },
+        required: ['q', 'opts', 'ans', 'exp'],
+      },
+    },
+  },
+  required: ['questions'],
+};
+
+const PRACTICE_SET_SYSTEM_PROMPT = `You write original practice questions in the style of the Academies of Loudoun (AOS/AET) admissions test, for a middle schooler (grades 6-9). You will be told a category, a difficulty, and how many questions to write.
+
+Categories and what they mean here:
+- Math/Quant: arithmetic, algebra, word problems, probability, geometry -- quantitative reasoning.
+- Logic/Reasoning: puzzles, deduction, pattern-based and critical-thinking problems.
+- Spatial/Geometric: mental rotation, 2D/3D visualization, transformations.
+
+Each question needs exactly 4 answer options ("opts"), a 0-indexed correct answer ("ans"), and a clear step-by-step explanation ("exp") of how to arrive at the correct answer. Make every question original -- never reuse a well-known textbook problem verbatim. Return exactly the requested number of questions as the requested JSON structure.`;
+
+app.post('/api/generate-practice-set', async (req, res) => {
+  const { userId, category, difficulty, count } = req.body;
+  if (!(await requirePro(userId))) return res.status(403).json({ error: 'Equalizer Pro required.' });
+  if (!category || !difficulty || !count) return res.status(400).json({ error: 'category, difficulty, and count are required' });
+  const n = Math.max(1, Math.min(20, Number(count) || 10));
+
+  try {
+    const result = await generateContentWithRetry({
+      model: 'gemini-3.6-flash',
+      contents: [{ role: 'user', parts: [{ text: `Category: ${category}\nDifficulty: ${difficulty}\nNumber of questions: ${n}` }] }],
+      config: {
+        systemInstruction: PRACTICE_SET_SYSTEM_PROMPT,
+        responseMimeType: 'application/json',
+        responseSchema: PRACTICE_SET_SCHEMA,
+        maxOutputTokens: 4096,
+      },
+    });
+    const parsed = JSON.parse(result.text);
+    res.json({ questions: parsed.questions || [] });
+  } catch (err) {
+    console.error('Practice set generation error:', err);
+    res.status(502).json({ error: 'Could not generate questions. Try again in a moment!' });
+  }
+});
 
 app.post('/api/chat', async (req, res) => {
   const { messages } = req.body;
